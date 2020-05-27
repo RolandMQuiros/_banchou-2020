@@ -125,16 +125,6 @@ namespace Banchou.AI {
                     }
                 })
                 .AddTo(this);
-
-            // this.LateUpdateAsObservable()
-            //     .Sample(TimeSpan.FromSeconds(1f / 15f))
-            //     .WithLatestFrom(observeState, (_, state) => state)
-            //     .Subscribe(state => {
-            //         foreach (var tree in trees) {
-            //             tree.Tick(state);
-            //         }
-            //     })
-            //     .AddTo(this);
         }
     }
 }

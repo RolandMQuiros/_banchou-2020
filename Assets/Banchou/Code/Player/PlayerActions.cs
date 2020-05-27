@@ -108,12 +108,17 @@ namespace Banchou.Player {
             };
         }
 
-        public StateAction.RemoveTarget RemoveTarget(PlayerId playerId, PawnId target) {
-            return new StateAction.RemoveTarget {
+        public ActionsCreator<GameState> RemoveTarget(PlayerId playerId, PawnId target) => (dispatch, getState) => {
+            dispatch(new StateAction.RemoveTarget {
                 PlayerId = playerId,
                 Target = target
-            };
-        }
+            });
+
+            var pawn = getState().GetPlayerPawn(playerId);
+            if (getState().GetCombatantTarget(pawn) == target) {
+                dispatch(_combatantActions.LockOff(pawn));
+            }
+        };
 
         public ActionsCreator<GameState> LockOn(PlayerId playerId) => (dispatch, getState) => {
             var player = getState().GetPlayer(playerId);
