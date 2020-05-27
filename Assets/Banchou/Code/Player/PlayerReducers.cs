@@ -1,9 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-
 using Banchou.Pawn;
-using Banchou.Player.Activation;
-using Banchou.Player.Targeting;
 
 namespace Banchou.Player {
     public static partial class PlayerReducers {
@@ -58,53 +54,17 @@ namespace Banchou.Player {
         }
 
         private static PlayerState ReducePlayer(in PlayerState prev, in object action) {
-            var addPawn = action as Pawn.StateAction.Add;
-            if (addPawn != null) {
-                var pawns = prev.Pawns.Append(addPawn.PawnId).ToList();
-                var selected = prev.SelectedPawns;
-                if (pawns.Count() == 1) {
-                    selected = pawns;
-                }
-
-                return new PlayerState(prev) {
-                    Pawns = pawns,
-                    SelectedPawns = selected
-                };
-            }
-
-            var removePawn = action as Pawn.StateAction.Remove;
-            if (removePawn != null) {
-                return RemovePawn(prev, removePawn.PawnId);
-            }
-
             var attach = action as StateAction.Attach;
             if (attach != null) {
                 return new PlayerState(prev) {
-                    Pawns = prev.Pawns.Concat(attach.Pawns).ToList(),
-                    SelectedPawns = !prev.Pawns.Any() ? attach.Pawns.Take(1).ToList() : prev.SelectedPawns
+                    Pawn = attach.PawnId
                 };
             }
 
             var detach = action as StateAction.Detach;
             if (detach != null) {
-                return RemovePawns(prev, detach.Pawns);
-            }
-
-            var detachAll = action as StateAction.DetachAll;
-            if (detachAll != null) {
                 return new PlayerState(prev) {
-                    Pawns = Enumerable.Empty<PawnId>().ToList(),
-                    SelectedPawns = new List<PawnId>()
-                };
-            }
-
-            var pushCommand = action as StateAction.PushCommand;
-            if (pushCommand != null) {
-                return new PlayerState(prev) {
-                    LastCommand = new PushedCommand {
-                        Command = pushCommand.Command,
-                        When = pushCommand.When
-                    }
+                    Pawn = PawnId.Empty
                 };
             }
 
@@ -122,31 +82,35 @@ namespace Banchou.Player {
                 };
             }
 
-            return TargetingReducers.Reduce(prev, action) ?? ActivationReducers.Reduce(prev, action) ?? prev;
-        }
+            var addTarget = action as StateAction.AddTarget;
+            if (addTarget != null && !prev.Targets.Contains(addTarget.Target)) {
+                var targets = new HashSet<PawnId>(prev.Targets);
+                targets.Add(addTarget.Target);
 
-        private static PlayerState RemovePawn(in PlayerState prev, params PawnId[] removed) {
-            return RemovePawns(prev, removed);
-        }
-
-        private static PlayerState RemovePawns(in PlayerState prev, IEnumerable<PawnId> removed) {
-            var hasPawn = prev.Pawns.Any(p => removed.Contains(p));
-            var hasTarget = prev.Targets.Any(p => removed.Contains(p));
-            var hasHistory = prev.Targets.Any(p => removed.Contains(p));
-            var hasFuture = prev.Targets.Any(p => removed.Contains(p));
-            var hasSelected = prev.SelectedPawns.Any(p => removed.Contains(p));
-            var hasLockOn = removed.Contains(prev.LockOnTarget);
-
-            if (hasPawn || hasTarget || hasSelected || hasLockOn) {
                 return new PlayerState(prev) {
-                    Pawns = hasPawn ? prev.Pawns.Except(removed).ToList() : prev.Pawns,
-                    Targets = hasTarget ? new HashSet<PawnId>(prev.Targets.Except(removed)) : prev.Targets,
-                    SelectedPawns = hasSelected ? prev.SelectedPawns.Except(removed).ToList() : prev.SelectedPawns,
-                    LockOnHistory = hasHistory ? prev.LockOnHistory.Except(removed) : prev.LockOnHistory,
-                    LockOnFuture = hasFuture ? prev.LockOnFuture.Except(removed) : prev.LockOnFuture,
-                    LockOnTarget = hasLockOn ? PawnId.Empty : prev.LockOnTarget
+                    Targets = targets
                 };
             }
+
+            var removeTarget = action as StateAction.RemoveTarget;
+            if (removeTarget != null) {
+                var target = removeTarget.Target;
+
+                // Remove target from current targeting list
+                var targets = prev.Targets;
+                if (targets.Contains(target)) {
+                    targets = new HashSet<PawnId>(prev.Targets);
+                    targets.Remove(target);
+                }
+
+                // If any change is detected, update the PlayerState
+                if (targets != prev.Targets) {
+                    return new PlayerState(prev) {
+                        Targets = targets
+                    };
+                }
+            }
+
             return prev;
         }
     }

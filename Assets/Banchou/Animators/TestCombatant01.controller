@@ -38,7 +38,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _movementSpeed: 5
-  _acceleration: 1
   _movementSpeedOut: Speed
   _velocityRightOut: SpeedRight
   _velocityForwardOut: SpeedForward
@@ -295,7 +294,7 @@ BlendTree:
   - serializedVersion: 2
     m_Motion: {fileID: 1441355474139489781, guid: 8e484611bb073bc4694f9a0ab7aac80f,
       type: 3}
-    m_Threshold: -1
+    m_Threshold: -3
     m_Position: {x: 0, y: 0}
     m_TimeScale: -1
     m_CycleOffset: 0
@@ -313,7 +312,7 @@ BlendTree:
   - serializedVersion: 2
     m_Motion: {fileID: 1441355474139489781, guid: 8e484611bb073bc4694f9a0ab7aac80f,
       type: 3}
-    m_Threshold: 0.5
+    m_Threshold: 3
     m_Position: {x: 0, y: 0}
     m_TimeScale: 1
     m_CycleOffset: 0
@@ -322,7 +321,7 @@ BlendTree:
   - serializedVersion: 2
     m_Motion: {fileID: 4658614491817142539, guid: 8e484611bb073bc4694f9a0ab7aac80f,
       type: 3}
-    m_Threshold: 1
+    m_Threshold: 5
     m_Position: {x: 0, y: 0}
     m_TimeScale: 1
     m_CycleOffset: 0
@@ -330,8 +329,8 @@ BlendTree:
     m_Mirror: 0
   m_BlendParameter: SpeedForward
   m_BlendParameterY: Health
-  m_MinThreshold: -1
-  m_MaxThreshold: 1
+  m_MinThreshold: -3
+  m_MaxThreshold: 5
   m_UseAutomaticThresholds: 0
   m_NormalizedBlendValues: 0
   m_BlendType: 0
@@ -563,6 +562,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8d2d26ef5f024d498aeb50f55cf30e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _maxTargetDistance: 4
   _targetingPrecision: 0.4
   _rotationSpeed: 1000
   _startTime: 0
@@ -762,7 +762,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _movementSpeed: 3
-  _acceleration: 1
   _movementSpeedOut: Speed
   _velocityRightOut: SpeedRight
   _velocityForwardOut: SpeedForward
@@ -1091,7 +1090,7 @@ BlendTree:
   - serializedVersion: 2
     m_Motion: {fileID: 1441355474139489781, guid: 8e484611bb073bc4694f9a0ab7aac80f,
       type: 3}
-    m_Threshold: -1
+    m_Threshold: -3
     m_Position: {x: 0, y: 0}
     m_TimeScale: -1
     m_CycleOffset: 0
@@ -1109,7 +1108,7 @@ BlendTree:
   - serializedVersion: 2
     m_Motion: {fileID: 1441355474139489781, guid: 8e484611bb073bc4694f9a0ab7aac80f,
       type: 3}
-    m_Threshold: 0.5
+    m_Threshold: 3
     m_Position: {x: 0, y: 0}
     m_TimeScale: 1
     m_CycleOffset: 0
@@ -1118,7 +1117,7 @@ BlendTree:
   - serializedVersion: 2
     m_Motion: {fileID: 4658614491817142539, guid: 8e484611bb073bc4694f9a0ab7aac80f,
       type: 3}
-    m_Threshold: 1
+    m_Threshold: 5
     m_Position: {x: 0, y: 0}
     m_TimeScale: 1
     m_CycleOffset: 0
@@ -1126,8 +1125,8 @@ BlendTree:
     m_Mirror: 0
   m_BlendParameter: SpeedForward
   m_BlendParameterY: Health
-  m_MinThreshold: -1
-  m_MaxThreshold: 1
+  m_MinThreshold: -3
+  m_MaxThreshold: 5
   m_UseAutomaticThresholds: 0
   m_NormalizedBlendValues: 0
   m_BlendType: 0
@@ -1520,6 +1519,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8d2d26ef5f024d498aeb50f55cf30e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _maxTargetDistance: 4
   _targetingPrecision: 0.75
   _rotationSpeed: 1000
   _startTime: 0

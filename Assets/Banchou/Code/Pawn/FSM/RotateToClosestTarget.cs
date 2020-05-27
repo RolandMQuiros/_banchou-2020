@@ -7,6 +7,7 @@ using Banchou.Pawn.Part;
 
 namespace Banchou.Pawn.FSM {
     public class RotateToClosestTarget : FSMBehaviour {
+        [SerializeField] private float _maxTargetDistance = 4f;
         [SerializeField] private float _targetingPrecision = 0.4f;
         [SerializeField] private float _rotationSpeed = 1000f;
 
@@ -33,11 +34,9 @@ namespace Banchou.Pawn.FSM {
                 .Select(targets => pawnInstances.GetMany(targets)
                     .Where(instance => {
                         if (instance != null) {
-                            var projected = Vector3.Dot(
-                                (instance.Position - body.transform.position).normalized,
-                                orientation.transform.forward
-                            );
-                            return projected > _targetingPrecision;
+                            var diff = instance.Position - body.transform.position;
+                            return diff.magnitude < _maxTargetDistance &&
+                                Vector3.Dot(diff.normalized, orientation.transform.forward) > _targetingPrecision;
                         }
                         return false;
                     })

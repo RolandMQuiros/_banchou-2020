@@ -11,22 +11,6 @@ namespace Banchou.Mob {
             return null;
         }
 
-        public static PawnId GetMobApproachTarget(this GameState state, PawnId pawnId) {
-            var mob = state.GetMob(pawnId);
-            if (mob?.Stage == ApproachStage.Target) {
-                return mob.Target;
-            }
-            return PawnId.Empty;
-        }
-
-        public static Vector3? GetMobTargetPosition(this GameState state, PawnId pawnId) {
-            var mob = state.GetMob(pawnId);
-            if (mob?.Stage == ApproachStage.Position) {
-                return mob?.Position;
-            }
-            return null;
-        }
-
         public static bool IsMobApproachingTarget(this GameState state, PawnId pawnId) {
             return state.GetMob(pawnId)?.Stage == ApproachStage.Target;
         }

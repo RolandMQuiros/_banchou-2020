@@ -36,7 +36,7 @@
             if (approachPosition != null) {
                 return new MobState(prev) {
                     Stage = ApproachStage.Position,
-                    Position = approachPosition.Position
+                    ApproachPosition = approachPosition.Position
                 };
             }
 

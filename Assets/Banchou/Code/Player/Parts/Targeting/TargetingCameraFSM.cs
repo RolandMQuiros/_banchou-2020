@@ -19,12 +19,6 @@ namespace Banchou.Player.Targeting {
             var AreEnemiesInRangeHash = Animator.StringToHash(_areEnemiesInRangeParameter);
 
             observeState
-                .Select(state => state.GetPlayerLockOnTarget(playerId) != PawnId.Empty)
-                .DistinctUntilChanged()
-                .Subscribe(isLockedOn => animator.SetBool(isLockedOnHash, isLockedOn))
-                .AddTo(this);
-
-            observeState
                 .Select(state => state.GetPlayerTargets(playerId).Any())
                 .DistinctUntilChanged()
                 .Subscribe(inRange => animator.SetBool(AreEnemiesInRangeHash, inRange))

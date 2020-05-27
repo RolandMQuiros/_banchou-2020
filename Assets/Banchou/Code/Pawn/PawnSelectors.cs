@@ -43,30 +43,5 @@ namespace Banchou.Pawn {
         public static Vector2 GetPawnPlayerInputMovement(this GameState state, PawnId pawnId) {
             return state.GetPawnPlayer(pawnId)?.InputMovement ?? Vector2.zero;
         }
-
-        public static PushedCommand? GetPawnPlayerCommand(this GameState state, PawnId pawnId) {
-            return state.GetPawnPlayer(pawnId)?.LastCommand;
-        }
-
-        public static Vector2 GetPawnPlayerStick(this GameState state, PawnId pawnId) {
-            return state.GetPawnPlayer(pawnId)?.InputMovement ?? Vector2.zero;
-        }
-
-        public static Team GetPawnPlayerTeam(this GameState state, PawnId pawnId) {
-            return state.GetPawnPlayer(pawnId)?.Team ?? Team.None;
-        }
-
-        public static bool ArePawnsHostile(this GameState state, PawnId first, PawnId second) {
-            return state.GetPawnPlayerTeam(first).IsHostile(state.GetPawnPlayerTeam(second));
-        }
-
-        public static bool IsPawnHostile(this GameState state, PlayerId playerId, PawnId pawnId) {
-            return state.GetPlayerTeam(playerId).IsHostile(state.GetPawnPlayerTeam(pawnId));
-        }
-
-        public static bool IsPawnSelected(this GameState state, PawnId pawnId) {
-            var player = state.GetPawnPlayer(pawnId);
-            return player != null && player.SelectedPawns.Contains(pawnId);
-        }
     }
 }

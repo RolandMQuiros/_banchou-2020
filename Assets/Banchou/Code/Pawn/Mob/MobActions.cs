@@ -51,11 +51,10 @@ namespace Banchou.Mob {
             };
         }
 
-        public StateAction.ApproachPosition ApproachPosition(PawnId pawnId, Vector3 position, float stoppingDistance) {
+        public StateAction.ApproachPosition ApproachPosition(PawnId pawnId, Vector3 position) {
             return new StateAction.ApproachPosition {
                 PawnId = pawnId,
-                Position = position,
-                StoppingDistance = stoppingDistance
+                Position = position
             };
         }
 

@@ -1,35 +1,41 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.InputSystem;
+using UniRx;
 using Redux;
 
-using Banchou.Player.Activation;
-using Banchou.Player.Targeting;
+using Banchou.Pawn;
+using Banchou.Combatant;
 
 namespace Banchou.Player.Part {
     public class PlayerInputDispatchers : MonoBehaviour {
         private PlayerId _playerId;
-        private GetState _getState;
+        private PawnId _pawnId;
         private Dispatcher _dispatch;
 
         private PlayerActions _playerActions;
-        private TargetingActions _targetingActions;
-        private ActivationActions _activationActions;
+        private CombatantActions _combatantActions;
 
         public void Construct(
             PlayerId playerId,
-            GetState getState,
+            IObservable<GameState> observeState,
             Dispatcher dispatch,
             PlayerActions playerActions,
-            TargetingActions targetingActions,
-            ActivationActions activationActions
+            CombatantActions combatantActions
         ) {
             _playerId = playerId;
-            _getState = getState;
             _dispatch = dispatch;
 
             _playerActions = playerActions;
-            _targetingActions = targetingActions;
-            _activationActions = activationActions;
+            _combatantActions = combatantActions;
+
+            observeState
+                .Select(state => state.GetPlayerPawn(playerId))
+                .DistinctUntilChanged()
+                .Subscribe(pawn => {
+                    _pawnId = pawn;
+                })
+                .AddTo(this);
         }
 
         public void DispatchMovement(InputAction.CallbackContext callbackContext) {
@@ -44,80 +50,19 @@ namespace Banchou.Player.Part {
 
         public void DispatchLightAttack(InputAction.CallbackContext callbackContext) {
             if (callbackContext.performed) {
-                _dispatch(_playerActions.PushCommand(_playerId, Command.LightAttack, Time.unscaledTime));
+                _dispatch(_combatantActions.PushCommand(_pawnId, Command.LightAttack));
             }
         }
 
         public void DispatchHeavyAttack(InputAction.CallbackContext callbackContext) {
-            if (callbackContext.performed) {
-                _dispatch(_playerActions.PushCommand(_playerId, Command.HeavyAttack, Time.unscaledTime));
+             if (callbackContext.performed) {
+                _dispatch(_combatantActions.PushCommand(_pawnId, Command.HeavyAttack));
             }
         }
 
         public void DispatchLockOn(InputAction.CallbackContext callbackContext) {
             if (callbackContext.performed) {
-                _dispatch(_targetingActions.ToggleLockOn(_playerId));
-            }
-        }
-
-        public void DispatchLockOff(InputAction.CallbackContext callbackContext) {
-            if (callbackContext.performed) {
-                _dispatch(_targetingActions.LockOff(_playerId));
-            }
-        }
-
-        public void DispatchToggleLockOn(InputAction.CallbackContext callbackContext) {
-            if (callbackContext.performed) {
-                _dispatch(_targetingActions.ToggleLockOn(_playerId));
-            }
-        }
-
-        public void DispatchNextLockOn(InputAction.CallbackContext callbackContext) {
-            if (callbackContext.performed) {
-                _dispatch(_targetingActions.NextLockOn(_playerId));
-            }
-        }
-
-        public void DispatchPreviousLockOn(InputAction.CallbackContext callbackContext) {
-            if (callbackContext.performed) {
-                _dispatch(_targetingActions.PreviousLockOn(_playerId));
-            }
-        }
-
-        public void DispatchActivateLeftPawn(InputAction.CallbackContext callbackContext) {
-            if (callbackContext.performed) {
-                _dispatch(_activationActions.ActivateLeftPawn(_playerId));
-            }
-        }
-
-        public void DispatchToggleLeftPawn(InputAction.CallbackContext callbackContext) {
-            if (callbackContext.performed) {
-                _dispatch(_activationActions.ToggleLeftPawn(_playerId));
-            }
-        }
-
-
-        public void DispatchActivateRightPawn(InputAction.CallbackContext callbackContext) {
-            if (callbackContext.performed) {
-                _dispatch(_activationActions.ActivateRightPawn(_playerId));
-            }
-        }
-
-        public void DispatchToggleRightPawn(InputAction.CallbackContext callbackContext) {
-            if (callbackContext.performed) {
-                _dispatch(_activationActions.ToggleRightPawn(_playerId));
-            }
-        }
-
-        public void DispatchActivateAllPawns(InputAction.CallbackContext callbackContext) {
-            if (callbackContext.performed) {
-                _dispatch(_activationActions.ActivateAllPawns(_playerId));
-            }
-        }
-
-        public void DispatchResetPawns(InputAction.CallbackContext callbackContext) {
-            if (callbackContext.performed) {
-                _dispatch(_activationActions.ResetActivations(_playerId));
+                _dispatch(_playerActions.ToggleLockOn(_playerId));
             }
         }
     }

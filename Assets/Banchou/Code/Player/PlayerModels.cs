@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
 
 using UnityEngine;
@@ -29,31 +28,6 @@ namespace Banchou.Player {
         #endregion
     }
 
-    public enum Team {
-        None,
-        Wobs,
-        Shufflemen
-    }
-
-    public static class TeamExt {
-        public static bool IsHostile(this Team team, Team other) {
-            return team != Team.None && other != Team.None &&
-                (
-                    (team == Team.Wobs && other == Team.Shufflemen) ||
-                    (team == Team.Shufflemen && other == Team.Wobs)
-                );
-        }
-    }
-
-    public enum Command {
-        None,
-        LightAttack,
-        HeavyAttack,
-
-        LockOn,
-        LockOff
-    }
-
     public enum InputSource {
         LocalSingle,
         LocalMulti,
@@ -61,51 +35,24 @@ namespace Banchou.Player {
         AI
     }
 
-    public struct PushedCommand : IEquatable<PushedCommand> {
-        public static readonly PushedCommand Empty = new PushedCommand();
-        public Command Command;
-        public float When;
-
-        public bool Equals(PushedCommand other) => other.Command == Command && other.When == When;
-    }
-
     public class PlayerState {
         public InputSource Source = InputSource.LocalSingle;
-        public Team Team = Team.None;
 
-        public List<PawnId> Pawns = new List<PawnId>();
-        public List<PawnId> SelectedPawns = new List<PawnId>();
-
+        public PawnId Pawn = PawnId.Empty;
         public HashSet<PawnId> Targets = new HashSet<PawnId>();
-
-        public IEnumerable<PawnId> LockOnHistory = Enumerable.Empty<PawnId>();
-        public IEnumerable<PawnId> LockOnFuture = Enumerable.Empty<PawnId>();
-
-        public PawnId LockOnTarget = PawnId.Empty;
 
         public Vector2 InputMovement;
         public Vector2 InputLook;
-        public bool InputLockOn;
-
-        public PushedCommand LastCommand;
 
         public PlayerState() { }
         public PlayerState(in PlayerState prev) {
             Source = prev.Source;
-            Team = prev.Team;
-            SelectedPawns = prev.SelectedPawns;
-            Pawns = prev.Pawns;
-            SelectedPawns = prev.SelectedPawns;
-            Targets = prev.Targets;
 
-            LockOnHistory = prev.LockOnHistory;
-            LockOnFuture = prev.LockOnFuture;
-            LockOnTarget = prev.LockOnTarget;
+            Pawn = prev.Pawn;
+            Targets = prev.Targets;
 
             InputMovement = prev.InputMovement;
             InputLook = prev.InputLook;
-
-            LastCommand = prev.LastCommand;
         }
     }
 

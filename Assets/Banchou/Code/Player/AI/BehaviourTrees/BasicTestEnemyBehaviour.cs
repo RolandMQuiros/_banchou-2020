@@ -8,9 +8,9 @@ using Redux;
 using FluentBehaviourTree;
 
 using Banchou.Pawn;
+using Banchou.Combatant;
 using Banchou.Mob;
 using Banchou.Player;
-using Banchou.Player.Targeting;
 
 namespace Banchou.AI {
     public class BasicTestEnemyBehaviour : MonoBehaviour {
@@ -20,7 +20,7 @@ namespace Banchou.AI {
             Dispatcher dispatch,
             PlayerActions playerActions,
             MobActions mobActions,
-            TargetingActions targetingActions,
+            CombatantActions combatantActions,
             IPawnInstances pawnInstances
         ) {
             var targets = new List<PawnContext>();
@@ -36,60 +36,46 @@ namespace Banchou.AI {
                 .AddTo(this);
 
             var observeTrees = observeState
-                .Select(state => state.GetPlayerPawns(playerId))
+                .Select(state => state.GetPlayerPawn(playerId))
                 .DistinctUntilChanged()
-                .Pairwise()
-                .Select(pair => pair.Current.Except(pair.Previous))
-                .Where(pawns => pawns.Any())
-                .SelectMany(pawns => pawns.Select(p => pawnInstances.Get(p) as PawnContext))
-                .Subscribe(pawn => {
+                .Subscribe(pawnId => {
+                    var pawn = pawnInstances.Get(pawnId) as PawnContext;
                     var body = pawn.Body;
                     var agent = pawn.Agent;
                     var targetId = PawnId.Empty;
                     Rigidbody target = null;
 
-                    var targetPicked = false;
-                    var approached = false;
                     var poked = false;
                     var retreated = false;
 
                     trees.Add(new BehaviourTreeBuilder<GameState>()
                         .Sequence("Poke and retreat")
                             .Do("Pick target", state => {
-                                if (!targetPicked) {
-                                    targetId = state.GetPlayerLockOnTarget(playerId);
-                                    if (targetId == PawnId.Empty) {
-                                        dispatch(targetingActions.LockOn(playerId));
-                                        return BehaviourTreeStatus.Running;
-                                    } else {
-                                        target = (pawnInstances.Get(targetId) as PawnContext)?.Body;
-                                        targetPicked = true;
-                                        dispatch(mobActions.ApproachTarget(pawn.PawnId, targetId, 2f));
-                                        if (target == null) {
-                                            return BehaviourTreeStatus.Failure;
-                                        }
-                                    }
+                                if (state.GetCombatantTarget(pawnId) != PawnId.Empty) {
+                                    return BehaviourTreeStatus.Success;
+                                } else {
+                                    dispatch(playerActions.LockOn(playerId));
+                                    return BehaviourTreeStatus.Running;
                                 }
-                                return BehaviourTreeStatus.Success;
                             })
                             .Do("Approach", state => {
-                                if (!approached) {
-                                    var mob = state.GetMob(pawn.PawnId);
-
-                                    switch (mob.Stage) {
-                                        case ApproachStage.Target:
-                                            return BehaviourTreeStatus.Running;
-                                        case ApproachStage.Interrupted:
-                                            return BehaviourTreeStatus.Failure;
-                                    }
+                                var mob = state.GetMob(pawn.PawnId);
+                                if (mob.Target == PawnId.Empty) {
+                                    dispatch(mobActions.ApproachTarget(
+                                        pawnId,
+                                        state.GetCombatantTarget(pawn.PawnId),
+                                        1f
+                                    ));
+                                } else if (state.IsMobApproachCompleted(pawn.PawnId)) {
+                                    return BehaviourTreeStatus.Success;
+                                } else if (state.IsMobApproachInterrupted(pawn.PawnId)) {
+                                    return BehaviourTreeStatus.Failure;
                                 }
-
-                                approached = true;
-                                return BehaviourTreeStatus.Success;
+                                return BehaviourTreeStatus.Running;
                             })
                             .Do("Poke", state => {
                                 if (!poked) {
-                                    dispatch(playerActions.PushCommand(playerId, Command.LightAttack, Time.unscaledTime));
+                                    dispatch(combatantActions.PushCommand(pawnId, Command.LightAttack));
                                     poked = true;
                                     return BehaviourTreeStatus.Running;
                                 }
@@ -112,15 +98,13 @@ namespace Banchou.AI {
                                 }
                             })
                             .Do("Disengage", state => {
-                                targetId = state.GetPlayerLockOnTarget(playerId);
+                                targetId = state.GetCombatantTarget(pawn.PawnId);
                                 if (targetId != PawnId.Empty) {
-                                    dispatch(targetingActions.LockOff(playerId));
+                                    dispatch(playerActions.LockOff(playerId));
                                     return BehaviourTreeStatus.Running;
                                 }
 
                                 target = null;
-                                targetPicked = false;
-                                approached = false;
                                 poked = false;
                                 retreated = false;
                                 return BehaviourTreeStatus.Success;

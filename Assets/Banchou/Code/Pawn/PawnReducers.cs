@@ -38,14 +38,25 @@ namespace Banchou.Pawn {
 
             var attach = action as Player.StateAction.Attach;
             if (attach != null) {
-                foreach (var pawnId in attach.Pawns) {
-                    PawnState prevPawn;
-                    if (prev.TryGetValue(pawnId, out prevPawn)) {
-                        return new PawnsState(prev) {
-                            [pawnId] = ReducePawn(prevPawn, action)
+                PawnState prevPawn;
+                if (prev.TryGetValue(attach.PawnId, out prevPawn)) {
+                    return new PawnsState(prev) {
+                        [attach.PawnId] = ReducePawn(prevPawn, action)
+                    };
+                }
+            }
+
+            var detach = action as Player.StateAction.Detach;
+            if (detach != null) {
+                var next = new PawnsState(prev);
+                foreach (var pair in prev) {
+                    if (pair.Value.PlayerId == detach.PlayerId) {
+                        next[pair.Key] = new PawnState(pair.Value) {
+                            PlayerId = PlayerId.Empty
                         };
                     }
                 }
+                return next;
             }
 
             // On scene load, remove all Pawns without Players

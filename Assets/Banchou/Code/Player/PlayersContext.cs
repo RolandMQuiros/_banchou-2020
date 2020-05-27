@@ -2,6 +2,9 @@
 using UnityEngine;
 
 using Banchou.Pawn;
+using Banchou.Combatant;
+using Banchou.Mob;
+
 namespace Banchou.Player {
     public class PlayersContext : MonoBehaviour, IContext {
         [SerializeField] private Transform _playerParent = null;
@@ -12,9 +15,13 @@ namespace Banchou.Player {
         public void Construct(
             IObservable<GameState> observeState,
             GetState getState,
+            IPawnInstances pawnInstances,
+            MobActions mobActions,
+            CombatantActions combatantActions,
             Instantiator instantiator
         ) {
             _playerFactory.Construct(_playerParent ?? transform, observeState, getState, instantiator);
+            _playerActions.Construct(pawnInstances, mobActions, combatantActions);
             // TODO: hook up PlayerInput detection events to state
         }
 

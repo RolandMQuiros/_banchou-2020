@@ -1,7 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
+using Redux;
 
 using Banchou.Pawn;
+using Banchou.Combatant;
+using Banchou.Mob;
 
 namespace Banchou.Player {
     namespace StateAction {
@@ -19,14 +23,10 @@ namespace Banchou.Player {
         }
 
         public class Attach : PlayerAction {
-            public IEnumerable<PawnId> Pawns;
+            public PawnId PawnId;
         }
 
-        public class Detach : PlayerAction {
-            public IEnumerable<PawnId> Pawns;
-        }
-
-        public class DetachAll : PlayerAction { }
+        public class Detach : PlayerAction { }
 
         public class Move : PlayerAction {
             public Vector2 Direction;
@@ -36,13 +36,31 @@ namespace Banchou.Player {
             public Vector2 Direction;
         }
 
-        public class PushCommand : PlayerAction {
-            public Command Command;
-            public float When;
+        public class AddTarget : PlayerAction {
+            public PawnId Target;
+        }
+
+        public class RemoveTarget : PlayerAction {
+            public PawnId Target;
         }
     }
 
     public class PlayerActions {
+        private IPawnInstances _pawnInstances;
+
+        private MobActions _mobActions;
+        private CombatantActions _combatantActions;
+
+        public void Construct(
+            IPawnInstances pawnInstances,
+            MobActions mobActions,
+            CombatantActions combatantActions
+        ) {
+            _pawnInstances = pawnInstances;
+            _mobActions = mobActions;
+            _combatantActions = combatantActions;
+        }
+
         public StateAction.Add Add(PlayerId playerId, InputSource source) {
             return new StateAction.Add {
                 PlayerId = playerId,
@@ -56,24 +74,16 @@ namespace Banchou.Player {
             };
         }
 
-        public StateAction.Attach Attach(PlayerId playerId, params PawnId[] pawns) {
+        public StateAction.Attach Attach(PlayerId playerId, PawnId pawnId) {
             return new StateAction.Attach {
                 PlayerId = playerId,
-                Pawns = pawns
+                PawnId = pawnId
             };
         }
 
-        public StateAction.Attach Attach(PlayerId playerId, IEnumerable<PawnId> pawns) {
-            return new StateAction.Attach {
-                PlayerId = playerId,
-                Pawns = pawns
-            };
-        }
-
-        public StateAction.Detach Detach(PlayerId playerId, IEnumerable<PawnId> pawns) {
+        public StateAction.Detach Detach(PlayerId playerId) {
             return new StateAction.Detach {
-                PlayerId = playerId,
-                Pawns = pawns
+                PlayerId = playerId
             };
         }
 
@@ -91,12 +101,73 @@ namespace Banchou.Player {
             };
         }
 
-        public StateAction.PushCommand PushCommand(PlayerId playerId, Command command, float when) {
-            return new StateAction.PushCommand {
+        public StateAction.AddTarget AddTarget(PlayerId playerId, PawnId target) {
+            return new StateAction.AddTarget {
                 PlayerId = playerId,
-                Command = command,
-                When = when
+                Target = target
             };
+        }
+
+        public StateAction.RemoveTarget RemoveTarget(PlayerId playerId, PawnId target) {
+            return new StateAction.RemoveTarget {
+                PlayerId = playerId,
+                Target = target
+            };
+        }
+
+        public ActionsCreator<GameState> LockOn(PlayerId playerId) => (dispatch, getState) => {
+            var player = getState().GetPlayer(playerId);
+            var pawn = getState().GetPlayerPawn(playerId);
+
+            if (player != null && pawn != PawnId.Empty) {
+                var to = ChooseTarget(pawn, getState().GetPlayerTargets(playerId));
+
+                dispatch(_combatantActions.LockOn(
+                    combatantId: pawn,
+                    to: to
+                ));
+            }
+        };
+
+        public ActionsCreator<GameState> LockOff(PlayerId playerId) => (dispatch, getState) => {
+            var pawn = getState().GetPlayerPawn(playerId);
+            if (pawn != PawnId.Empty) {
+                dispatch(_combatantActions.LockOff(pawn));
+            }
+        };
+
+        public ActionsCreator<GameState> ToggleLockOn(PlayerId playerId) => (dispatch, getState) => {
+            var state = getState();
+            var pawn = state.GetPlayerPawn(playerId);
+
+            if (pawn != PawnId.Empty) {
+                var to = ChooseTarget(pawn, state.GetPlayerTargets(playerId));
+                if (to != PawnId.Empty) {
+                    if (state.GetCombatantTarget(pawn) != PawnId.Empty) {
+                        dispatch(_combatantActions.LockOff(pawn));
+                    } else {
+                        dispatch(_combatantActions.LockOn(pawn, to));
+                    }
+                }
+            }
+        };
+
+        private PawnId ChooseTarget(PawnId pawn, IEnumerable<PawnId> targets) {
+            var pawnInstance = _pawnInstances.Get(pawn);
+            var centroid = pawnInstance.Position;
+            var forward = pawnInstance.Forward;
+
+             return targets
+                .Select(target => _pawnInstances.Get(target))
+                .Select(instance => (
+                    Id: instance.PawnId,
+                    Distance: (instance.Position - centroid).sqrMagnitude,
+                    Dot: Vector3.Dot(instance.Position - centroid, forward)
+                ))
+                .Where(target => target.Dot >= 0f)
+                .OrderBy(target => target.Distance)
+                .Select(target => target.Id)
+                .FirstOrDefault();
         }
     }
 }

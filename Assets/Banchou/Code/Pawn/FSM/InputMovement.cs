@@ -52,8 +52,8 @@ namespace Banchou.Pawn.FSM {
                         }
 
                         animator.SetFloat(speedOut, velocity.magnitude);
-                        animator.SetFloat(rightSpeedOut, Vector3.Dot(direction, orientation.transform.right));
-                        animator.SetFloat(forwardSpeedOut, Vector3.Dot(direction, orientation.transform.forward));
+                        animator.SetFloat(rightSpeedOut, Vector3.Dot(velocity, orientation.transform.right));
+                        animator.SetFloat(forwardSpeedOut, Vector3.Dot(velocity, orientation.transform.forward));
                     }
                 })
                 .AddTo(Streams);

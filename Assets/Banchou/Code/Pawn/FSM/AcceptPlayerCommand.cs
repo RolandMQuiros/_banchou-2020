@@ -24,7 +24,6 @@ namespace Banchou.Pawn.FSM {
             var observeCommand = observeState
                 .Select(state => state.GetCombatantLastCommand(pawnId))
                 .DistinctUntilChanged()
-                .Where(_ => getState().IsPawnSelected(pawnId))
                 .Where(lastCommand => lastCommand.Command != Command.None && lastCommand.Command == _acceptedCommand)
                 .Select(lastCommand => lastCommand.Command);
 

@@ -13,14 +13,14 @@ namespace Banchou.Mob {
 
     public class MobState {
         public ApproachStage Stage = ApproachStage.Complete;
-        public Vector3 Position = Vector3.zero;
+        public Vector3 ApproachPosition = Vector3.zero;
         public PawnId Target = PawnId.Empty;
         public float StoppingDistance = 1f;
 
         public MobState() { }
         public MobState(in MobState prev) {
             Stage = prev.Stage;
-            Position = prev.Position;
+            ApproachPosition = prev.ApproachPosition;
             Target = prev.Target;
             StoppingDistance = prev.StoppingDistance;
         }

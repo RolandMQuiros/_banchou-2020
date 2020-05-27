@@ -40,7 +40,7 @@ namespace Banchou.Mob.FSM {
                 .Select(mob => {
                     switch (mob.Stage) {
                         case ApproachStage.Position:
-                            return mob.Position;
+                            return mob.ApproachPosition;
                         case ApproachStage.Target:
                             return pawnInstances.Get(mob.Target)?.Position;
                     }
@@ -84,15 +84,13 @@ namespace Banchou.Mob.FSM {
                 .Where(isApproaching => isApproaching)
                 .CatchIgnore((Exception error) => { Debug.LogException(error); })
                 .Subscribe(_ => {
-                    var pathingOffset = agent.nextPosition - body.position;
-                    velocity = Mathf.Min(pathingOffset.magnitude, _movementSpeed * Time.fixedDeltaTime) * pathingOffset.normalized;
-                    motor.Move(velocity);
+                    motor.Move(agent.desiredVelocity * Time.fixedDeltaTime);
 
                     // Write to output variables
                     if (!string.IsNullOrWhiteSpace(_movementSpeedOut)) {
                         animator.SetFloat(speedOut, agent.velocity.magnitude);
-                        animator.SetFloat(rightSpeedOut, Vector3.Dot(velocity, _movementSpeed * orientation.transform.right * Time.fixedDeltaTime));
-                        animator.SetFloat(forwardSpeedOut, Vector3.Dot(velocity, _movementSpeed * orientation.transform.forward * Time.fixedDeltaTime));
+                        animator.SetFloat(rightSpeedOut, Vector3.Dot(agent.desiredVelocity, orientation.transform.right));
+                        animator.SetFloat(forwardSpeedOut, Vector3.Dot(agent.desiredVelocity, orientation.transform.forward));
                     }
                 })
                 .AddTo(Streams);

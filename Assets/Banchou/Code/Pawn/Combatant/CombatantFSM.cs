@@ -24,7 +24,7 @@ namespace Banchou.Combatant {
                 .AddTo(this);
 
             observeState
-                .Select(state => state.GetPawnPlayer(pawnId)?.LockOnTarget ?? PawnId.Empty)
+                .Select(state => state.GetCombatantTarget(pawnId))
                 .DistinctUntilChanged()
                 .Select(target => target != PawnId.Empty)
                 .Subscribe(isLockedOn => animator.SetBool(isLockedOnHash, isLockedOn))

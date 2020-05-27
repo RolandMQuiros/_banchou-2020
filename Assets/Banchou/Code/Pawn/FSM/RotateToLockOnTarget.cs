@@ -3,6 +3,7 @@ using UnityEngine;
 using UniRx;
 
 using Banchou.Pawn.Part;
+using Banchou.Combatant;
 
 namespace Banchou.Pawn.FSM {
     public class RotateToLockOnTarget : FSMBehaviour {
@@ -22,7 +23,7 @@ namespace Banchou.Pawn.FSM {
             IPawnInstances pawnInstance
         ) {
             var observeTarget = observeState
-                .Select(state => state.GetPawnPlayer(pawnId)?.LockOnTarget ?? PawnId.Empty)
+                .Select(state => state.GetCombatantTarget(pawnId))
                 .DistinctUntilChanged();
 
             ObserveStateUpdate
