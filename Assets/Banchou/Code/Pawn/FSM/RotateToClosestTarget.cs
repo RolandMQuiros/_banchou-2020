@@ -41,6 +41,11 @@ namespace Banchou.Pawn.FSM {
                         return false;
                     })
                     .OrderBy(t => (t.Position - body.transform.position).sqrMagnitude)
+                    .Select(t => Vector3.ProjectOnPlane(
+                            t.Position - body.transform.position,
+                            body.transform.up
+                        ).normalized
+                    )
                     .FirstOrDefault()
                 );
 
@@ -50,13 +55,9 @@ namespace Banchou.Pawn.FSM {
                 .WithLatestFrom(chooseTargetOnEnter, (_, target) => target)
                 .Where(target => target != null)
                 .Subscribe(target => {
-                    var direction = Vector3.ProjectOnPlane(
-                        target.Position - body.transform.position,
-                        body.transform.up
-                    ).normalized;
                     orientation.transform.rotation = Quaternion.RotateTowards(
                         orientation.transform.rotation,
-                        Quaternion.LookRotation(direction),
+                        Quaternion.LookRotation(target),
                         _rotationSpeed * Time.fixedDeltaTime
                     );
                 })

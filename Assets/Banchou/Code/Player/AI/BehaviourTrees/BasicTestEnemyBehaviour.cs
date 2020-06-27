@@ -37,16 +37,15 @@ namespace Banchou.AI {
 
             var observeTrees = observeState
                 .Select(state => state.GetPlayerPawn(playerId))
+                .Where(pawnId => pawnId != PawnId.Empty)
                 .DistinctUntilChanged()
                 .Subscribe(pawnId => {
                     var pawn = pawnInstances.Get(pawnId) as PawnContext;
                     var body = pawn.Body;
                     var agent = pawn.Agent;
                     var targetId = PawnId.Empty;
-                    Rigidbody target = null;
 
                     var poked = false;
-                    var retreated = false;
 
                     trees.Add(new BehaviourTreeBuilder<GameState>()
                         .Sequence("Poke and retreat")
@@ -82,31 +81,30 @@ namespace Banchou.AI {
                                 return BehaviourTreeStatus.Success;
                             })
                             .Do("Retreat", state => {
-                                if (retreated) {
-                                    return BehaviourTreeStatus.Success;
+                                var target = state.GetCombatantTarget(pawnId);
+                                var targetInstance = pawnInstances.Get(target);
+                                if (target == PawnId.Empty || targetInstance == null) {
+                                    return BehaviourTreeStatus.Failure;
                                 }
 
-                                var diff = pawn.transform.position - target.transform.position;
-                                if (diff.magnitude > 6f) {
-                                    dispatch(playerActions.Move(playerId, Vector3.zero));
-                                    retreated = true;
+                                var diff = pawn.transform.position - targetInstance.Position;
+                                if (diff.magnitude < 6f) {
+                                    if (!state.IsMobApproachingPosition(pawnId)) {
+                                        dispatch(mobActions.ApproachPosition(pawnId, targetInstance.Position + (6f * diff.normalized)));
+                                    }
+                                } else if (state.IsMobApproachInterrupted(pawnId)) {
+                                    return BehaviourTreeStatus.Failure;
+                                } else if (state.IsMobApproachCompleted(pawnId)){
                                     return BehaviourTreeStatus.Success;
-                                } else {
-                                    var direction = Vector3.Normalize(diff);
-                                    dispatch(playerActions.Move(playerId, direction));
-                                    return BehaviourTreeStatus.Running;
                                 }
+                                return BehaviourTreeStatus.Running;
                             })
                             .Do("Disengage", state => {
-                                targetId = state.GetCombatantTarget(pawn.PawnId);
-                                if (targetId != PawnId.Empty) {
+                                if (state.GetCombatantTarget(pawn.PawnId) != PawnId.Empty) {
                                     dispatch(playerActions.LockOff(playerId));
                                     return BehaviourTreeStatus.Running;
                                 }
-
-                                target = null;
                                 poked = false;
-                                retreated = false;
                                 return BehaviourTreeStatus.Success;
                             })
                         .End()

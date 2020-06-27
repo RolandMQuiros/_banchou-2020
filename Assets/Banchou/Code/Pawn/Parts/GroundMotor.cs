@@ -56,8 +56,12 @@ namespace Banchou.Pawn.Part {
                         // If we're moving into a surface, we want to project the movement direction on it, so we don't cause physics jitters from
                         // overlaps
                         if (Vector3.Dot(contact, _rigidbody.transform.up) > 0.3f) {
-                            // If surface is a floor, move along it at full movement speed
-                            return Vector3.ProjectOnPlane(projected, contact).normalized * projected.magnitude;
+                            if (Vector3.Dot(velocity, contact) < 0f) {
+                                // If surface is a floor, and we're moving into it, move along it at full movement speed
+                                return Vector3.ProjectOnPlane(projected, contact).normalized * projected.magnitude;
+                            }
+                            // If we're moving away from the surface, no need for projections
+                            return projected;
                         } else if (Vector3.Dot(velocity, contact) < 0f) {
                             // If the surface is a wall, and we're moving into it, move along it instead
                             return Vector3.ProjectOnPlane(projected, contact);

@@ -21,6 +21,13 @@ namespace Banchou.Combatant {
             public Command Command;
             public float When;
         }
+
+        public class Hit : CombatantAction {
+            public PawnId By;
+            public int Strength;
+            public Vector3 Push;
+            public float When;
+        }
     }
 
     public class CombatantActions {
@@ -48,6 +55,15 @@ namespace Banchou.Combatant {
                 CombatantId = combatantId,
                 Command = command,
                 When = Time.fixedUnscaledTime
+            };
+        }
+
+        public StateAction.Hit Hit(PawnId combatantId, PawnId by, int strength, Vector3 push = default(Vector3)) {
+            return new StateAction.Hit {
+                CombatantId = combatantId,
+                By = by,
+                Push = push,
+                When = Time.unscaledTime
             };
         }
     }

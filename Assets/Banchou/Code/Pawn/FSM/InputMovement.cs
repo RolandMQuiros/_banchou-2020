@@ -30,7 +30,10 @@ namespace Banchou.Pawn.FSM {
             var speedOut = Animator.StringToHash(_movementSpeedOut);
             var rightSpeedOut = Animator.StringToHash(_velocityRightOut);
             var forwardSpeedOut = Animator.StringToHash(_velocityForwardOut);
-            var walkingCurve = 0f;
+
+            var speed = 0f;
+            var forwardSpeed = 0f;
+            var rightSpeed = 0f;
 
             ObserveStateUpdate
                 .WithLatestFrom(observeState, (_, state) => state)
@@ -45,15 +48,20 @@ namespace Banchou.Pawn.FSM {
 
                     // Write to output variables
                     if (!string.IsNullOrWhiteSpace(_movementSpeedOut)) {
-                        if (direction == Vector3.zero) {
-                            walkingCurve = Mathf.Clamp(walkingCurve - (_acceleration * Time.fixedDeltaTime), 0f, 1f);
-                        } else {
-                            walkingCurve = Mathf.Clamp(walkingCurve + (_acceleration * Time.fixedDeltaTime), 0f, 1f);
+                        if (speedOut != 0) {
+                            speed = Mathf.MoveTowards(speed, velocity.magnitude, _acceleration);
+                            animator.SetFloat(speedOut, speed);
                         }
 
-                        animator.SetFloat(speedOut, velocity.magnitude);
-                        animator.SetFloat(rightSpeedOut, Vector3.Dot(velocity, orientation.transform.right));
-                        animator.SetFloat(forwardSpeedOut, Vector3.Dot(velocity, orientation.transform.forward));
+                        if (rightSpeedOut != 0) {
+                            rightSpeed = Mathf.MoveTowards(rightSpeed, Vector3.Dot(velocity, orientation.transform.right), _acceleration);
+                            animator.SetFloat(rightSpeedOut, rightSpeed);
+                        }
+
+                        if (forwardSpeedOut != 0) {
+                            forwardSpeed = Mathf.MoveTowards(forwardSpeed, Vector3.Dot(velocity, orientation.transform.forward), _acceleration);
+                            animator.SetFloat(forwardSpeedOut, forwardSpeed);
+                        }
                     }
                 })
                 .AddTo(Streams);

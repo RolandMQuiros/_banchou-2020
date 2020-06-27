@@ -60,6 +60,18 @@ namespace Banchou.Combatant {
                 };
             }
 
+            var hit = action as StateAction.Hit;
+            if (hit != null) {
+                return new CombatantState(prev) {
+                    LastHit = new Hit {
+                        By = hit.By,
+                        Strength = hit.Strength,
+                        Push = hit.Push,
+                        When = hit.When
+                    }
+                };
+            }
+
             return prev;
         }
     }

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
-
-using Banchou.Player;
+using UnityEngine;
 using Banchou.Pawn;
 
 namespace Banchou.Combatant {
@@ -39,6 +38,10 @@ namespace Banchou.Combatant {
                 return combatantState.Health;
             }
             return 0;
+        }
+
+        public static Hit GetCombatantLastHit(this GameState state, PawnId combatantId) {
+            return state.GetCombatant(combatantId)?.LastHit ?? Hit.Empty;
         }
     }
 }
