@@ -7,6 +7,7 @@ namespace Banchou.Pawn.Part {
     public class HurtVolume : MonoBehaviour {
         [SerializeField] private int _strength = 0;
         [SerializeField] private Vector3 _push = Vector3.zero;
+        [SerializeField] private HitMedium _medium = HitMedium.Melee;
 
         private PawnId _pawnId;
         private Dispatcher _dispatch;
@@ -39,8 +40,9 @@ namespace Banchou.Pawn.Part {
 
                 _dispatch(
                     _combatantActions.Hit(
-                        combatantId: hitVolume.PawnId,
-                        by: _pawnId,
+                        from: _pawnId,
+                        to: hitVolume.PawnId,
+                        medium: _medium,
                         strength: _strength,
                         push: _orientation.TransformDirection(_push)
                     )

@@ -62,7 +62,15 @@ namespace Banchou.Player.Part {
 
         public void DispatchLockOn(InputAction.CallbackContext callbackContext) {
             if (callbackContext.performed) {
-                _dispatch(_playerActions.ToggleLockOn(_playerId));
+                _dispatch(_playerActions.LockOn(_playerId));
+            } else {
+                _dispatch(_playerActions.LockOff(_playerId));
+            }
+        }
+
+        public void DispatchLockOff(InputAction.CallbackContext callbackContext) {
+            if (callbackContext.performed) {
+                _dispatch(_playerActions.LockOff(_playerId));
             }
         }
     }

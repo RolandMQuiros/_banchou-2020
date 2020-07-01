@@ -6,6 +6,8 @@ namespace Banchou.Pawn.FSM {
     public class RotateToInput : FSMBehaviour {
         [SerializeField, Tooltip("How quickly, in degrees per second, the Object will rotate to face its motion vector")]
         private float _rotationSpeed = 1000f;
+        [SerializeField, Tooltip("If enabled, immediately snaps rotation to input on state exit")]
+        private bool _snapOnExit = true;
 
         [SerializeField, Tooltip("How long, in seconds, the Object will face a direction before it rotates towards its motion vector")]
         private float _flipDelay = 0f;
@@ -68,14 +70,16 @@ namespace Banchou.Pawn.FSM {
                 })
                 .AddTo(Streams);
 
-            ObserveStateExit
-                .WithLatestFrom(observeMovement, (_, input) => input)
-                .Subscribe(input => {
-                    // Snap to the facing direction on state exit.
-                    // Helps face the character in the intended direction when jumping mid-turn.
-                    orientation.transform.rotation = Quaternion.LookRotation(faceDirection.normalized);
-                })
-                .AddTo(Streams);
+            if (_snapOnExit) {
+                ObserveStateExit
+                    .WithLatestFrom(observeMovement, (_, input) => input)
+                    .Subscribe(input => {
+                        // Snap to the facing direction on state exit.
+                        // Helps face the character in the intended direction when jumping mid-turn.
+                        orientation.transform.rotation = Quaternion.LookRotation(faceDirection.normalized);
+                    })
+                    .AddTo(Streams);
+            }
         }
     }
 }

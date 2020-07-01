@@ -115,7 +115,7 @@ namespace Banchou.Player {
             });
 
             var pawn = getState().GetPlayerPawn(playerId);
-            if (getState().GetCombatantTarget(pawn) == target) {
+            if (getState().GetCombatantLockOnTarget(pawn) == target) {
                 dispatch(_combatantActions.LockOff(pawn));
             }
         };
@@ -148,7 +148,7 @@ namespace Banchou.Player {
             if (pawn != PawnId.Empty) {
                 var to = ChooseTarget(pawn, state.GetPlayerTargets(playerId));
                 if (to != PawnId.Empty) {
-                    if (state.GetCombatantTarget(pawn) != PawnId.Empty) {
+                    if (state.GetCombatantLockOnTarget(pawn) != PawnId.Empty) {
                         dispatch(_combatantActions.LockOff(pawn));
                     } else {
                         dispatch(_combatantActions.LockOn(pawn, to));

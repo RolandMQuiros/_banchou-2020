@@ -25,19 +25,19 @@ namespace Banchou.Combatant {
         public bool Equals(PushedCommand other) => other.Command == Command && other.When == When;
     }
 
-    public struct Hit : IEquatable<Hit> {
-        public static readonly Hit Empty = new Hit();
-        public PawnId By;
+    public enum HitMedium {
+        Environment,
+        Melee,
+        Ranged
+    }
+
+    public class Hit {
+        public HitMedium Medium;
+        public PawnId From;
+        public PawnId To;
         public Vector3 Push;
         public int Strength;
         public float When;
-
-        public bool Equals(Hit other) {
-            return By == other.By &&
-                Push == other.Push &&
-                Strength == other.Strength &&
-                When == other.When;
-        }
     }
 
     public static class TeamExt {
@@ -55,14 +55,16 @@ namespace Banchou.Combatant {
 
         public PawnId LockOnTarget = PawnId.Empty;
         public PushedCommand LastCommand = PushedCommand.Empty;
-        public Hit LastHit = Hit.Empty;
+        public Hit HitTaken = null;
+        public Hit HitDealt = null;
 
         public CombatantState() { }
         public CombatantState(in CombatantState prev) {
             Health = prev.Health;
             LockOnTarget = prev.LockOnTarget;
             LastCommand = prev.LastCommand;
-            LastHit = prev.LastHit;
+            HitTaken = prev.HitTaken;
+            HitDealt = prev.HitDealt;
         }
     }
 

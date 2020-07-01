@@ -12,7 +12,7 @@ namespace Banchou.Combatant.FSM {
             Rigidbody body
         ) {
             observeState
-                .Select(state => state.GetCombatantLastHit(pawnId))
+                .Select(state => state.GetCombatantHitTaken(pawnId))
                 .DistinctUntilChanged()
                 .Where(_ => IsStateActive)
                 .Subscribe(hit => {

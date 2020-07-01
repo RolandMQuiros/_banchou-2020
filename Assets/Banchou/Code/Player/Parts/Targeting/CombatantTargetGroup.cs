@@ -29,7 +29,7 @@ namespace Banchou.Player.Targeting {
                 .Select(state => (
                     Pawn: state.GetPlayerPawn(playerId),
                     Targets: state.GetPlayerTargets(playerId),
-                    LockOnTarget: state.GetCombatantTarget(state.GetPlayerPawn(playerId))
+                    LockOnTarget: state.GetCombatantLockOnTarget(state.GetPlayerPawn(playerId))
                 ))
                 .DistinctUntilChanged()
                 .SelectMany(selection => selection.Targets

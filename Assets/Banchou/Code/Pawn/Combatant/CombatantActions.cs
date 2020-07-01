@@ -22,8 +22,10 @@ namespace Banchou.Combatant {
             public float When;
         }
 
-        public class Hit : CombatantAction {
-            public PawnId By;
+        public class Hit {
+            public PawnId From;
+            public PawnId To;
+            public HitMedium Medium;
             public int Strength;
             public Vector3 Push;
             public float When;
@@ -58,10 +60,11 @@ namespace Banchou.Combatant {
             };
         }
 
-        public StateAction.Hit Hit(PawnId combatantId, PawnId by, int strength, Vector3 push = default(Vector3)) {
+        public StateAction.Hit Hit(PawnId from, PawnId to, HitMedium medium, int strength, Vector3 push = default(Vector3)) {
             return new StateAction.Hit {
-                CombatantId = combatantId,
-                By = by,
+                From = from,
+                To = to,
+                Medium = medium,
                 Push = push,
                 When = Time.unscaledTime
             };

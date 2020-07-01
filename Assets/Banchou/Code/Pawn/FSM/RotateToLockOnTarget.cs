@@ -18,12 +18,11 @@ namespace Banchou.Pawn.FSM {
         public void Construct(
             PawnId pawnId,
             IObservable<GameState> observeState,
-            Rigidbody body,
             Orientation orientation,
             IPawnInstances pawnInstance
         ) {
             var observeTarget = observeState
-                .Select(state => state.GetCombatantTarget(pawnId))
+                .Select(state => state.GetCombatantLockOnTarget(pawnId))
                 .DistinctUntilChanged();
 
             ObserveStateUpdate
@@ -34,8 +33,8 @@ namespace Banchou.Pawn.FSM {
                 .Subscribe(target => {
                     var targetInstance = pawnInstance.Get(target);
                     var direction = Vector3.ProjectOnPlane(
-                        targetInstance.Position - body.transform.position,
-                        body.transform.up
+                        targetInstance.Position - orientation.transform.position,
+                        orientation.transform.up
                     ).normalized;
                     orientation.transform.rotation = Quaternion.RotateTowards(
                         orientation.transform.rotation,

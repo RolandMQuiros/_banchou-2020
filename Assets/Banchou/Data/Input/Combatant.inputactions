@@ -46,12 +46,12 @@
                     "interactions": "Tap"
                 },
                 {
-                    "name": "Toggle Lock On",
+                    "name": "Lock On",
                     "type": "Button",
                     "id": "280e7160-91a9-44c0-be26-f4f6736ce620",
                     "expectedControlType": "Button",
                     "processors": "",
-                    "interactions": ""
+                    "interactions": "Press(behavior=2)"
                 },
                 {
                     "name": "Next Target",
@@ -354,22 +354,22 @@
                 {
                     "name": "",
                     "id": "1abca205-dfee-4352-9296-33063fa5c851",
-                    "path": "<Gamepad>/rightStickPress",
+                    "path": "<Gamepad>/rightShoulder",
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
-                    "action": "Toggle Lock On",
+                    "action": "Lock On",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
                     "id": "d53ca65d-4416-4710-90ef-2015034ce521",
-                    "path": "<Mouse>/middleButton",
+                    "path": "<Keyboard>/leftShift",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
-                    "action": "Toggle Lock On",
+                    "action": "Lock On",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

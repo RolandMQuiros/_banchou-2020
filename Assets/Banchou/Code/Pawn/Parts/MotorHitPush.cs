@@ -16,12 +16,21 @@ namespace Banchou.Pawn.Part {
             var pushVelocity = Vector3.zero;
 
             observeState
-                .Select(state => state.GetCombatantLastHit(pawnId))
-                .DistinctUntilChanged()
-                .CatchIgnore((Exception error) => Debug.LogException(error))
-                .Subscribe(hit => {
-                    pushVelocity = hit.Push;
+                .Select(state => state.GetCombatantHitTaken(pawnId))
+                .Pairwise()
+                .Subscribe(pair => {
+                    if (pair.Previous != pair.Current) {
+                        Debug.Log(pawnId);
+                    }
                 })
+                .AddTo(this);
+
+            observeState
+                .Select(state => state.GetCombatantHitTaken(pawnId))
+                .DistinctUntilChanged()
+                .Where(hit => hit != null)
+                .CatchIgnore((Exception error) => Debug.LogException(error))
+                .Subscribe(hit => { pushVelocity = hit.Push; })
                 .AddTo(this);
 
             this.FixedUpdateAsObservable()

@@ -8,8 +8,15 @@ using Banchou.Player;
 namespace Banchou.Pawn.FSM {
     public class AcceptPlayerCommand : FSMBehaviour {
         [SerializeField] private Command _acceptedCommand = Command.None;
-        [SerializeField, Range(0f, 1f)] private float _fromStateTime = 0f;
-        [SerializeField, Range(0f, 1f)] private float _toStateTime = 1f;
+
+        [SerializeField, Range(0f, 1f), Tooltip("The normalized state time after which the command is accepted")]
+        private float _acceptFromStateTime = 0f;
+
+        [SerializeField, Range(0f, 1f), Tooltip("The normalized state time after which the command is no longer accepted")]
+        private float _acceptUntilStateTime = 1f;
+
+        [SerializeField, Range(0f, 1f), Tooltip("When, in regular state time, the accepted command is output to a trigger")]
+        private float _bufferUntilStateTime = 0f;
 
         public void Construct(
             IObservable<GameState> observeState,
@@ -33,16 +40,18 @@ namespace Banchou.Pawn.FSM {
                 .Where(_ => IsStateActive && !wasTriggered)
                 .WithLatestFrom(
                     ObserveStateUpdate,
-                    (command, stateInfo) => stateInfo.loop ? stateInfo.normalizedTime % 1 : stateInfo.normalizedTime
+                    (command, stateInfo) => stateInfo.normalizedTime % 1
                 )
-                .Where(stateTime => stateTime >= _fromStateTime && stateTime <= _toStateTime)
-                .Subscribe(_ => {
-                    wasTriggered = true;
-                    animator.SetTrigger(commandHash);
-                })
+                .Where(stateTime => stateTime >= _acceptFromStateTime && stateTime <= _acceptUntilStateTime)
+                .Subscribe(_ => { wasTriggered = true; })
                 .AddTo(Streams);
 
-            ObserveStateEnter
+            ObserveStateUpdate
+                .Where(stateInfo => wasTriggered && stateInfo.normalizedTime >= _bufferUntilStateTime)
+                .Subscribe(_ => { animator.SetTrigger(commandHash); })
+                .AddTo(Streams);
+
+            ObserveStateExit
                 .Subscribe(_ => {
                     if (wasTriggered) {
                         animator.ResetTrigger(commandHash);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using UnityEngine;
 using UniRx;
 
@@ -6,6 +7,7 @@ using Banchou.Pawn;
 
 namespace Banchou.Combatant {
     public class CombatantFSM : MonoBehaviour {
+
         [Header("State Machine Parameters")]
         [SerializeField] private string _healthParameterName = "Health";
         [SerializeField] private string _isLockedOnParameterName = "IsLockedOn";
@@ -20,11 +22,12 @@ namespace Banchou.Combatant {
 
             observeState
                 .Select(state => state.GetCombatantHealth(pawnId))
+                .DistinctUntilChanged()
                 .Subscribe(health => animator.SetFloat(healthHash, health))
                 .AddTo(this);
 
             observeState
-                .Select(state => state.GetCombatantTarget(pawnId))
+                .Select(state => state.GetCombatantLockOnTarget(pawnId))
                 .DistinctUntilChanged()
                 .Select(target => target != PawnId.Empty)
                 .Subscribe(isLockedOn => animator.SetBool(isLockedOnHash, isLockedOn))

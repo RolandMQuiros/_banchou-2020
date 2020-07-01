@@ -32,6 +32,31 @@ namespace Banchou.Combatant {
                 }
             }
 
+            var hit = action as StateAction.Hit;
+            if (hit != null) {
+                CombatantState from, to;
+                if (prev.TryGetValue(hit.From, out from) && prev.TryGetValue(hit.To, out to)) {
+                    var lastHit = new Hit {
+                        From = hit.From,
+                        To = hit.To,
+                        Medium = hit.Medium,
+                        Push = hit.Push,
+                        Strength = hit.Strength,
+                        When = hit.When
+                    };
+
+                    return new CombatantsState(prev) {
+                        [hit.From] = new CombatantState(from) {
+                            HitDealt = lastHit
+                        },
+                        [hit.To] = new CombatantState(to) {
+                            HitTaken = lastHit
+                        }
+                    };
+                }
+            }
+
+
             return prev;
         }
 
@@ -56,18 +81,6 @@ namespace Banchou.Combatant {
                     LastCommand = new PushedCommand() {
                         Command = pushCommand.Command,
                         When = pushCommand.When
-                    }
-                };
-            }
-
-            var hit = action as StateAction.Hit;
-            if (hit != null) {
-                return new CombatantState(prev) {
-                    LastHit = new Hit {
-                        By = hit.By,
-                        Strength = hit.Strength,
-                        Push = hit.Push,
-                        When = hit.When
                     }
                 };
             }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
 using Banchou.Pawn;
 
@@ -16,7 +17,7 @@ namespace Banchou.Combatant {
             return state.GetCombatant(combatantId) != null;
         }
 
-        public static PawnId GetCombatantTarget(this GameState state, PawnId combatantId) {
+        public static PawnId GetCombatantLockOnTarget(this GameState state, PawnId combatantId) {
             return state.GetCombatant(combatantId)?.LockOnTarget ?? PawnId.Empty;
         }
 
@@ -40,8 +41,12 @@ namespace Banchou.Combatant {
             return 0;
         }
 
-        public static Hit GetCombatantLastHit(this GameState state, PawnId combatantId) {
-            return state.GetCombatant(combatantId)?.LastHit ?? Hit.Empty;
+        public static Hit GetCombatantHitTaken(this GameState state, PawnId combatantId) {
+            return state.GetCombatant(combatantId)?.HitTaken;
+        }
+
+        public static Hit GetCombatantHitDealt(this GameState state, PawnId combatantId) {
+            return state.GetCombatant(combatantId)?.HitDealt;
         }
     }
 }

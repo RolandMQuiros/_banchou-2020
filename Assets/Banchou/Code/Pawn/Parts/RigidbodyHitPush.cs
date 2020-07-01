@@ -14,7 +14,7 @@ namespace Banchou.Pawn.Part {
             Rigidbody body
         ) {
             observeState
-                .Select(state => state.GetCombatantLastHit(pawnId))
+                .Select(state => state.GetCombatantHitTaken(pawnId))
                 .DistinctUntilChanged()
                 .CatchIgnore((Exception error) => Debug.LogException(error))
                 .Subscribe(hit => {

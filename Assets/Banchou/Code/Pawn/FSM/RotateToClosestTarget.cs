@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEngine;
 using UniRx;
 
+using Banchou.Combatant;
 using Banchou.Pawn.Part;
 
 namespace Banchou.Pawn.FSM {
@@ -25,28 +26,32 @@ namespace Banchou.Pawn.FSM {
             IPawnInstances pawnInstances
         ) {
             var observeTarget = observeState
-                .Select(state => state.GetPawnPlayer(pawnId)?.Targets)
+                .Select(
+                    state => (
+                        LockOnTarget: state.GetCombatantLockOnTarget(pawnId),
+                        Targets: state.GetPawnPlayer(pawnId)?.Targets
+                    )
+                )
                 .DistinctUntilChanged()
-                .Select(targets => targets ?? Enumerable.Empty<PawnId>());
+                .Where(substate => substate.LockOnTarget == PawnId.Empty)
+                .Select(substate => substate.Targets ?? Enumerable.Empty<PawnId>());
 
             var chooseTargetOnEnter = ObserveStateEnter
                 .WithLatestFrom(observeTarget, (_, targets) => targets)
-                .Select(targets => pawnInstances.GetMany(targets)
-                    .Where(instance => {
-                        if (instance != null) {
-                            var diff = instance.Position - body.transform.position;
-                            return diff.magnitude < _maxTargetDistance &&
-                                Vector3.Dot(diff.normalized, orientation.transform.forward) > _targetingPrecision;
-                        }
-                        return false;
-                    })
-                    .OrderBy(t => (t.Position - body.transform.position).sqrMagnitude)
-                    .Select(t => Vector3.ProjectOnPlane(
-                            t.Position - body.transform.position,
-                            body.transform.up
-                        ).normalized
-                    )
-                    .FirstOrDefault()
+                .Select(
+                    targets => pawnInstances.GetMany(targets)
+                        .Where(
+                            instance => {
+                                if (instance != null) {
+                                    var diff = instance.Position - body.transform.position;
+                                    return diff.magnitude < _maxTargetDistance &&
+                                        Vector3.Dot(diff.normalized, orientation.transform.forward) > _targetingPrecision;
+                                }
+                                return false;
+                            }
+                        )
+                        .OrderBy(t => (t.Position - body.transform.position).sqrMagnitude)
+                        .FirstOrDefault()
                 );
 
             ObserveStateUpdate
@@ -54,6 +59,12 @@ namespace Banchou.Pawn.FSM {
                 .Where(time => time >= _startTime && time <= _endTime)
                 .WithLatestFrom(chooseTargetOnEnter, (_, target) => target)
                 .Where(target => target != null)
+                .Select(
+                    t => Vector3.ProjectOnPlane(
+                        t.Position - body.transform.position,
+                        body.transform.up
+                    ).normalized
+                )
                 .Subscribe(target => {
                     orientation.transform.rotation = Quaternion.RotateTowards(
                         orientation.transform.rotation,
