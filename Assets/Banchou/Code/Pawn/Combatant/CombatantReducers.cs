@@ -56,7 +56,6 @@ namespace Banchou.Combatant {
                 }
             }
 
-
             return prev;
         }
 

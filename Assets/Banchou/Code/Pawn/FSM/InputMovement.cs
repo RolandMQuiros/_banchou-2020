@@ -2,6 +2,7 @@
 using UnityEngine;
 using UniRx;
 
+using Banchou.Player;
 using Banchou.Mob;
 
 namespace Banchou.Pawn.FSM {
@@ -38,32 +39,36 @@ namespace Banchou.Pawn.FSM {
             ObserveStateUpdate
                 .WithLatestFrom(observeState, (_, state) => state)
                 .Where(state => !state.IsMobApproaching(pawnId))
-                .Select(state => state.GetPawnPlayerInputMovement(pawnId))
-                .Select(input => Vector3.ProjectOnPlane(Camera.main.transform.forward, Vector3.up).normalized * input.y +
-                    Vector3.ProjectOnPlane(Camera.main.transform.right, Vector3.up).normalized * input.x)
+                .Select(
+                    state => state
+                        .GetPawnPlayerInputMovement(pawnId)
+                        .CameraPlaneProject()
+                )
                 .CatchIgnore((Exception error) => { Debug.LogException(error); })
-                .Subscribe(direction => {
-                    var velocity = _movementSpeed * direction;
-                    motor.Move(velocity * Time.fixedDeltaTime);
+                .Subscribe(
+                    direction => {
+                        var velocity = _movementSpeed * direction;
+                        motor.Move(velocity * Time.fixedDeltaTime);
 
-                    // Write to output variables
-                    if (!string.IsNullOrWhiteSpace(_movementSpeedOut)) {
-                        if (speedOut != 0) {
-                            speed = Mathf.MoveTowards(speed, velocity.magnitude, _acceleration);
-                            animator.SetFloat(speedOut, speed);
-                        }
+                        // Write to output variables
+                        if (!string.IsNullOrWhiteSpace(_movementSpeedOut)) {
+                            if (speedOut != 0) {
+                                speed = Mathf.MoveTowards(speed, velocity.magnitude, _acceleration);
+                                animator.SetFloat(speedOut, speed);
+                            }
 
-                        if (rightSpeedOut != 0) {
-                            rightSpeed = Mathf.MoveTowards(rightSpeed, Vector3.Dot(velocity, orientation.transform.right), _acceleration);
-                            animator.SetFloat(rightSpeedOut, rightSpeed);
-                        }
+                            if (rightSpeedOut != 0) {
+                                rightSpeed = Mathf.MoveTowards(rightSpeed, Vector3.Dot(velocity, orientation.transform.right), _acceleration);
+                                animator.SetFloat(rightSpeedOut, rightSpeed);
+                            }
 
-                        if (forwardSpeedOut != 0) {
-                            forwardSpeed = Mathf.MoveTowards(forwardSpeed, Vector3.Dot(velocity, orientation.transform.forward), _acceleration);
-                            animator.SetFloat(forwardSpeedOut, forwardSpeed);
+                            if (forwardSpeedOut != 0) {
+                                forwardSpeed = Mathf.MoveTowards(forwardSpeed, Vector3.Dot(velocity, orientation.transform.forward), _acceleration);
+                                animator.SetFloat(forwardSpeedOut, forwardSpeed);
+                            }
                         }
                     }
-                })
+                )
                 .AddTo(Streams);
         }
     }

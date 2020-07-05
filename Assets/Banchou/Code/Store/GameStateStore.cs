@@ -40,7 +40,13 @@ namespace Banchou {
 
         private void OnEnable() {
             var initialState = JsonConvert.DeserializeObject<GameState>(_initialState.text);
-            _store = new Store<GameState>(Reducer, initialState, Redux.Middlewares.Thunk);
+
+            _store = new Store<GameState>(
+                Reducer,
+                initialState,
+                Redux.Middlewares.Thunk,
+                Redux.UnityEditor.DevTools.Middleware
+            );
 
             SceneManager.sceneLoaded += (scene, loadSceneMode) => {
                 if (loadSceneMode == LoadSceneMode.Single) {

@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 
 using UnityEngine;
+using Newtonsoft.Json;
 
 using Banchou.Pawn;
+using Banchou.Utility;
 
 namespace Banchou.Player {
+    [JsonConverter(typeof(PlayerIdConverter))]
     public struct PlayerId {
         public static readonly PlayerId Empty = new PlayerId();
         public Guid Id;

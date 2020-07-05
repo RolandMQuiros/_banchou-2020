@@ -1,11 +1,12 @@
-﻿using UnityEngine;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 using Banchou.Player;
+using Banchou.Utility;
 
 namespace Banchou.Pawn {
+    [JsonConverter(typeof(PawnIdConverter))]
     public struct PawnId {
         public static readonly PawnId Empty = new PawnId();
         public Guid Id;

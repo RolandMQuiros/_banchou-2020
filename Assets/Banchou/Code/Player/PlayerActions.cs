@@ -1,7 +1,9 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+
 using Redux;
+using Redux.UnityEditor;
 
 using Banchou.Pawn;
 using Banchou.Combatant;
@@ -28,10 +30,13 @@ namespace Banchou.Player {
 
         public class Detach : PlayerAction { }
 
+        [DevTools.CollapsibleAction]
         public class Move : PlayerAction {
             public Vector2 Direction;
         }
 
+
+        [DevTools.CollapsibleAction]
         public class Look : PlayerAction {
             public Vector2 Direction;
         }
@@ -42,6 +47,7 @@ namespace Banchou.Player {
 
         public class RemoveTarget : PlayerAction {
             public PawnId Target;
+            int x = 1;
         }
     }
 

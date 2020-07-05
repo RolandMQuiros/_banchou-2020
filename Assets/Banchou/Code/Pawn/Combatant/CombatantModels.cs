@@ -25,6 +25,18 @@ namespace Banchou.Combatant {
         public bool Equals(PushedCommand other) => other.Command == Command && other.When == When;
     }
 
+    public enum StickDirection {
+        Neutral,
+        Forward,
+        ForwardRight,
+        Right,
+        BackRight,
+        Back,
+        BackLeft,
+        Left,
+        ForwardLeft
+    }
+
     public enum HitMedium {
         Environment,
         Melee,

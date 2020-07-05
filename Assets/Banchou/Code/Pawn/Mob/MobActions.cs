@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+
 using Banchou.Pawn;
 
 namespace Banchou.Mob {

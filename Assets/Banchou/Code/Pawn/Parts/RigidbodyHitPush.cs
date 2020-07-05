@@ -6,7 +6,7 @@ using Banchou.Combatant;
 
 namespace Banchou.Pawn.Part {
     public class RigidbodyHitPush : MonoBehaviour {
-        [SerializeField] private ForceMode _forceMode;
+        [SerializeField] private ForceMode _forceMode = ForceMode.VelocityChange;
 
         public void Construct(
             PawnId pawnId,
