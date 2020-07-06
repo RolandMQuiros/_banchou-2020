@@ -5,7 +5,7 @@ using Banchou.Player;
 namespace Banchou.Pawn {
     public static class PawnsReducers {
         public static PawnsState Reduce(in PawnsState prev, in object action) {
-            var add = action as StateAction.Add;
+            var add = action as StateAction.AddPawn;
             if (add != null) {
                 PawnState pawn;
                 if (!prev.TryGetValue(add.PawnId, out pawn)) {
@@ -18,14 +18,14 @@ namespace Banchou.Pawn {
                 }
             }
 
-            var remove = action as StateAction.Remove;
+            var remove = action as StateAction.RemovePawn;
             if (remove != null) {
                 var next = new PawnsState(prev);
                 next.Remove(remove.PawnId);
                 return next;
             }
 
-            var removePlayer = action as Player.StateAction.Remove;
+            var removePlayer = action as Player.StateAction.RemovePlayer;
             if (removePlayer != null) {
                 var affected = prev.Values.Where(pawn => pawn.PlayerId == removePlayer.PlayerId);
                 if (affected.Any()) {
@@ -36,7 +36,7 @@ namespace Banchou.Pawn {
                 }
             }
 
-            var attach = action as Player.StateAction.Attach;
+            var attach = action as Player.StateAction.AttachPlayerToPawn;
             if (attach != null) {
                 PawnState prevPawn;
                 if (prev.TryGetValue(attach.PawnId, out prevPawn)) {
@@ -46,7 +46,7 @@ namespace Banchou.Pawn {
                 }
             }
 
-            var detach = action as Player.StateAction.Detach;
+            var detach = action as Player.StateAction.DetachPlayerFromPawn;
             if (detach != null) {
                 var next = new PawnsState(prev);
                 foreach (var pair in prev) {
@@ -82,14 +82,14 @@ namespace Banchou.Pawn {
         }
 
         private static PawnState ReducePawn(in PawnState prev, in object action) {
-            var attach = action as Player.StateAction.Attach;
+            var attach = action as Player.StateAction.AttachPlayerToPawn;
             if (attach != null) {
                 return new PawnState(prev) {
                     PlayerId = attach.PlayerId
                 };
             }
 
-            var removePlayer = action as Player.StateAction.Remove;
+            var removePlayer = action as Player.StateAction.RemovePlayer;
             if (removePlayer != null && prev.PlayerId == removePlayer.PlayerId) {
                 return new PawnState(prev) {
                     PlayerId = PlayerId.Empty

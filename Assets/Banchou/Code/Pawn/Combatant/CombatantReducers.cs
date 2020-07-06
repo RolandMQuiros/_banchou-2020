@@ -3,7 +3,7 @@
 namespace Banchou.Combatant {
     public static class CombatantsReducers{
         public static CombatantsState Reduce(in CombatantsState prev, in object action) {
-            var add = action as StateAction.Add;
+            var add = action as StateAction.AddCombatant;
             if (add != null) {
                 CombatantState pawn;
                 if (!prev.TryGetValue(add.PawnId, out pawn)) {
@@ -15,7 +15,7 @@ namespace Banchou.Combatant {
                 }
             }
 
-            var remove = action as Pawn.StateAction.Remove;
+            var remove = action as Pawn.StateAction.RemovePawn;
             if (remove != null) {
                 var next = new CombatantsState(prev);
                 next.Remove(remove.PawnId);

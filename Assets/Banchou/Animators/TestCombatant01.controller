@@ -579,9 +579,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8d2d26ef5f024d498aeb50f55cf30e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _guide: 0
   _maxTargetDistance: 4
   _targetingPrecision: 0.4
   _rotationSpeed: 1000
+  _snapOnEnter: 0
+  _snapOnExit: 1
   _startTime: 0
   _endTime: 1
 --- !u!1101 &-3664019919218236083
@@ -711,7 +714,6 @@ AnimatorStateMachine:
   m_StateMachineBehaviours:
   - {fileID: -8022968955536357441}
   - {fileID: 6444891104291808436}
-  - {fileID: 8342199515945779759}
   - {fileID: 6787269739060360123}
   m_AnyStatePosition: {x: 270, y: 40, z: 0}
   m_EntryPosition: {x: 50, y: 120, z: 0}
@@ -809,9 +811,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8d2d26ef5f024d498aeb50f55cf30e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _guide: 0
   _maxTargetDistance: 4
   _targetingPrecision: 0.4
   _rotationSpeed: 1000
+  _snapOnEnter: 0
+  _snapOnExit: 1
   _startTime: 0
   _endTime: 0.1
 --- !u!1101 &-568589930727547893
@@ -1730,11 +1735,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8d2d26ef5f024d498aeb50f55cf30e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _maxTargetDistance: 4
-  _targetingPrecision: 0.6
-  _rotationSpeed: 1000
-  _startTime: 0.05
-  _endTime: 0.1
+  _guide: 1
+  _maxTargetDistance: 3
+  _targetingPrecision: 0.4
+  _rotationSpeed: 2000
+  _snapOnEnter: 0
+  _snapOnExit: 1
+  _startTime: 0
+  _endTime: 0.2
 --- !u!114 &6787269739060360123
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1956,23 +1964,6 @@ MonoBehaviour:
   _acceptFromStateTime: 0
   _acceptUntilStateTime: 1
   _bufferUntilStateTime: 0.38
---- !u!114 &8342199515945779759
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 175a3331f17e3254bb18f990edc3aed4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _rotationSpeed: 1000
-  _snapOnExit: 0
-  _flipDelay: 0
-  _startTime: 0
-  _endTime: 0.25
 --- !u!1101 &8501883939466280095
 AnimatorStateTransition:
   m_ObjectHideFlags: 1

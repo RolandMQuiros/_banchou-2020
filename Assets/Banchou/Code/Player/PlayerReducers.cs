@@ -4,7 +4,7 @@ using Banchou.Pawn;
 namespace Banchou.Player {
     public static partial class PlayerReducers {
         public static PlayersState ReducePlayers(in PlayersState prev, in object action) {
-            var add = action as StateAction.Add;
+            var add = action as StateAction.AddPlayer;
             if (add != null && !prev.ContainsKey(add.PlayerId)) {
                 return new PlayersState(prev) {
                     [add.PlayerId] = new PlayerState() {
@@ -13,14 +13,14 @@ namespace Banchou.Player {
                 };
             }
 
-            var remove = action as StateAction.Remove;
+            var remove = action as StateAction.RemovePlayer;
             if (remove != null) {
                 var next = new PlayersState(prev);
                 next.Remove(remove.PlayerId);
                 return next;
             }
 
-            var addPawn = action as Pawn.StateAction.Add;
+            var addPawn = action as Pawn.StateAction.AddPawn;
             if (addPawn != null) {
                 PlayerState prevPlayer;
                 if (prev.TryGetValue(addPawn.PlayerId, out prevPlayer)) {
@@ -30,7 +30,7 @@ namespace Banchou.Player {
                 }
             }
 
-            var removePawn = action as Pawn.StateAction.Add;
+            var removePawn = action as Pawn.StateAction.AddPawn;
             if (removePawn != null) {
                 PlayerState prevPlayer;
                 if (prev.TryGetValue(removePawn.PlayerId, out prevPlayer)) {
@@ -54,35 +54,35 @@ namespace Banchou.Player {
         }
 
         private static PlayerState ReducePlayer(in PlayerState prev, in object action) {
-            var attach = action as StateAction.Attach;
+            var attach = action as StateAction.AttachPlayerToPawn;
             if (attach != null) {
                 return new PlayerState(prev) {
                     Pawn = attach.PawnId
                 };
             }
 
-            var detach = action as StateAction.Detach;
+            var detach = action as StateAction.DetachPlayerFromPawn;
             if (detach != null) {
                 return new PlayerState(prev) {
                     Pawn = PawnId.Empty
                 };
             }
 
-            var move = action as StateAction.Move;
+            var move = action as StateAction.PlayerMove;
             if (move != null && move.Direction != prev.InputMovement) {
                 return new PlayerState(prev) {
                     InputMovement = move.Direction
                 };
             }
 
-            var look = action as StateAction.Look;
+            var look = action as StateAction.PlayerLook;
             if (look != null && look.Direction != prev.InputLook) {
                 return new PlayerState(prev) {
                     InputLook = look.Direction
                 };
             }
 
-            var addTarget = action as StateAction.AddTarget;
+            var addTarget = action as StateAction.AddPlayerTarget;
             if (addTarget != null && !prev.Targets.Contains(addTarget.Target)) {
                 var targets = new HashSet<PawnId>(prev.Targets);
                 targets.Add(addTarget.Target);
@@ -92,7 +92,7 @@ namespace Banchou.Player {
                 };
             }
 
-            var removeTarget = action as StateAction.RemoveTarget;
+            var removeTarget = action as StateAction.RemovePlayerTarget;
             if (removeTarget != null) {
                 var target = removeTarget.Target;
 

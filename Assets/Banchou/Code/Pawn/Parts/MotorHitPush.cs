@@ -17,18 +17,9 @@ namespace Banchou.Pawn.Part {
 
             observeState
                 .Select(state => state.GetCombatantHitTaken(pawnId))
-                .Pairwise()
-                .Subscribe(pair => {
-                    if (pair.Previous != pair.Current) {
-                        Debug.Log(pawnId);
-                    }
-                })
-                .AddTo(this);
-
-            observeState
-                .Select(state => state.GetCombatantHitTaken(pawnId))
                 .DistinctUntilChanged()
                 .Where(hit => hit != null)
+                .Where(_ => isActiveAndEnabled)
                 .CatchIgnore((Exception error) => Debug.LogException(error))
                 .Subscribe(hit => { pushVelocity = hit.Push; })
                 .AddTo(this);
@@ -41,5 +32,7 @@ namespace Banchou.Pawn.Part {
                 })
                 .AddTo(this);
         }
+
+        private void Start() { }
     }
 }

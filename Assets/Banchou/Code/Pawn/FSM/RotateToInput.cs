@@ -2,6 +2,8 @@
 using UnityEngine;
 using UniRx;
 
+using Banchou.Player;
+
 namespace Banchou.Pawn.FSM {
     public class RotateToInput : FSMBehaviour {
         [SerializeField, Tooltip("How quickly, in degrees per second, the Object will rotate to face its motion vector")]
@@ -18,7 +20,7 @@ namespace Banchou.Pawn.FSM {
         [SerializeField, Range(0f, 1f), Tooltip("When, in normalized state time, the Object will stop rotating to input")]
         private float _endTime = 1f;
 
-         public void Construct(
+        public void Construct(
             PawnId pawnId,
             IObservable<GameState> observeState,
             Part.IMotor motor,
@@ -44,8 +46,7 @@ namespace Banchou.Pawn.FSM {
                 .Select(stateInfo => stateInfo.normalizedTime % 1)
                 .Where(time => time >= _startTime && time <= _endTime)
                 .WithLatestFrom(observeMovement, (_, input) => input)
-                .Select(input => Vector3.ProjectOnPlane(Camera.main.transform.forward, Vector3.up).normalized * input.y +
-                    Vector3.ProjectOnPlane(Camera.main.transform.right, Vector3.up).normalized * input.x)
+                .Select(input => input.CameraPlaneProject())
                 .Subscribe(direction => {
                     if (direction != Vector3.zero) {
                         // If the movement direction is different enough from the facing direction,
@@ -72,8 +73,7 @@ namespace Banchou.Pawn.FSM {
 
             if (_snapOnExit) {
                 ObserveStateExit
-                    .WithLatestFrom(observeMovement, (_, input) => input)
-                    .Subscribe(input => {
+                    .Subscribe(_ => {
                         // Snap to the facing direction on state exit.
                         // Helps face the character in the intended direction when jumping mid-turn.
                         orientation.transform.rotation = Quaternion.LookRotation(faceDirection.normalized);

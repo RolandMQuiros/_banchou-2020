@@ -15,37 +15,37 @@ namespace Banchou.Player {
             public PlayerId PlayerId;
         }
 
-        public class Add {
+        public class AddPlayer {
             public PlayerId PlayerId;
             public InputSource Source;
         }
 
-        public class Remove {
+        public class RemovePlayer {
             public PlayerId PlayerId;
         }
 
-        public class Attach : PlayerAction {
+        public class AttachPlayerToPawn : PlayerAction {
             public PawnId PawnId;
         }
 
-        public class Detach : PlayerAction { }
+        public class DetachPlayerFromPawn : PlayerAction { }
 
         [DevTools.CollapsibleAction]
-        public class Move : PlayerAction {
+        public class PlayerMove : PlayerAction {
             public Vector2 Direction;
         }
 
 
         [DevTools.CollapsibleAction]
-        public class Look : PlayerAction {
+        public class PlayerLook : PlayerAction {
             public Vector2 Direction;
         }
 
-        public class AddTarget : PlayerAction {
+        public class AddPlayerTarget : PlayerAction {
             public PawnId Target;
         }
 
-        public class RemoveTarget : PlayerAction {
+        public class RemovePlayerTarget : PlayerAction {
             public PawnId Target;
             int x = 1;
         }
@@ -67,55 +67,55 @@ namespace Banchou.Player {
             _combatantActions = combatantActions;
         }
 
-        public StateAction.Add Add(PlayerId playerId, InputSource source) {
-            return new StateAction.Add {
+        public StateAction.AddPlayer Add(PlayerId playerId, InputSource source) {
+            return new StateAction.AddPlayer {
                 PlayerId = playerId,
                 Source = source
             };
         }
 
-        public StateAction.Remove Remove(PlayerId playerId) {
-            return new StateAction.Remove {
+        public StateAction.RemovePlayer Remove(PlayerId playerId) {
+            return new StateAction.RemovePlayer {
                 PlayerId = playerId
             };
         }
 
-        public StateAction.Attach Attach(PlayerId playerId, PawnId pawnId) {
-            return new StateAction.Attach {
+        public StateAction.AttachPlayerToPawn Attach(PlayerId playerId, PawnId pawnId) {
+            return new StateAction.AttachPlayerToPawn {
                 PlayerId = playerId,
                 PawnId = pawnId
             };
         }
 
-        public StateAction.Detach Detach(PlayerId playerId) {
-            return new StateAction.Detach {
+        public StateAction.DetachPlayerFromPawn Detach(PlayerId playerId) {
+            return new StateAction.DetachPlayerFromPawn {
                 PlayerId = playerId
             };
         }
 
-        public StateAction.Move Move(PlayerId playerId, Vector3 direction) {
-            return new StateAction.Move {
+        public StateAction.PlayerMove Move(PlayerId playerId, Vector3 direction) {
+            return new StateAction.PlayerMove {
                 PlayerId = playerId,
                 Direction = direction
             };
         }
 
-        public StateAction.Look Look(PlayerId playerId, Vector2 direction) {
-            return new StateAction.Look {
+        public StateAction.PlayerLook Look(PlayerId playerId, Vector2 direction) {
+            return new StateAction.PlayerLook {
                 PlayerId = playerId,
                 Direction = direction
             };
         }
 
-        public StateAction.AddTarget AddTarget(PlayerId playerId, PawnId target) {
-            return new StateAction.AddTarget {
+        public StateAction.AddPlayerTarget AddTarget(PlayerId playerId, PawnId target) {
+            return new StateAction.AddPlayerTarget {
                 PlayerId = playerId,
                 Target = target
             };
         }
 
         public ActionsCreator<GameState> RemoveTarget(PlayerId playerId, PawnId target) => (dispatch, getState) => {
-            dispatch(new StateAction.RemoveTarget {
+            dispatch(new StateAction.RemovePlayerTarget {
                 PlayerId = playerId,
                 Target = target
             });

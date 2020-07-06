@@ -3,7 +3,7 @@ using Banchou.Pawn;
 
 namespace Banchou.Combatant {
     namespace StateAction {
-        public class Add : Pawn.StateAction.Add {
+        public class AddCombatant : Pawn.StateAction.AddPawn {
             public int Health;
         }
 
@@ -33,8 +33,8 @@ namespace Banchou.Combatant {
     }
 
     public class CombatantActions {
-        public StateAction.Add Add(PawnId pawnId) {
-            return new StateAction.Add {
+        public StateAction.AddCombatant Add(PawnId pawnId) {
+            return new StateAction.AddCombatant {
                 PawnId = pawnId
             };
         }

@@ -4,13 +4,21 @@ using UnityEngine;
 using UniRx;
 
 using Banchou.Combatant;
+using Banchou.Player;
 using Banchou.Pawn.Part;
 
 namespace Banchou.Pawn.FSM {
     public class RotateToClosestTarget : FSMBehaviour {
+        private enum Guide {
+            ByOrientation,
+            ByInput
+        }
+
+        [SerializeField] private Guide _guide = Guide.ByOrientation;
         [SerializeField] private float _maxTargetDistance = 4f;
         [SerializeField] private float _targetingPrecision = 0.4f;
         [SerializeField] private float _rotationSpeed = 1000f;
+        [SerializeField] private bool _snapOnExit = false;
 
         [SerializeField, Range(0f, 1f), Tooltip("When, in normalized state time, the Object will start rotating to input")]
         private float _startTime = 0f;
@@ -21,31 +29,46 @@ namespace Banchou.Pawn.FSM {
         public void Construct(
             PawnId pawnId,
             IObservable<GameState> observeState,
+            GetState getState,
             Rigidbody body,
-            Orientation orientation,
-            IPawnInstances pawnInstances
+            IPawnInstances pawnInstances,
+            Orientation orientation = null
         ) {
-            var observeTarget = observeState
+            Vector3 faceDirection = Vector3.zero;
+
+            var observeSubstate = observeState
                 .Select(
                     state => (
                         LockOnTarget: state.GetCombatantLockOnTarget(pawnId),
-                        Targets: state.GetPawnPlayer(pawnId)?.Targets
+                        Targets: state.GetPawnPlayer(pawnId)?.Targets,
+                        Input: getState().GetPawnPlayerInputMovement(pawnId)
                     )
                 )
-                .DistinctUntilChanged()
-                .Where(substate => substate.LockOnTarget == PawnId.Empty)
-                .Select(substate => substate.Targets ?? Enumerable.Empty<PawnId>());
+                .DistinctUntilChanged();
+                //.Where(substate => substate.LockOnTarget == PawnId.Empty);
 
+            // TODO: Appears to be evaluating the state multiple times. Change this to just save to some local vars in a subscription.
             var chooseTargetOnEnter = ObserveStateEnter
-                .WithLatestFrom(observeTarget, (_, targets) => targets)
+                .WithLatestFrom(observeSubstate, (_, substate) => substate)
                 .Select(
-                    targets => pawnInstances.GetMany(targets)
+                    substate => pawnInstances.GetMany(substate.Targets)
                         .Where(
                             instance => {
                                 if (instance != null) {
                                     var diff = instance.Position - body.transform.position;
+
+                                    Vector3 basis = Vector3.zero;
+                                    switch (_guide) {
+                                        case Guide.ByInput:
+                                            basis = substate.Input.CameraPlaneProject();
+                                            break;
+                                        case Guide.ByOrientation:
+                                            basis = orientation?.transform.forward ?? Vector3.zero;
+                                            break;
+                                    }
+
                                     return diff.magnitude < _maxTargetDistance &&
-                                        Vector3.Dot(diff.normalized, orientation.transform.forward) > _targetingPrecision;
+                                        Vector3.Dot(diff.normalized, basis) > _targetingPrecision;
                                 }
                                 return false;
                             }
@@ -65,14 +88,27 @@ namespace Banchou.Pawn.FSM {
                         body.transform.up
                     ).normalized
                 )
-                .Subscribe(target => {
+                .Subscribe(targetDirection => {
+                    faceDirection = targetDirection;
                     orientation.transform.rotation = Quaternion.RotateTowards(
                         orientation.transform.rotation,
-                        Quaternion.LookRotation(target),
+                        Quaternion.LookRotation(targetDirection),
                         _rotationSpeed * Time.fixedDeltaTime
                     );
                 })
                 .AddTo(Streams);
+
+            if (_snapOnExit) {
+                ObserveStateExit
+                    .Subscribe(_ => {
+                        // Snap to the facing direction on state exit.
+                        // Helps face the character in the intended direction when jumping mid-turn.
+                        if (faceDirection != Vector3.zero) {
+                            orientation.transform.rotation = Quaternion.LookRotation(faceDirection);
+                        }
+                    })
+                    .AddTo(Streams);
+            }
         }
     }
 }

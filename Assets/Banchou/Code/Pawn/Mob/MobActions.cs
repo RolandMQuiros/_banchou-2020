@@ -4,11 +4,11 @@ using Banchou.Pawn;
 
 namespace Banchou.Mob {
      namespace StateAction {
-        public class Add {
+        public class AddMob {
             public PawnId PawnId;
         }
 
-        public class Remove {
+        public class RemoveMob {
             public PawnId PawnId;
         }
 
@@ -16,57 +16,57 @@ namespace Banchou.Mob {
             public PawnId PawnId;
         }
 
-        public class ApproachTarget : MobAction {
+        public class MobApproachTarget : MobAction {
             public PawnId TargetId;
             public float StoppingDistance;
         }
 
-        public class ApproachPosition : MobAction {
+        public class MobApproachPosition : MobAction {
             public Vector3 Position;
             public float StoppingDistance;
         }
 
-        public class ApproachCompleted : MobAction { }
+        public class MobApproachCompleted : MobAction { }
 
-        public class ApproachInterrupted : MobAction { }
+        public class MobApproachInterrupted : MobAction { }
     }
 
     public class MobActions {
-        public StateAction.Add Add(PawnId pawnId) {
-            return new StateAction.Add {
+        public StateAction.AddMob Add(PawnId pawnId) {
+            return new StateAction.AddMob {
                 PawnId = pawnId
             };
         }
 
-        public StateAction.Remove Remove(PawnId pawnId) {
-            return new StateAction.Remove {
+        public StateAction.RemoveMob Remove(PawnId pawnId) {
+            return new StateAction.RemoveMob {
                 PawnId = pawnId
             };
         }
 
-        public StateAction.ApproachTarget ApproachTarget(PawnId pawnId, PawnId targetId, float stoppingDistance) {
-            return new StateAction.ApproachTarget {
+        public StateAction.MobApproachTarget ApproachTarget(PawnId pawnId, PawnId targetId, float stoppingDistance) {
+            return new StateAction.MobApproachTarget {
                 PawnId = pawnId,
                 TargetId = targetId,
                 StoppingDistance = stoppingDistance
             };
         }
 
-        public StateAction.ApproachPosition ApproachPosition(PawnId pawnId, Vector3 position) {
-            return new StateAction.ApproachPosition {
+        public StateAction.MobApproachPosition ApproachPosition(PawnId pawnId, Vector3 position) {
+            return new StateAction.MobApproachPosition {
                 PawnId = pawnId,
                 Position = position
             };
         }
 
-        public StateAction.ApproachInterrupted ApproachInterrupted(PawnId pawnId) {
-            return new StateAction.ApproachInterrupted {
+        public StateAction.MobApproachInterrupted ApproachInterrupted(PawnId pawnId) {
+            return new StateAction.MobApproachInterrupted {
                 PawnId = pawnId
             };
         }
 
-        public StateAction.ApproachCompleted ApproachCompleted(PawnId pawnId) {
-            return new StateAction.ApproachCompleted {
+        public StateAction.MobApproachCompleted ApproachCompleted(PawnId pawnId) {
+            return new StateAction.MobApproachCompleted {
                 PawnId = pawnId
             };
         }

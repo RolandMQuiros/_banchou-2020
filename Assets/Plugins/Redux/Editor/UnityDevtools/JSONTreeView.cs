@@ -86,7 +86,7 @@ namespace Redux.UnityEditor {
                         var typeProperty = obj.Property("$type");
 
                         string typeName = " ";
-                        if (typeProperty != null && typeProperty.Value.Type == JTokenType.String) {
+                        if (args.selected && typeProperty != null && typeProperty.Value.Type == JTokenType.String) {
                             typeName = $" {typeProperty.Value} ";
                         } else if (((JObject)token).Properties().Any()) {
                             typeName = " ... ";
