@@ -19,6 +19,7 @@ namespace Banchou {
     [CreateAssetMenu(fileName = "GameStateStore.asset", menuName = "Banchou/Game State Store")]
     public class GameStateStore : ScriptableObject, IStore<GameState> {
         [SerializeField] private TextAsset _initialState = null;
+        [SerializeField] private Redux.DevTools.DevToolsSession _devToolsSession = null;
         private IStore<GameState> _store;
 
         public event Action StateChanged {
@@ -41,12 +42,15 @@ namespace Banchou {
         private void OnEnable() {
             var initialState = JsonConvert.DeserializeObject<GameState>(_initialState.text);
 
-            _store = new Store<GameState>(
-                Reducer,
-                initialState,
-                Redux.Middlewares.Thunk,
-                Redux.UnityEditor.DevTools.Middleware
-            );
+            if (_devToolsSession == null) {
+                _store = new Store<GameState>(
+                    Reducer, initialState, Redux.Middlewares.Thunk
+                );
+            } else {
+                _store = new Store<GameState>(
+                    Reducer, initialState, Redux.Middlewares.Thunk, _devToolsSession.Install<GameState>()
+                );
+            }
 
             SceneManager.sceneLoaded += (scene, loadSceneMode) => {
                 if (loadSceneMode == LoadSceneMode.Single) {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using Redux;
-using Redux.UnityEditor;
+using Redux.DevTools;
 
 using Banchou.Pawn;
 using Banchou.Combatant;
@@ -30,15 +30,26 @@ namespace Banchou.Player {
 
         public class DetachPlayerFromPawn : PlayerAction { }
 
-        [DevTools.CollapsibleAction]
-        public class PlayerMove : PlayerAction {
+        public class PlayerMove : PlayerAction, ICollapsibleAction {
             public Vector2 Direction;
+            public object Collapse(in object next) {
+                var nextMove = next as PlayerMove;
+                if (nextMove != null) {
+                    Direction += nextMove.Direction;
+                }
+                return this;
+            }
         }
 
-
-        [DevTools.CollapsibleAction]
-        public class PlayerLook : PlayerAction {
+        public class PlayerLook : PlayerAction, ICollapsibleAction {
             public Vector2 Direction;
+            public object Collapse(in object next) {
+                var nextLook = next as PlayerLook;
+                if (nextLook != null) {
+                    Direction += nextLook.Direction;
+                }
+                return this;
+            }
         }
 
         public class AddPlayerTarget : PlayerAction {
@@ -47,7 +58,6 @@ namespace Banchou.Player {
 
         public class RemovePlayerTarget : PlayerAction {
             public PawnId Target;
-            int x = 1;
         }
     }
 
