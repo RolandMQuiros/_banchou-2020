@@ -40,12 +40,11 @@ namespace Banchou.Pawn.FSM {
                 .Select(
                     state => (
                         LockOnTarget: state.GetCombatantLockOnTarget(pawnId),
-                        Targets: state.GetPawnPlayer(pawnId)?.Targets,
+                        Targets: state.GetPawnPlayerTargets(pawnId),
                         Input: getState().GetPawnPlayerInputMovement(pawnId)
                     )
                 )
                 .DistinctUntilChanged();
-                //.Where(substate => substate.LockOnTarget == PawnId.Empty);
 
             // TODO: Appears to be evaluating the state multiple times. Change this to just save to some local vars in a subscription.
             var chooseTargetOnEnter = ObserveStateEnter

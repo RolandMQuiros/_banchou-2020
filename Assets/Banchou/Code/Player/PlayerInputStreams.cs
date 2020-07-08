@@ -4,12 +4,12 @@ using UniRx;
 
 namespace Banchou.Player {
     public delegate IObservable<Vector3> ObservePlayerMove();
-    public delegate IObservable<Vector3> ObservePlayerLook();
+    public delegate IObservable<Vector2> ObservePlayerLook();
 
     public class PlayerInputStreams {
         public struct LookUnit {
             public PlayerId PlayerId;
-            public Vector3 Look;
+            public Vector2 Look;
         }
 
         public struct MoveUnit {
@@ -26,7 +26,7 @@ namespace Banchou.Player {
                 .Select(unit => unit.Move);
         }
 
-        public IObservable<Vector3> ObserveLook(PlayerId playerId) {
+        public IObservable<Vector2> ObserveLook(PlayerId playerId) {
             return _lookSubject
                 .Where(unit => unit.PlayerId == playerId)
                 .Select(unit => unit.Look);

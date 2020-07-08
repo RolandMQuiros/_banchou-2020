@@ -19,9 +19,9 @@ namespace Banchou.Pawn.FSM {
         private float _bufferUntilStateTime = 0f;
 
         public void Construct(
+            PawnId pawnId,
             IObservable<GameState> observeState,
             GetState getState,
-            PawnId pawnId,
             Animator animator
         ) {
             var enterTime = Time.fixedTime;

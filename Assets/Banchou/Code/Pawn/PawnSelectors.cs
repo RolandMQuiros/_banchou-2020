@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
 using Banchou.Player;
 
@@ -38,6 +39,10 @@ namespace Banchou.Pawn {
 
         public static PlayerState GetPawnPlayer(this GameState state, PawnId pawnId) {
             return state.GetPlayer(state.GetPawnPlayerId(pawnId));
+        }
+
+        public static IEnumerable<PawnId> GetPawnPlayerTargets(this GameState state, PawnId pawnId) {
+            return state.GetPlayer(state.GetPawnPlayerId(pawnId))?.Targets ?? Enumerable.Empty<PawnId>();
         }
 
         public static Vector2 GetPawnPlayerInputMovement(this GameState state, PawnId pawnId) {

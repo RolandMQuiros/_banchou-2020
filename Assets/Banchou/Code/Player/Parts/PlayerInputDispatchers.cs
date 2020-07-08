@@ -49,8 +49,7 @@ namespace Banchou.Player.Part {
 
         public void DispatchLook(InputAction.CallbackContext callbackContext) {
             var direction = callbackContext.ReadValue<Vector2>();
-            _playerInputStreams.PushLook(_playerId, direction.CameraPlaneProject());
-            // _dispatch(_playerActions.Look(_playerId, direction));
+            _playerInputStreams.PushLook(_playerId, direction);
         }
 
         public void DispatchLightAttack(InputAction.CallbackContext callbackContext) {
