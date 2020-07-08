@@ -23,6 +23,7 @@ namespace Banchou.Pawn.FSM {
         public void Construct(
             PawnId pawnId,
             IObservable<GameState> observeState,
+            ObservePlayerMove observePlayerMove,
             Part.IMotor motor,
             Part.Orientation orientation,
             Animator animator
@@ -31,9 +32,9 @@ namespace Banchou.Pawn.FSM {
             var faceDirection = Vector3.zero;
             var flipTimer = 0f;
 
-            var observeMovement = observeState
-                .Select(state => state.GetPawnPlayerInputMovement(pawnId))
-                .DistinctUntilChanged();
+            // observeState
+            //     .Select(state => state.GetPawnPlayerInputMovement(pawnId))
+            //     .DistinctUntilChanged();
 
             ObserveStateEnter
                 .Subscribe(_ => {
@@ -45,8 +46,7 @@ namespace Banchou.Pawn.FSM {
             ObserveStateUpdate
                 .Select(stateInfo => stateInfo.normalizedTime % 1)
                 .Where(time => time >= _startTime && time <= _endTime)
-                .WithLatestFrom(observeMovement, (_, input) => input)
-                .Select(input => input.CameraPlaneProject())
+                .WithLatestFrom(observePlayerMove(), (_, input) => input)
                 .Subscribe(direction => {
                     if (direction != Vector3.zero) {
                         // If the movement direction is different enough from the facing direction,

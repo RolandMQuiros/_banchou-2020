@@ -2,7 +2,9 @@
 using UnityEngine;
 using UnityEngine.AI;
 using Redux;
+using UniRx;
 
+using Banchou.Player;
 using Banchou.Pawn.Part;
 using Banchou.Mob;
 
@@ -32,6 +34,7 @@ namespace Banchou.Pawn {
         private GetState _getState;
         private IObservable<GameState> _observeState;
         private IPawnInstances _pawnInstances;
+        private PlayerInputStreams _playerInputStreams;
 
         public void Construct(
             Dispatcher dispatch,
@@ -39,7 +42,8 @@ namespace Banchou.Pawn {
             MobActions mobActions,
             GetState getState,
             IObservable<GameState> observeState,
-            IPawnInstances pawnInstances
+            IPawnInstances pawnInstances,
+            PlayerInputStreams playerInputStreams
         ) {
             _dispatch = dispatch;
             _boardActions = boardActions;
@@ -47,6 +51,7 @@ namespace Banchou.Pawn {
             _getState = getState;
             _observeState = observeState;
             _pawnInstances = pawnInstances;
+            _playerInputStreams = playerInputStreams;
 
             _animator = _animator == null ? GetComponentInChildren<Animator>(true) : _animator;
             _rigidbody =  _rigidbody == null ? GetComponentInChildren<Rigidbody>(true) : _rigidbody;
@@ -68,6 +73,19 @@ namespace Banchou.Pawn {
             container.Bind<NavMeshAgent>(_agent);
 
             container.Bind<Part.IMotor>(_motor);
+
+            container.Bind<ObservePlayerLook>(
+                () =>  _observeState
+                    .Select(state => state.GetPawnPlayerId(PawnId))
+                    .DistinctUntilChanged()
+                    .SelectMany(playerId => _playerInputStreams.ObserveLook(playerId))
+            );
+            container.Bind<ObservePlayerMove>(
+                () =>  _observeState
+                    .Select(state => state.GetPawnPlayerId(PawnId))
+                    .DistinctUntilChanged()
+                    .SelectMany(playerId => _playerInputStreams.ObserveMove(playerId))
+            );
         }
 
         private void Start() {

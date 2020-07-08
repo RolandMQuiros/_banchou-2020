@@ -15,19 +15,23 @@ namespace Banchou.Player.Part {
 
         private PlayerActions _playerActions;
         private CombatantActions _combatantActions;
+        private PlayerInputStreams _playerInputStreams;
 
         public void Construct(
             PlayerId playerId,
             IObservable<GameState> observeState,
             Dispatcher dispatch,
             PlayerActions playerActions,
-            CombatantActions combatantActions
+            CombatantActions combatantActions,
+            PlayerInputStreams playerInputStreams
         ) {
             _playerId = playerId;
             _dispatch = dispatch;
 
             _playerActions = playerActions;
             _combatantActions = combatantActions;
+
+            _playerInputStreams = playerInputStreams;
 
             observeState
                 .Select(state => state.GetPlayerPawn(playerId))
@@ -40,12 +44,13 @@ namespace Banchou.Player.Part {
 
         public void DispatchMovement(InputAction.CallbackContext callbackContext) {
             var direction = callbackContext.ReadValue<Vector2>();
-            _dispatch(_playerActions.Move(_playerId, direction));
+            _playerInputStreams.PushMove(_playerId, direction.CameraPlaneProject());
         }
 
         public void DispatchLook(InputAction.CallbackContext callbackContext) {
             var direction = callbackContext.ReadValue<Vector2>();
-            _dispatch(_playerActions.Look(_playerId, direction));
+            _playerInputStreams.PushLook(_playerId, direction.CameraPlaneProject());
+            // _dispatch(_playerActions.Look(_playerId, direction));
         }
 
         public void DispatchLightAttack(InputAction.CallbackContext callbackContext) {

@@ -4,14 +4,12 @@ using UnityEngine;
 using Cinemachine;
 
 using UniRx;
+using UniRx.Triggers;
 
 namespace Banchou.Player.Part {
     [RequireComponent(typeof(CinemachineVirtualCamera))]
     public class PlayerCinemachineInput : MonoBehaviour {
-        public void Construct(
-            PlayerId playerId,
-            IObservable<GameState> observeState
-        ) {
+        public void Construct(ObservePlayerLook observePlayerLook) {
             var x = 0f;
             var y = 0f;
 
@@ -21,10 +19,8 @@ namespace Banchou.Player.Part {
                 return 0f;
             };
 
-            observeState
-                .Select(state => state.GetPlayer(playerId))
-                .Where(player => player?.Source == InputSource.LocalSingle || player?.Source == InputSource.LocalMulti)
-                .Select(player => player.InputLook)
+            this.FixedUpdateAsObservable()
+                .WithLatestFrom(observePlayerLook(), (_, look) => look)
                 .Subscribe(direction => {
                     x = direction.x;
                     y = direction.y;
