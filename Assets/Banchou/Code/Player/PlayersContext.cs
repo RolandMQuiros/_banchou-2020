@@ -22,7 +22,7 @@ namespace Banchou.Player {
             Instantiator instantiator
         ) {
             _playerFactory.Construct(_playerParent ?? transform, observeState, getState, instantiator);
-            _playerActions.Construct(pawnInstances, mobActions, combatantActions, _playerInputStreams);
+            _playerActions.Construct(pawnInstances, mobActions, combatantActions);
             // TODO: hook up PlayerInput detection events to state
         }
 
