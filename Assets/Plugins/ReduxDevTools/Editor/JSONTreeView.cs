@@ -30,7 +30,7 @@ using UnityEditor.IMGUI.Controls;
 
 using Newtonsoft.Json.Linq;
 
-namespace Redux.UnityEditor {
+namespace Redux.DevTools {
     public class JSONTreeView : TreeView {
         public JToken Source { get; set; } = null;
 
@@ -125,14 +125,25 @@ namespace Redux.UnityEditor {
                     case JTokenType.Uri:
                     case JTokenType.String:
                         return $"<color=#ff006f>\"{token.ToString()}\"</color>";
+                    case JTokenType.Date:
+                        return $"<color=#4287f5>\"{token.ToString()}\"</color>";
+                    case JTokenType.TimeSpan:
+                        return $"<color=#42f54e>\"{token.ToString()}\"</color>";
                     case JTokenType.Boolean:
                         return $"<color=#e1ff00>{token}</color>";
                     case JTokenType.Null:
                     case JTokenType.None:
                         return $"<color=#0076de>null</color>";
+                    default:
+                        return $"<color=#67caf5>\"{token.ToString()}\"</color>";
                 }
                 return null;
             }
+        }
+
+        public override void OnGUI(Rect rect) {
+            GUI.backgroundColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+            base.OnGUI(rect);
         }
     }
 

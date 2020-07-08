@@ -583,7 +583,6 @@ MonoBehaviour:
   _maxTargetDistance: 4
   _targetingPrecision: 0.4
   _rotationSpeed: 1000
-  _snapOnEnter: 0
   _snapOnExit: 1
   _startTime: 0
   _endTime: 1
@@ -815,7 +814,6 @@ MonoBehaviour:
   _maxTargetDistance: 4
   _targetingPrecision: 0.4
   _rotationSpeed: 1000
-  _snapOnEnter: 0
   _snapOnExit: 1
   _startTime: 0
   _endTime: 0.1
@@ -1739,8 +1737,7 @@ MonoBehaviour:
   _maxTargetDistance: 3
   _targetingPrecision: 0.4
   _rotationSpeed: 2000
-  _snapOnEnter: 0
-  _snapOnExit: 1
+  _snapOnExit: 0
   _startTime: 0
   _endTime: 0.2
 --- !u!114 &6787269739060360123

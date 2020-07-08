@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: GameStateStore
   m_EditorClassIdentifier: 
   _initialState: {fileID: 4900000, guid: fb6a333a859e4a846af075d32c99ec51, type: 3}
+  _devToolsSession: {fileID: 11400000, guid: f68abfe6b8322144d8767d82e470dc5c, type: 2}

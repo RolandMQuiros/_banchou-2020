@@ -24,7 +24,6 @@ SOFTWARE.
 
 using System;
 using System.Linq;
-using System.Reflection;
 using System.Collections.Generic;
 
 using UnityEngine;
@@ -36,157 +35,35 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using JsonDiffPatchDotNet;
 
-namespace Redux.UnityEditor {
-    public class DevTools : EditorWindow {
-        [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-        public class CollapsibleActionAttribute : Attribute { }
-
-        // TODO: Make this serializable to disk so the history can persist between recompiiles
-        public class Step {
-            public object Action;
-            public Type ActionType;
-            public int CollapsedCount;
-            public object State;
-            public float When;
-
-            public JToken ActionCache;
-            public JToken StateCache;
-            public JToken DiffCache;
-
-            public Step() { }
-            public Step(in Step prev) {
-                Action = prev.Action;
-                ActionType = prev.ActionType;
-                CollapsedCount = prev.CollapsedCount;
-                State = prev.State;
-                When = prev.When;
-            }
-        }
-
-        [SerializeField] private bool _isRecording = false;
-        private HashSet<Type> _actionsDisplayFilter = new HashSet<Type>();
-        private List<Type> _actionTypes = new List<Type>();
-        private List<Step> _history = new List<Step>();
-        private Dispatcher _dispatch = null;
-
-
-        #region Singleton stuff
-        private static DevTools _instance;
-
-        [MenuItem("Tools/Redux Dev Tools")]
-        public static void ShowWindow() {
-            GetWindow();
-        }
-
-        private static DevTools GetWindow() {
-            return EditorWindow.GetWindow<DevTools>(
-                title: "Redux DevTools"
-            );
-        }
-
-        public static Func<Dispatcher, Dispatcher> Middleware<TState>(IStore<TState> store) {
-            if (Application.isEditor) {
-                return next => action => {
-                    var dispatched = next(action);
-
-                    if (_instance == null && EditorWindow.HasOpenInstances<DevTools>()) {
-                        _instance = GetWindow();
-                        _instance._dispatch = store.Dispatch;
-                        _instance.ClearHistory();
-                    }
-
-                    if (_instance?._isRecording == true) {
-                        _instance.RecordStep(action, store.GetState());
-                    }
-
-                    return dispatched;
-                };
-            }
-
-            // Return a pass-through method if we're not in-editor
-            return next => next;
-        }
-        #endregion
-
-        public void AddStep(Step step) {
-            _history.Add(step);
-            if (_historyList.index == _history.Count - 2) {
-                _historyList.index = _history.Count - 1;
-                _historyScroll.y = _historyList.GetHeight();
-                RefreshView(_historyList.index);
-            }
-        }
-
-        public void RecordStep(object action, object state) {
-            var history = _instance._history;
-
-            // Early-out if the action is a thunk, or filtered
-            var actionType = action.GetType();
-            if (action is Delegate || _instance._actionsDisplayFilter.Contains(actionType)) {
-                return;
-            }
-
-            var step = new Step {
-                Action = action,
-                ActionType = actionType,
-                State = state,
-                When = Time.unscaledTime
-            };
-
-            if (history.Count > 0) {
-                var prevStep = history[history.Count - 1];
-
-                // Action classes marked with the [CollapsibleAction] attribute are aggregated into
-                // Lists of actions and are displayed in the devtools as a single row. This is useful for
-                // actions that are dispatched very often, like continuous controller input
-                var isCollapsible = actionType
-                    .GetCustomAttribute<CollapsibleActionAttribute>() != null;
-                if (isCollapsible && prevStep.ActionType == actionType) {
-                    // If the previous step action is collapsible and of the same type, turn it into a list
-                    // and add the current action to it
-                    if (prevStep.CollapsedCount == 0) {
-                        history[history.Count - 1] = new Step(prevStep) {
-                            Action = new List<Step> { prevStep, step },
-                            State = state,
-                            When = Time.unscaledTime,
-                            CollapsedCount = 2
-                        };
-                    } else {
-                        (prevStep.Action as List<Step>).Add(step);
-                        prevStep.CollapsedCount++;
-                    }
-
-                    return;
-                }
-            }
-            _instance.AddStep(step);
-        }
-
-        public void ClearHistory() {
-            _history.Clear();
-            _treeView.Reload();
-        }
-
-        #region GUI
+namespace Redux.DevTools {
+    public class DevToolsWindow : EditorWindow {
+        private DevToolsSession _session = null;
         private ReorderableList _historyList = null;
         private TreeViewState _viewState = null;
         private JSONTreeView _treeView = null;
         private JsonSerializer _serializer;
+        private List<Type> _actionTypes = null;
+        private HashSet<Type> _actionsDisplayFilter = new HashSet<Type>();
+
+        private Vector2 _historyScroll = Vector2.zero;
+        private Vector2 _viewScroll = Vector2.zero;
+        private Rect _fullRect = Rect.zero;
+        private Rect _historyRect = Rect.zero;
+        private int _viewMode = 0;
+
+
+        [MenuItem("Tools/Redux Dev Tools")]
+        public static void ShowWindow() {
+            EditorWindow.GetWindow<DevToolsWindow>(
+                title: "Redux DevTools"
+            );
+        }
 
         private void OnEnable() {
             _actionTypes = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(assembly => assembly.GetTypes())
                 .Where(type => !string.IsNullOrWhiteSpace(type.Namespace) && type.Namespace.EndsWith("StateAction"))
                 .ToList();
-
-            _historyList = new ReorderableList(
-                _history,
-                typeof(Step),
-                draggable: false,
-                displayHeader: false,
-                displayAddButton: false,
-                displayRemoveButton: false
-            );
 
             // Create a custom serializer for Unity classes that don't handle it well by default
             _serializer = new JsonSerializer();
@@ -195,8 +72,41 @@ namespace Redux.UnityEditor {
             _serializer.Converters.Add(new Vec4Conv());
             _serializer.TypeNameHandling = TypeNameHandling.All;
 
+            var path = AssetDatabase.FindAssets("t:DevToolsSession")
+                .Select(guid => AssetDatabase.GUIDToAssetPath(guid))
+                .FirstOrDefault();
+
+            if (path == null) {
+                path = "Assets/ReduxDevToolsSession.asset";
+                AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<DevToolsSession>(), path);
+            }
+
+            AttachToSession(AssetDatabase.LoadAssetAtPath<DevToolsSession>(path));
+        }
+
+        private void AttachToSession(DevToolsSession session) {
+            session.OnAdd += step => {
+                if (_historyList.index == session.History.Count - 2) {
+                    _historyList.index = session.History.Count - 1;
+                    _historyScroll.y = _historyList.GetHeight();
+                    RefreshView(_historyList.index);
+                }
+            };
+
+            session.OnClear += () => { _treeView.Reload(); };
+            session.OnCollapse += (_, index) => { RefreshView(index); };
+
+            _historyList = new ReorderableList(
+                session.History,
+                typeof(DevToolsSession.Step),
+                draggable: false,
+                displayHeader: false,
+                displayAddButton: false,
+                displayRemoveButton: false
+            );
+
             _historyList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) => {
-                var step = _history[index];
+                var step = session.History[index];
 
                 // Display the name of the action type
                 var nameRect = new Rect(rect) {
@@ -225,6 +135,8 @@ namespace Redux.UnityEditor {
             _viewState = _viewState ?? new TreeViewState();
             _treeView = new JSONTreeView(_viewState);
             _treeView.Reload();
+
+            _session = session;
         }
 
         private void DrawActionsMenu(HashSet<Type> target, Action<Type> onAdd = null, Action<Type> onRemove = null) {
@@ -249,12 +161,12 @@ namespace Redux.UnityEditor {
         }
 
         private void RefreshView(int index) {
-            if (index < 0 || _history.Count < index) { return; }
-            var step = _history[index];
+            if (index < 0 || _session.History.Count < index) { return; }
+            var step = _session.History[index];
 
             switch (_viewMode) {
                 case 0: { // View Action
-                    var collapsedActions = step.Action as List<Step>;
+                    var collapsedActions = step.Action as List<DevToolsSession.Step>;
                     if (collapsedActions != null) {
                         _treeView.Source = step.ActionCache =
                             step.ActionCache ??
@@ -271,7 +183,7 @@ namespace Redux.UnityEditor {
                 } break;
                 case 2: { // View State diff
                     if (index > 0) {
-                        var prev = _history[index - 1];
+                        var prev = _session.History[index - 1];
                         prev.StateCache = prev.StateCache ?? JToken.FromObject(prev.State, _serializer);
                         step.StateCache = step.StateCache ?? JToken.FromObject(step.State, _serializer);
                         step.DiffCache = step.DiffCache ?? new JsonDiffPatch().Diff(step.StateCache, prev.StateCache);
@@ -284,23 +196,22 @@ namespace Redux.UnityEditor {
             }
 
             _treeView.Reload();
-            _treeView.SetExpandedRecursive(0, true);
+            _treeView.SetExpanded(0, true);
         }
-
-        private Vector2 _historyScroll = Vector2.zero;
-        private Vector2 _viewScroll = Vector2.zero;
-        private Rect _fullRect = Rect.zero;
-        private Rect _historyRect = Rect.zero;
-        private int _viewMode = 0;
 
         private void OnGUI() {
             void ApplyFilter() {
-                _historyList.list = _history
+                _historyList.list = _session.History
                     .Where(step => !_actionsDisplayFilter.Contains(step.ActionType))
                     .ToList();
             }
 
-            _isRecording = EditorGUILayout.Toggle(label: "Recording", value: _isRecording);
+            if (_session == null) {
+                GUILayout.Label("A DevToolsSession asset was not found, or could not be created in this project");
+                return;
+            }
+
+            _session.IsRecording = EditorGUILayout.Toggle(label: "Recording", value: _session.IsRecording);
 
             var fullRect = EditorGUILayout.BeginHorizontal();
             _fullRect = fullRect == Rect.zero ? _fullRect : fullRect;
@@ -311,7 +222,7 @@ namespace Redux.UnityEditor {
                     EditorGUILayout.BeginHorizontal();
                         EditorGUILayout.LabelField("History", new GUIStyle { fontStyle = FontStyle.Bold });
                         if (GUILayout.Button("Clear")) {
-                            _history.Clear();
+                            _session.Clear();
                             _treeView.Source = null;
                             _treeView.Reload();
                         }
@@ -353,8 +264,6 @@ namespace Redux.UnityEditor {
                         alwaysShowVertical: false
                     );
                         var viewRect = EditorGUILayout.GetControlRect(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-                        GUI.backgroundColor = new Color(0.3f, 0.3f, 0.3f, 1f);
-
                         _treeView.OnGUI(viewRect);
                     EditorGUILayout.EndScrollView();
                 EditorGUILayout.EndVertical();
@@ -364,7 +273,5 @@ namespace Redux.UnityEditor {
         private void OnInspectorUpdate() {
             Repaint();
         }
-
-        #endregion
     }
 }
