@@ -43,19 +43,12 @@ namespace Banchou.Player {
 
         public PawnId Pawn = PawnId.Empty;
         public HashSet<PawnId> Targets = new HashSet<PawnId>();
-
-        public Vector2 InputMovement;
-        public Vector2 InputLook;
-
         public PlayerState() { }
         public PlayerState(in PlayerState prev) {
             Source = prev.Source;
 
             Pawn = prev.Pawn;
             Targets = prev.Targets;
-
-            InputMovement = prev.InputMovement;
-            InputLook = prev.InputLook;
         }
     }
 

@@ -21,8 +21,6 @@ namespace Banchou.Pawn.FSM {
         private float _endTime = 1f;
 
         public void Construct(
-            PawnId pawnId,
-            IObservable<GameState> observeState,
             ObservePlayerMove observePlayerMove,
             Part.IMotor motor,
             Part.Orientation orientation,
@@ -31,10 +29,6 @@ namespace Banchou.Pawn.FSM {
             // The object's final facing unit vector angle
             var faceDirection = Vector3.zero;
             var flipTimer = 0f;
-
-            // observeState
-            //     .Select(state => state.GetPawnPlayerInputMovement(pawnId))
-            //     .DistinctUntilChanged();
 
             ObserveStateEnter
                 .Subscribe(_ => {

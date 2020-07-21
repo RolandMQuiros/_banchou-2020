@@ -68,20 +68,6 @@ namespace Banchou.Player {
                 };
             }
 
-            var move = action as StateAction.PlayerMove;
-            if (move != null && move.Direction != prev.InputMovement) {
-                return new PlayerState(prev) {
-                    InputMovement = move.Direction
-                };
-            }
-
-            var look = action as StateAction.PlayerLook;
-            if (look != null && look.Direction != prev.InputLook) {
-                return new PlayerState(prev) {
-                    InputLook = look.Direction
-                };
-            }
-
             var addTarget = action as StateAction.AddPlayerTarget;
             if (addTarget != null && !prev.Targets.Contains(addTarget.Target)) {
                 var targets = new HashSet<PawnId>(prev.Targets);

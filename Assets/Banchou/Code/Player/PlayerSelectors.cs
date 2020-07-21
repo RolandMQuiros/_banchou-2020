@@ -33,13 +33,5 @@ namespace Banchou.Player {
         public static IEnumerable<PawnId> GetPlayerTargets(this GameState state, PlayerId playerId) {
             return state.GetPlayer(playerId)?.Targets ?? Enumerable.Empty<PawnId>();
         }
-
-        public static Vector2 GetPlayerMovement(this GameState state, PlayerId playerId) {
-            return state.GetPlayer(playerId)?.InputMovement ?? Vector3.zero;
-        }
-
-        public static Vector2 GetPlayerLook(this GameState state, PlayerId playerId) {
-            return state.GetPlayer(playerId)?.InputLook ?? Vector2.zero;
-        }
     }
 }

@@ -29,28 +29,26 @@ namespace Banchou.Pawn.FSM {
         public void Construct(
             PawnId pawnId,
             IObservable<GameState> observeState,
-            GetState getState,
+            ObservePlayerMove observePlayerMove,
             Rigidbody body,
             IPawnInstances pawnInstances,
             Orientation orientation = null
         ) {
             Vector3 faceDirection = Vector3.zero;
 
-            var observeSubstate = observeState
-                .Select(
-                    state => (
-                        LockOnTarget: state.GetCombatantLockOnTarget(pawnId),
-                        Targets: state.GetPawnPlayerTargets(pawnId),
-                        Input: getState().GetPawnPlayerInputMovement(pawnId)
-                    )
-                )
-                .DistinctUntilChanged();
-
             // TODO: Appears to be evaluating the state multiple times. Change this to just save to some local vars in a subscription.
             var chooseTargetOnEnter = ObserveStateEnter
-                .WithLatestFrom(observeSubstate, (_, substate) => substate)
+                .WithLatestFrom(
+                    observeState
+                        .Select(state => state.GetPawnPlayerTargets(pawnId))
+                        .DistinctUntilChanged(),
+                    (_, targets) => targets
+                )
+                .WithLatestFrom(
+                    observePlayerMove(), (targets, move) => (targets, move)
+                )
                 .Select(
-                    substate => pawnInstances.GetMany(substate.Targets)
+                    substate => pawnInstances.GetMany(substate.targets)
                         .Where(
                             instance => {
                                 if (instance != null) {
@@ -59,7 +57,7 @@ namespace Banchou.Pawn.FSM {
                                     Vector3 basis = Vector3.zero;
                                     switch (_guide) {
                                         case Guide.ByInput:
-                                            basis = substate.Input.CameraPlaneProject();
+                                            basis = substate.move;
                                             break;
                                         case Guide.ByOrientation:
                                             basis = orientation?.transform.forward ?? Vector3.zero;
