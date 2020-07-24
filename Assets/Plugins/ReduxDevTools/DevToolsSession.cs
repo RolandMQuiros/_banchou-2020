@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Reflection;
 using System.Collections.Generic;
 using UnityEngine;
 
 using Newtonsoft.Json.Linq;
 
 namespace Redux.DevTools {
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    public class CollapsibleActionAttribute : Attribute { }
-
     public class DevToolsSession : ScriptableObject {
         public class Step {
             public object Action;

@@ -96,6 +96,40 @@ namespace Banchou.Pawn {
                 };
             }
 
+            var fsmStateChanged = action as StateAction.FSMStateChanged;
+            if (fsmStateChanged != null) {
+                return new PawnState(prev) {
+                    FSMState = new PawnFSMState(prev.FSMState) {
+                        StateHash = fsmStateChanged.Statehash,
+                        IsLoop = fsmStateChanged.IsLoop,
+                        ClipLength = fsmStateChanged.ClipLength,
+                        FixedTimeAtChange = fsmStateChanged.When
+                    }
+                };
+            }
+
+            var rollbackStarted = action as StateAction.RollbackStarted;
+            if (rollbackStarted != null) {
+                return new PawnState(prev) {
+                    RollbackState = PawnRollbackState.RollingBack
+                };
+            }
+
+            var fastForwarding = action as StateAction.FastForwarding;
+            if (fastForwarding != null) {
+                return new PawnState(prev) {
+                    RollbackState = PawnRollbackState.FastForward,
+                    RollbackCorrectionTime = fastForwarding.CorrectionTime
+                };
+            }
+
+            var rollbackComplete = action as StateAction.RollbackComplete;
+            if (rollbackComplete != null) {
+                return new PawnState(prev) {
+                    RollbackState = PawnRollbackState.Complete
+                };
+            }
+
             return prev;
         }
     }

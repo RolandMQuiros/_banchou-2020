@@ -26,7 +26,7 @@ namespace Banchou.Pawn.FSM {
                 .DistinctUntilChanged();
 
             ObserveStateUpdate
-                .Select(stateInfo => stateInfo.normalizedTime % 1)
+                .Select(stateUnit => stateUnit.StateInfo.normalizedTime % 1)
                 .Where(time => time >= _startTime && time <= _endTime)
                 .WithLatestFrom(observeTarget, (_, target) => target)
                 .Where(target => target != PawnId.Empty)

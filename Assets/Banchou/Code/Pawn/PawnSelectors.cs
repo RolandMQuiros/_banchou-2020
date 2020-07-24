@@ -44,5 +44,9 @@ namespace Banchou.Pawn {
         public static IEnumerable<PawnId> GetPawnPlayerTargets(this GameState state, PawnId pawnId) {
             return state.GetPlayer(state.GetPawnPlayerId(pawnId))?.Targets ?? Enumerable.Empty<PawnId>();
         }
+
+        public static PawnRollbackState GetPawnRollbackState(this GameState state, PawnId pawnId) {
+            return state.GetPawn(pawnId).RollbackState;
+        }
     }
 }

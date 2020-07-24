@@ -3,7 +3,6 @@ using System.Linq;
 using UnityEngine;
 using UniRx;
 
-using Banchou.Combatant;
 using Banchou.Player;
 using Banchou.Pawn.Part;
 
@@ -75,7 +74,7 @@ namespace Banchou.Pawn.FSM {
                 );
 
             ObserveStateUpdate
-                .Select(stateInfo => stateInfo.normalizedTime % 1)
+                .Select(unit => unit.StateInfo.normalizedTime % 1)
                 .Where(time => time >= _startTime && time <= _endTime)
                 .WithLatestFrom(chooseTargetOnEnter, (_, target) => target)
                 .Where(target => target != null)

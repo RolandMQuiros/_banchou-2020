@@ -17,11 +17,6 @@ namespace Banchou.Combatant {
 
         public class LockOff : CombatantAction { }
 
-        public class PushCommand : CombatantAction {
-            public Command Command;
-            public float When;
-        }
-
         public class Hit {
             public PawnId From;
             public PawnId To;
@@ -49,14 +44,6 @@ namespace Banchou.Combatant {
         public StateAction.LockOff LockOff(PawnId combatantId) {
             return new StateAction.LockOff {
                 CombatantId = combatantId
-            };
-        }
-
-        public StateAction.PushCommand PushCommand(PawnId combatantId, Command command) {
-            return new StateAction.PushCommand {
-                CombatantId = combatantId,
-                Command = command,
-                When = Time.fixedUnscaledTime
             };
         }
 

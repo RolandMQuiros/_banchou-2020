@@ -11,32 +11,6 @@ namespace Banchou.Combatant {
         Shufflemen
     }
 
-    public enum Command {
-        None,
-        LightAttack,
-        HeavyAttack
-    }
-
-    public struct PushedCommand : IEquatable<PushedCommand> {
-        public static readonly PushedCommand Empty = new PushedCommand();
-        public Command Command;
-        public float When;
-
-        public bool Equals(PushedCommand other) => other.Command == Command && other.When == When;
-    }
-
-    public enum StickDirection {
-        Neutral,
-        Forward,
-        ForwardRight,
-        Right,
-        BackRight,
-        Back,
-        BackLeft,
-        Left,
-        ForwardLeft
-    }
-
     public enum HitMedium {
         Environment,
         Melee,
@@ -66,7 +40,6 @@ namespace Banchou.Combatant {
         public int Health = 0;
 
         public PawnId LockOnTarget = PawnId.Empty;
-        public PushedCommand LastCommand = PushedCommand.Empty;
         public Hit HitTaken = null;
         public Hit HitDealt = null;
 
@@ -74,7 +47,6 @@ namespace Banchou.Combatant {
         public CombatantState(in CombatantState prev) {
             Health = prev.Health;
             LockOnTarget = prev.LockOnTarget;
-            LastCommand = prev.LastCommand;
             HitTaken = prev.HitTaken;
             HitDealt = prev.HitDealt;
         }

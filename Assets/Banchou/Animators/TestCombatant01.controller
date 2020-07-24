@@ -261,6 +261,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _acceptedCommand: 1
+  _outputTrigger: C:LightAttack
   _acceptFromStateTime: 0
   _acceptUntilStateTime: 1
   _bufferUntilStateTime: 0.45
@@ -660,6 +661,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _acceptedCommand: 2
+  _outputTrigger: C:HeavyAttack
   _acceptFromStateTime: 0
   _acceptUntilStateTime: 1
   _bufferUntilStateTime: 0
@@ -727,7 +729,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Light Attack 2
-  m_Speed: 1.5
+  m_Speed: 1
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 304000787263767947}
@@ -773,6 +775,18 @@ AnimatorStateTransition:
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
+--- !u!114 &-1432470110364047314
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ed564b1fe5563643972878c420b19bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1101 &-1330500628083276969
 AnimatorStateTransition:
   m_ObjectHideFlags: 1
@@ -998,6 +1012,7 @@ AnimatorStateMachine:
     - {fileID: -5211142258500256578}
   m_StateMachineBehaviours:
   - {fileID: 8186623742325980083}
+  - {fileID: -1432470110364047314}
   m_AnyStatePosition: {x: 50, y: 20, z: 0}
   m_EntryPosition: {x: 50, y: 80, z: 0}
   m_ExitPosition: {x: 50, y: 400, z: 0}
@@ -1304,7 +1319,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Light Attack 1
-  m_Speed: 1.5
+  m_Speed: 1
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 8501883939466280095}
@@ -1338,6 +1353,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _acceptedCommand: 1
+  _outputTrigger: C:LightAttack
   _acceptFromStateTime: 0
   _acceptUntilStateTime: 1
   _bufferUntilStateTime: 0.56
@@ -1471,6 +1487,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _acceptedCommand: 1
+  _outputTrigger: C:LightAttack
   _acceptFromStateTime: 0
   _acceptUntilStateTime: 1
   _bufferUntilStateTime: 0
@@ -1648,7 +1665,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Light Attack 3
-  m_Speed: 1.5
+  m_Speed: 1
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: -7314040885652696364}
@@ -1869,6 +1886,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _acceptedCommand: 1
+  _outputTrigger: C:LightAttack
   _acceptFromStateTime: 0
   _acceptUntilStateTime: 1
   _bufferUntilStateTime: 0.37
@@ -1958,6 +1976,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _acceptedCommand: 1
+  _outputTrigger: C:LightAttack
   _acceptFromStateTime: 0
   _acceptUntilStateTime: 1
   _bufferUntilStateTime: 0.38
@@ -1999,6 +2018,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _acceptedCommand: 2
+  _outputTrigger: 
   _acceptFromStateTime: 0
   _acceptUntilStateTime: 1
   _bufferUntilStateTime: 0

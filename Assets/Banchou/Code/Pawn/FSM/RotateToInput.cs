@@ -38,7 +38,7 @@ namespace Banchou.Pawn.FSM {
                 .AddTo(Streams);
 
             ObserveStateUpdate
-                .Select(stateInfo => stateInfo.normalizedTime % 1)
+                .Select(stateUnit => stateUnit.StateInfo.normalizedTime % 1)
                 .Where(time => time >= _startTime && time <= _endTime)
                 .WithLatestFrom(observePlayerMove(), (_, input) => input)
                 .Subscribe(direction => {

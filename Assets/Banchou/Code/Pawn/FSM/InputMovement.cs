@@ -37,14 +37,6 @@ namespace Banchou.Pawn.FSM {
             var forwardSpeed = 0f;
             var rightSpeed = 0f;
 
-            // ObserveStateUpdate
-            //     .WithLatestFrom(observeState, (_, state) => state)
-            //     .Where(state => !state.IsMobApproaching(pawnId))
-            //     .Select(
-            //         state => state
-            //             .GetPawnPlayerInputMovement(pawnId)
-            //             .CameraPlaneProject()
-            //     )
             ObserveStateUpdate
                 .WithLatestFrom(observePlayerMove(), (_, move) => move)
                 .CatchIgnore((Exception error) => { Debug.LogException(error); })

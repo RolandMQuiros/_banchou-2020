@@ -29,16 +29,42 @@ namespace Banchou.Pawn {
         #endregion
     }
 
+    public struct PawnFSMState {
+        public int StateHash;
+        public bool IsLoop;
+        public float ClipLength;
+        public float FixedTimeAtChange;
+        public PawnFSMState(in PawnFSMState prev) {
+            StateHash = prev.StateHash;
+            IsLoop = prev.IsLoop;
+            ClipLength = prev.ClipLength;
+            FixedTimeAtChange = prev.FixedTimeAtChange;
+        }
+    }
+
+    public enum PawnRollbackState {
+        Complete,
+        RollingBack,
+        FastForward
+    }
+
     public class PawnState {
         public PlayerId PlayerId;
         public string PrefabKey = string.Empty;
         public float TimeScale = 1f;
+
+        public PawnRollbackState RollbackState = PawnRollbackState.Complete;
+        public float RollbackCorrectionTime = 0f;
+        public PawnFSMState FSMState = new PawnFSMState();
 
         public PawnState() { }
         public PawnState(in PawnState prev) {
             PlayerId = prev.PlayerId;
             PrefabKey = prev.PrefabKey;
             TimeScale = prev.TimeScale;
+            RollbackState = prev.RollbackState;
+            RollbackCorrectionTime = prev.RollbackCorrectionTime;
+            FSMState = prev.FSMState;
         }
     }
 

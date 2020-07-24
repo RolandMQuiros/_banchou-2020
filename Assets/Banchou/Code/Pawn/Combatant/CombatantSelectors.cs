@@ -33,10 +33,6 @@ namespace Banchou.Combatant {
             return state.Combatants.Values;
         }
 
-        public static PushedCommand GetCombatantLastCommand(this GameState state, PawnId combatantId) {
-            return state.GetCombatant(combatantId)?.LastCommand ?? PushedCommand.Empty;
-        }
-
         public static int GetCombatantHealth(this GameState state, PawnId combatantId) {
             CombatantState combatantState;
             if (state.Combatants.TryGetValue(combatantId, out combatantState)) {

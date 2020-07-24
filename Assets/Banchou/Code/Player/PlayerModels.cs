@@ -25,7 +25,7 @@ namespace Banchou.Player {
         }
 
         public override int GetHashCode() => base.GetHashCode();
-        public override string ToString() => base.ToString();
+        public override string ToString() => Id.ToString();
         public static bool operator==(PlayerId first, PlayerId second) => first.Equals(second);
         public static bool operator!=(PlayerId first, PlayerId second) => !first.Equals(second);
         #endregion

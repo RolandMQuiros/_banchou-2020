@@ -6,7 +6,12 @@ using UnityEngine;
 
 namespace Banchou {
     public sealed class DiContainer {
-        private Dictionary<Type, object> _bindings = new Dictionary<Type, object>();
+        private class Binding {
+            public object Instance = null;
+            public Func<Type, bool> Condition = null;
+        }
+
+        private Dictionary<Type, Binding> _bindings = new Dictionary<Type, Binding>();
 
         public DiContainer() {
             Bind<DiContainer>(this);
@@ -19,12 +24,27 @@ namespace Banchou {
         }
 
         public void Bind<T>(T instance) {
-            _bindings[typeof(T)] = instance;
+            _bindings[typeof(T)] = new Binding { Instance = instance };
+        }
+
+        public void Bind<T>(T instance, Func<Type, bool> where) {
+            _bindings[typeof(T)] = new Binding {
+                Instance = instance,
+                Condition = where
+            };
         }
 
         public void Inject(object target) {
             if (target.GetType() == typeof(DiContainer)) {
                 throw new Exception("Cannot inject into a DiContainer");
+            }
+
+            var applicableBindings = _bindings
+                .Where(pair => pair.Value.Condition == null || pair.Value.Condition(target.GetType()))
+                .Select(pair => (Key: pair.Key, Value: pair.Value.Instance));
+
+            if (!applicableBindings.Any()) {
+                return;
             }
 
             var targetType = target.GetType();
@@ -44,7 +64,7 @@ namespace Banchou {
                 var injectionPairs = parameters
                     // Left join against the parameter list
                     .GroupJoin(
-                        inner: _bindings,
+                        inner: applicableBindings,
                         outerKeySelector: parameter => parameter.ParameterType,
                         innerKeySelector: pair => pair.Key,
                         resultSelector: (parameter, containerPairs) => (
@@ -73,7 +93,7 @@ namespace Banchou {
                 if (injections.Length == parameters.Length) {
                     inject.Invoke(target, injections);
                 } else {
-                    var missingTypes = parameters.Select(p => p.ParameterType).Except(_bindings.Keys);
+                    var missingTypes = parameters.Select(p => p.ParameterType).Except(applicableBindings.Select(p => p.Key));
                     Debug.LogWarning(
                         $"Failed to satisfy the dependencies for {inject.DeclaringType}:{inject}\n" +
                         $"Missing bindings:\n\t{string.Join("\n\t", missingTypes)}"

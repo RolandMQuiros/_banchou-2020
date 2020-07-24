@@ -2,34 +2,60 @@
 using System.Collections.Generic;
 
 using UnityEngine;
+using UnityEngine.Animations;
 using UniRx;
 
 namespace Banchou {
     public class FSMBehaviour : StateMachineBehaviour {
         public bool IsStateActive { get; private set; }
+
         private List<IDisposable> _streams = new List<IDisposable>();
         protected ICollection<IDisposable> Streams { get => _streams; }
 
-        public int Count => throw new NotImplementedException();
+        protected struct FSMUnit {
+            public AnimatorStateInfo StateInfo;
+            public int LayerIndex;
+            public AnimatorControllerPlayable Playable;
 
-        public bool IsReadOnly => throw new NotImplementedException();
+            public void Deconstruct(
+                out AnimatorStateInfo stateInfo,
+                out int layerIndex,
+                out AnimatorControllerPlayable playable
+            ) {
+                stateInfo = StateInfo;
+                layerIndex = LayerIndex;
+                playable = Playable;
+            }
+        }
 
-        protected Subject<AnimatorStateInfo> ObserveStateEnter = new Subject<AnimatorStateInfo>();
-        protected Subject<AnimatorStateInfo> ObserveStateUpdate = new Subject<AnimatorStateInfo>();
-        protected Subject<AnimatorStateInfo> ObserveStateExit = new Subject<AnimatorStateInfo>();
+        protected Subject<FSMUnit> ObserveStateEnter = new Subject<FSMUnit>();
+        protected Subject<FSMUnit> ObserveStateUpdate = new Subject<FSMUnit>();
+        protected Subject<FSMUnit> ObserveStateExit = new Subject<FSMUnit>();
 
-        public override void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
+        public override void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex, AnimatorControllerPlayable playable) {
             IsStateActive = true;
-            ObserveStateEnter.OnNext(stateInfo);
+            ObserveStateEnter.OnNext(new FSMUnit {
+                StateInfo = stateInfo,
+                LayerIndex = layerIndex,
+                Playable = playable
+            });
         }
 
-        public override void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
+        public override void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex, AnimatorControllerPlayable playable) {
             IsStateActive = false;
-            ObserveStateExit.OnNext(stateInfo);
+            ObserveStateExit.OnNext(new FSMUnit {
+                StateInfo = stateInfo,
+                LayerIndex = layerIndex,
+                Playable = playable
+            });
         }
 
-        public override void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
-            ObserveStateUpdate.OnNext(stateInfo);
+        public override void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex, AnimatorControllerPlayable playable) {
+            ObserveStateUpdate.OnNext(new FSMUnit {
+                StateInfo = stateInfo,
+                LayerIndex = layerIndex,
+                Playable = playable
+            });
         }
 
         private void OnDisable() {

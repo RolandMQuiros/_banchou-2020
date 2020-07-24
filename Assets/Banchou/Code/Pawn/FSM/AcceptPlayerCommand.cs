@@ -1,13 +1,12 @@
 ﻿using System;
 using UnityEngine;
 using UniRx;
-
-using Banchou.Combatant;
 using Banchou.Player;
 
 namespace Banchou.Pawn.FSM {
     public class AcceptPlayerCommand : FSMBehaviour {
-        [SerializeField] private Command _acceptedCommand = Command.None;
+        [SerializeField] private InputCommand _acceptedCommand = InputCommand.None;
+        [SerializeField] private string _outputTrigger = null;
 
         [SerializeField, Range(0f, 1f), Tooltip("The normalized state time after which the command is accepted")]
         private float _acceptFromStateTime = 0f;
@@ -21,35 +20,35 @@ namespace Banchou.Pawn.FSM {
         public void Construct(
             PawnId pawnId,
             IObservable<GameState> observeState,
+            ObservePlayerCommand observeCommand,
             GetState getState,
             Animator animator
         ) {
             var enterTime = Time.fixedTime;
             var exitTime = Time.fixedTime;
-            var commandHash = Animator.StringToHash($"C:{_acceptedCommand}");
-
-            var observeCommand = observeState
-                .Select(state => state.GetCombatantLastCommand(pawnId))
-                .DistinctUntilChanged()
-                .Where(lastCommand => lastCommand.Command != Command.None && lastCommand.Command == _acceptedCommand)
-                .Select(lastCommand => lastCommand.Command);
-
+            var commandHash = Animator.StringToHash(_outputTrigger);
             var wasTriggered = false;
 
-            observeCommand
-                .Where(_ => IsStateActive && !wasTriggered)
+            observeCommand()
+                .Where(command => command == _acceptedCommand && IsStateActive && !wasTriggered)
                 .WithLatestFrom(
                     ObserveStateUpdate,
-                    (command, stateInfo) => stateInfo.normalizedTime % 1
+                    (command, unit) => unit.StateInfo.normalizedTime % 1
                 )
                 .Where(stateTime => stateTime >= _acceptFromStateTime && stateTime <= _acceptUntilStateTime)
-                .Subscribe(_ => { wasTriggered = true; })
+                .Subscribe(stateTime => {
+                    wasTriggered = true;
+                })
                 .AddTo(Streams);
 
-            ObserveStateUpdate
-                .Where(stateInfo => wasTriggered && stateInfo.normalizedTime >= _bufferUntilStateTime)
-                .Subscribe(_ => { animator.SetTrigger(commandHash); })
-                .AddTo(Streams);
+            if (commandHash != 0) {
+                ObserveStateUpdate
+                    .Where(unit => wasTriggered && unit.StateInfo.normalizedTime >= _bufferUntilStateTime)
+                    .Subscribe(unit => {
+                        animator.SetTrigger(commandHash);
+                    })
+                    .AddTo(Streams);
+            }
 
             ObserveStateExit
                 .Subscribe(_ => {

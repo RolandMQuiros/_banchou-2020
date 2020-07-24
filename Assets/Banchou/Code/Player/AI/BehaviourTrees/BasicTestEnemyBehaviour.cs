@@ -21,7 +21,8 @@ namespace Banchou.AI {
             PlayerActions playerActions,
             MobActions mobActions,
             CombatantActions combatantActions,
-            IPawnInstances pawnInstances
+            IPawnInstances pawnInstances,
+            PlayerInputStreams playerInput
         ) {
             var targets = new List<PawnContext>();
             var trees = new List<IBehaviourTreeNode<GameState>>();
@@ -74,7 +75,7 @@ namespace Banchou.AI {
                             })
                             .Do("Poke", state => {
                                 if (!poked) {
-                                    dispatch(combatantActions.PushCommand(pawnId, Command.LightAttack));
+                                    playerInput.PushCommand(playerId, InputCommand.LightAttack);
                                     poked = true;
                                     return BehaviourTreeStatus.Running;
                                 }

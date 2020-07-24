@@ -74,16 +74,6 @@ namespace Banchou.Combatant {
                 };
             }
 
-            var pushCommand = action as StateAction.PushCommand;
-            if (pushCommand != null) {
-                return new CombatantState(prev) {
-                    LastCommand = new PushedCommand() {
-                        Command = pushCommand.Command,
-                        When = pushCommand.When
-                    }
-                };
-            }
-
             return prev;
         }
     }

@@ -6,9 +6,6 @@ using Redux;
 using Banchou.Pawn;
 
 namespace Banchou.Player {
-    public delegate void PushMove(Vector3 direction);
-    public delegate void PushLook(Vector2 direction);
-
     public class PlayerContext : MonoBehaviour, IContext {
         public PlayerId PlayerId { get; set; } = PlayerId.Create();
 
@@ -40,12 +37,11 @@ namespace Banchou.Player {
 
         public void InstallBindings(DiContainer container) {
             container.Bind<PlayerId>(PlayerId);
-            container.Bind<PushMove>(direction => { _playerInputStreams.PushMove(PlayerId, direction); });
-            container.Bind<PushLook>(direction => { _playerInputStreams.PushLook(PlayerId, direction); });
 
             container.Bind<ObservePlayerLook>(
                 () => _playerInputStreams
                     .ObserveLook(PlayerId)
+                    .Select(lookUnit => lookUnit.Look)
                     .WithLatestFrom(
                         _observeState
                             .Select(state => state.GetPlayer(PlayerId))
@@ -59,6 +55,7 @@ namespace Banchou.Player {
             container.Bind<ObservePlayerMove>(
                 () => _playerInputStreams
                     .ObserveMove(PlayerId)
+                    .Select(moveUnit => moveUnit.Move)
                     .WithLatestFrom(
                         _observeState
                             .Select(state => state.GetPlayer(PlayerId))

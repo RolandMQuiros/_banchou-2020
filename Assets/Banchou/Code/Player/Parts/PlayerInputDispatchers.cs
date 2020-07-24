@@ -2,65 +2,58 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UniRx;
+using UniRx.Triggers;
 using Redux;
-
-using Banchou.Pawn;
-using Banchou.Combatant;
 
 namespace Banchou.Player.Part {
     public class PlayerInputDispatchers : MonoBehaviour {
         private PlayerId _playerId;
-        private PawnId _pawnId;
         private Dispatcher _dispatch;
 
         private PlayerActions _playerActions;
-        private CombatantActions _combatantActions;
         private PlayerInputStreams _playerInputStreams;
+
+        private Vector2 _moveInput;
 
         public void Construct(
             PlayerId playerId,
             IObservable<GameState> observeState,
             Dispatcher dispatch,
             PlayerActions playerActions,
-            CombatantActions combatantActions,
             PlayerInputStreams playerInputStreams
         ) {
             _playerId = playerId;
             _dispatch = dispatch;
 
             _playerActions = playerActions;
-            _combatantActions = combatantActions;
-
             _playerInputStreams = playerInputStreams;
 
-            observeState
-                .Select(state => state.GetPlayerPawn(playerId))
-                .DistinctUntilChanged()
-                .Subscribe(pawn => {
-                    _pawnId = pawn;
+            this.FixedUpdateAsObservable()
+                .Subscribe(_ => {
+                    _playerInputStreams.PushMove(_playerId, _moveInput.CameraPlaneProject(), Time.fixedUnscaledTime);
                 })
                 .AddTo(this);
         }
 
         public void DispatchMovement(InputAction.CallbackContext callbackContext) {
             var direction = callbackContext.ReadValue<Vector2>();
-            _playerInputStreams.PushMove(_playerId, direction.CameraPlaneProject());
+            _moveInput = direction;
         }
 
         public void DispatchLook(InputAction.CallbackContext callbackContext) {
             var direction = callbackContext.ReadValue<Vector2>();
-            _playerInputStreams.PushLook(_playerId, direction);
+            _playerInputStreams.PushLook(_playerId, direction, Time.fixedUnscaledTime);
         }
 
         public void DispatchLightAttack(InputAction.CallbackContext callbackContext) {
             if (callbackContext.performed) {
-                _dispatch(_combatantActions.PushCommand(_pawnId, Command.LightAttack));
+                _playerInputStreams.PushCommand(_playerId, InputCommand.LightAttack, Time.fixedUnscaledTime);
             }
         }
 
         public void DispatchHeavyAttack(InputAction.CallbackContext callbackContext) {
              if (callbackContext.performed) {
-                _dispatch(_combatantActions.PushCommand(_pawnId, Command.HeavyAttack));
+                _playerInputStreams.PushCommand(_playerId, InputCommand.HeavyAttack, Time.fixedUnscaledTime);
             }
         }
 
