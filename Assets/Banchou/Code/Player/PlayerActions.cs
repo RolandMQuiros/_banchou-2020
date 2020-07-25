@@ -63,17 +63,13 @@ namespace Banchou.Player {
 
     public class PlayerActions {
         private IPawnInstances _pawnInstances;
-
-        private MobActions _mobActions;
         private CombatantActions _combatantActions;
 
-        public void Construct(
+        public PlayerActions(
             IPawnInstances pawnInstances,
-            MobActions mobActions,
             CombatantActions combatantActions
         ) {
             _pawnInstances = pawnInstances;
-            _mobActions = mobActions;
             _combatantActions = combatantActions;
         }
 

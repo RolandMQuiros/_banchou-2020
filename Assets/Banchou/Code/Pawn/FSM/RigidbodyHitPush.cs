@@ -6,6 +6,7 @@ using Banchou.Pawn;
 
 namespace Banchou.Combatant.FSM {
     public class RigidbodyHitPush : FSMBehaviour {
+        [SerializeField] private ForceMode _forceMode;
         public void Construct(
             PawnId pawnId,
             IObservable<GameState> observeState,

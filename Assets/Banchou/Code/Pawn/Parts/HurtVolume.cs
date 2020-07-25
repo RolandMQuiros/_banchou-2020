@@ -29,15 +29,6 @@ namespace Banchou.Pawn.Part {
         private void OnTriggerEnter(Collider collider) {
             var hitVolume = collider.GetComponent<HitVolume>();
             if (hitVolume != null && _pawnId != hitVolume.PawnId) {
-                Debug.Log(
-                    "Hit detected!\n" +
-                    $"\tTo: {hitVolume.PawnId}\n" +
-                    $"\tBy: {_pawnId}\n" +
-                    $"\tStrength: {_strength}\n" +
-                    $"\tPush: {_push}\n" +
-                    $"\tTransformed Push: {_orientation.TransformDirection(_push)}"
-                );
-
                 _dispatch(
                     _combatantActions.Hit(
                         from: _pawnId,

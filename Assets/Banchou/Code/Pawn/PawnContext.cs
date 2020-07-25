@@ -13,7 +13,6 @@ using Banchou.Mob;
 
 namespace Banchou.Pawn {
     public delegate float GetDeltaTime();
-    public delegate bool RecordFSMStateChanges();
 
     public class PawnContext : MonoBehaviour, IContext, IPawnInstance {
         [SerializeField] private string _pawnId = string.Empty;
@@ -161,30 +160,23 @@ namespace Banchou.Pawn {
             container.Bind<NavMeshAgent>(_agent);
             container.Bind<Part.IMotor>(_motor);
             container.Bind<PawnActions>(_pawnActions);
-            container.Bind<RecordFSMStateChanges>(() => _recordStateChanges);
             container.Bind<GetDeltaTime>(() => _deltaTime);
 
             container.Bind<ObservePlayerLook>(
-                () =>  _observeState
+                () => _observeState
                     .Select(state => state.GetPawnPlayerId(PawnId))
                     .DistinctUntilChanged()
                     .SelectMany(playerId => _playerInput.ObserveLook(playerId).Select(unit => unit.Look))
             );
 
             container.Bind<ObservePlayerMove>(
-                () =>  _observeState
+                () => _observeState
                     .Select(state => state.GetPawnPlayerId(PawnId))
                     .DistinctUntilChanged()
                     .SelectMany(playerId => _playerInput.ObserveMove(playerId).Select(unit => unit.Move))
             );
 
-            container.Bind<ObservePlayerCommand>(
-                () => _commandSubject
-                // _observeState
-                //     .Select(state => state.GetPawnPlayerId(PawnId))
-                //     .DistinctUntilChanged()
-                //     .SelectMany(playerId => _playerInput.ObserveCommand(playerId).Select(unit => unit.Command))
-            );
+            container.Bind<ObservePlayerCommand>(() => _commandSubject);
         }
 
         private void Start() {
