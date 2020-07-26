@@ -32,12 +32,16 @@ namespace Banchou.Pawn {
         #endregion
     }
 
-    public struct PawnFSMState {
+    public class PawnFSMState {
+        public PawnId PawnId;
         public int StateHash;
         public bool IsLoop;
         public float ClipLength;
         public float FixedTimeAtChange;
+
+        public PawnFSMState() { }
         public PawnFSMState(in PawnFSMState prev) {
+            PawnId = prev.PawnId;
             StateHash = prev.StateHash;
             IsLoop = prev.IsLoop;
             ClipLength = prev.ClipLength;
@@ -79,13 +83,22 @@ namespace Banchou.Pawn {
         public PawnSyncState() { }
         public PawnSyncState(in PawnSyncState prev) {
             PawnId = prev.PawnId;
+            Position = prev.Position;
+            Rotation = prev.Rotation;
         }
     }
 
-    public class PawnsState : Dictionary<PawnId, PawnState> {
+    public class PawnsState {
+        public Dictionary<PawnId, PawnState> States = new Dictionary<PawnId, PawnState>();
+        public PawnSyncState LatestSync = new PawnSyncState();
+        public PawnFSMState LatestFSMChange = new PawnFSMState();
+
         public PawnsState() { }
-        public PawnsState(in PawnsState prev) : base(prev) { }
-        public PawnsState(in Dictionary<PawnId, PawnState> dict) : base(dict) { }
+        public PawnsState(in PawnsState prev) {
+            States = prev.States;
+            LatestSync = prev.LatestSync;
+            LatestFSMChange = prev.LatestFSMChange;
+        }
     }
 
 }

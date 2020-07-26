@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 using Banchou.Player;
 
@@ -7,11 +8,13 @@ namespace Banchou.Pawn {
         public static PawnsState Reduce(in PawnsState prev, in object action) {
             if (action is StateAction.AddPawn add) {
                 PawnState pawn;
-                if (!prev.TryGetValue(add.PawnId, out pawn)) {
+                if (!prev.States.TryGetValue(add.PawnId, out pawn)) {
                     return new PawnsState(prev) {
-                        [add.PawnId] = new PawnState {
-                            PlayerId = add.PlayerId,
-                            PrefabKey = add.PrefabKey
+                        States = new Dictionary<PawnId, PawnState>(prev.States) {
+                            [add.PawnId] = new PawnState {
+                                PlayerId = add.PlayerId,
+                                PrefabKey = add.PrefabKey
+                            }
                         }
                     };
                 }
@@ -19,54 +22,72 @@ namespace Banchou.Pawn {
 
             if (action is StateAction.RemovePawn remove) {
                 var next = new PawnsState(prev);
-                next.Remove(remove.PawnId);
+                next.States.Remove(remove.PawnId);
                 return next;
             }
 
             if (action is Player.StateAction.RemovePlayer removePlayer) {
-                var affected = prev.Values.Where(pawn => pawn.PlayerId == removePlayer.PlayerId);
+                var affected = prev.States.Values.Where(pawn => pawn.PlayerId == removePlayer.PlayerId);
                 if (affected.Any()) {
-                    return new PawnsState(
-                        prev.Select(pair => (Id: pair.Key, Pawn: ReducePawn(pair.Value, removePlayer)))
+                    return new PawnsState(prev) {
+                        States = prev.States.Select(pair => (Id: pair.Key, Pawn: ReducePawn(pair.Value, removePlayer)))
                             .ToDictionary(pair => pair.Id, pair => pair.Pawn)
-                    );
+                    };
                 }
             }
 
             if (action is Player.StateAction.AttachPlayerToPawn attach) {
                 PawnState prevPawn;
-                if (prev.TryGetValue(attach.PawnId, out prevPawn)) {
+                if (prev.States.TryGetValue(attach.PawnId, out prevPawn)) {
                     return new PawnsState(prev) {
-                        [attach.PawnId] = ReducePawn(prevPawn, action)
+                        States = new Dictionary<PawnId, PawnState>(prev.States) {
+                            [attach.PawnId] = ReducePawn(prevPawn, action)
+                        }
                     };
                 }
             }
 
             if (action is Player.StateAction.DetachPlayerFromPawn detach) {
-                var next = new PawnsState(prev);
-                foreach (var pair in prev) {
+                var next = new Dictionary<PawnId, PawnState>(prev.States);
+                foreach (var pair in prev.States) {
                     if (pair.Value.PlayerId == detach.PlayerId) {
                         next[pair.Key] = new PawnState(pair.Value) {
                             PlayerId = PlayerId.Empty
                         };
                     }
                 }
-                return next;
+                return new PawnsState(prev) {
+                    States = next
+                };
             }
 
             // On scene load, remove all Pawns without Players
             if (action is Banchou.StateAction.SceneLoaded) {
-                return new PawnsState(
-                    prev.Where(pair => pair.Value.PlayerId == PlayerId.Empty)
+                return new PawnsState(prev) {
+                    States = prev.States.Where(pair => pair.Value.PlayerId == PlayerId.Empty)
                         .ToDictionary(pair => pair.Key, pair => pair.Value)
-                );
+                };
+            }
+
+            if (action is StateAction.FSMStateChanged fsmStateChanged) {
+                return new PawnsState(prev) {
+                    LatestFSMChange = new PawnFSMState(prev.LatestFSMChange) {
+                        PawnId = fsmStateChanged.PawnId,
+                        StateHash = fsmStateChanged.Statehash,
+                        IsLoop = fsmStateChanged.IsLoop,
+                        ClipLength = fsmStateChanged.ClipLength,
+                        FixedTimeAtChange = fsmStateChanged.When
+                    }
+                };
             }
 
             if (action is StateAction.IPawnAction pawnAction) {
                 PawnState prevPawn;
-                if (prev.TryGetValue(pawnAction.PawnId, out prevPawn)) {
+                if (prev.States.TryGetValue(pawnAction.PawnId, out prevPawn)) {
                     return new PawnsState(prev) {
-                        [pawnAction.PawnId] = ReducePawn(prevPawn, pawnAction)
+                        States = new Dictionary<PawnId, PawnState>(prev.States) {
+                            [pawnAction.PawnId] = ReducePawn(prevPawn, pawnAction)
+                        }
                     };
                 }
             }
@@ -84,17 +105,6 @@ namespace Banchou.Pawn {
             if (action is Player.StateAction.RemovePlayer removePlayer && prev.PlayerId == removePlayer.PlayerId) {
                 return new PawnState(prev) {
                     PlayerId = PlayerId.Empty
-                };
-            }
-
-            if (action is StateAction.FSMStateChanged fsmStateChanged) {
-                return new PawnState(prev) {
-                    FSMState = new PawnFSMState(prev.FSMState) {
-                        StateHash = fsmStateChanged.Statehash,
-                        IsLoop = fsmStateChanged.IsLoop,
-                        ClipLength = fsmStateChanged.ClipLength,
-                        FixedTimeAtChange = fsmStateChanged.When
-                    }
                 };
             }
 

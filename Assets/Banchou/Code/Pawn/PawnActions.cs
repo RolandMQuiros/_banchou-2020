@@ -6,8 +6,8 @@ namespace Banchou.Pawn {
             PawnId PawnId { get; }
         }
 
-        public struct FSMStateChanged : IPawnAction {
-            public PawnId PawnId { get; set; }
+        public struct FSMStateChanged {
+            public PawnId PawnId;
             public int Statehash;
             public bool IsLoop;
             public float ClipLength;

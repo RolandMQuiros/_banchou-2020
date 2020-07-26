@@ -6,20 +6,20 @@ using Banchou.Player;
 namespace Banchou.Pawn {
     public static class PawnSelectors {
         public static bool HasPawn(this GameState state, PawnId pawnId) {
-            return state.Pawns.ContainsKey(pawnId);
+            return state.Pawns.States.ContainsKey(pawnId);
         }
 
         public static IEnumerable<PawnState> GetPawns(this GameState state) {
-            return state.Pawns.Values;
+            return state.Pawns.States.Values;
         }
 
         public static IEnumerable<PawnId> GetPawnIds(this GameState state) {
-            return state.Pawns.Keys;
+            return state.Pawns.States.Keys;
         }
 
         public static PawnState GetPawn(this GameState state, PawnId pawnId) {
             PawnState pawn;
-            if (state.Pawns.TryGetValue(pawnId, out pawn)) {
+            if (state.Pawns.States.TryGetValue(pawnId, out pawn)) {
                 return pawn;
             }
             return null;
