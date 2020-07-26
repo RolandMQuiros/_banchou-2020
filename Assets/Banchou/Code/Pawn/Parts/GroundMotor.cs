@@ -13,14 +13,26 @@ namespace Banchou.Pawn.Part {
         private List<Vector3> _contacts = new List<Vector3>();
         private Vector3 _velocity = Vector3.zero;
 
-        #region MonoBehaviour
+        private class ContactSorter : IComparer<Vector3> {
+            private Rigidbody _body;
+            public ContactSorter(Rigidbody body) {
+                _body = body;
+            }
+            public int Compare(Vector3 first, Vector3 second) {
+                var diff = Vector3.Dot(first, _body.transform.up) - Vector3.Dot(first, _body.transform.up);
+                return (int)Mathf.Sign(diff);
+            }
+        }
+        private ContactSorter _sorter;
 
+        #region MonoBehaviour
         public void Construct(
             Rigidbody rigidbody,
             NavMeshAgent navMeshAgent = null
         ) {
             _rigidbody = rigidbody;
             _navMeshAgent = navMeshAgent;
+            _sorter = new ContactSorter(_rigidbody);
         }
 
         private void OnCollisionStay(Collision collision) {
@@ -49,28 +61,25 @@ namespace Banchou.Pawn.Part {
         }
 
         public Vector3 Project(Vector3 velocity) {
-            return _contacts.OrderByDescending(contact => Vector3.Dot(contact, _rigidbody.transform.up))
-                .Aggregate(
-                    velocity,
-                    (projected, contact) => {
-                        // If we're moving into a surface, we want to project the movement direction on it, so we don't cause physics jitters from
-                        // overlaps
-                        if (Vector3.Dot(contact, _rigidbody.transform.up) > 0.3f) {
-                            if (Vector3.Dot(velocity, contact) < 0f) {
-                                // If surface is a floor, and we're moving into it, move along it at full movement speed
-                                return Vector3.ProjectOnPlane(projected, contact).normalized * projected.magnitude;
-                            }
-                            // If we're moving away from the surface, no need for projections
-                            return projected;
-                        } else if (Vector3.Dot(velocity, contact) < 0f) {
-                            // If the surface is a wall, and we're moving into it, move along it instead
-                            return Vector3.ProjectOnPlane(projected, contact);
-                        } else {
-                            // If we're moving away from the surface, no need for projections
-                            return projected;
-                        }
+            var projected = velocity;
+
+            _contacts.Sort(_sorter);
+            foreach (var contact in _contacts) {
+                // If we're moving into a surface, we want to project the movement direction on it, so we don't cause physics jitters from
+                // overlaps
+                if (Vector3.Dot(contact, _rigidbody.transform.up) > 0.3f) {
+                    if (Vector3.Dot(velocity, contact) < 0f) {
+                        // If surface is a floor, and we're moving into it, move along it at full movement speed
+                        projected = Vector3.ProjectOnPlane(projected, contact).normalized * projected.magnitude;
                     }
-                );
+                    // If we're moving away from the surface, no need for projections
+                } else if (Vector3.Dot(velocity, contact) < 0f) {
+                    // If the surface is a wall, and we're moving into it, move along it instead
+                    projected = Vector3.ProjectOnPlane(projected, contact);
+                }
+            }
+
+            return projected;
         }
 
         private void OnDrawGizmos() {
