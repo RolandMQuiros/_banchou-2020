@@ -4,31 +4,37 @@ using Banchou.Pawn;
 
 namespace Banchou.Mob {
      namespace StateAction {
-        public class AddMob {
+        public struct AddMob {
             public PawnId PawnId;
         }
 
-        public class RemoveMob {
+        public struct RemoveMob {
             public PawnId PawnId;
         }
 
-        public class MobAction {
-            public PawnId PawnId;
+        public interface IMobAction {
+            PawnId PawnId { get; }
         }
 
-        public class MobApproachTarget : MobAction {
+        public struct MobApproachTarget : IMobAction {
+            public PawnId PawnId { get; set; }
             public PawnId TargetId;
             public float StoppingDistance;
         }
 
-        public class MobApproachPosition : MobAction {
+        public struct MobApproachPosition : IMobAction {
+            public PawnId PawnId { get; set; }
             public Vector3 Position;
             public float StoppingDistance;
         }
 
-        public class MobApproachCompleted : MobAction { }
+        public struct MobApproachCompleted : IMobAction {
+            public PawnId PawnId { get; set; }
+        }
 
-        public class MobApproachInterrupted : MobAction { }
+        public struct MobApproachInterrupted : IMobAction {
+            public PawnId PawnId { get; set; }
+        }
     }
 
     public class MobActions {

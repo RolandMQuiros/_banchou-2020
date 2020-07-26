@@ -1,8 +1,7 @@
 ﻿namespace Banchou.Mob {
     public static class MobsReducers {
         public static MobsState Reduce(in MobsState prev, in object action) {
-            var add = action as StateAction.AddMob;
-            if (add != null) {
+            if (action is StateAction.AddMob add) {
                 MobState prevMob;
                 if (!prev.TryGetValue(add.PawnId, out prevMob)) {
                     return new MobsState(prev) {
@@ -11,15 +10,13 @@
                 }
             }
 
-            var remove = action as StateAction.RemoveMob;
-            if (remove != null) {
+            if (action is StateAction.RemoveMob remove) {
                 var next = new MobsState(prev);
                 next.Remove(remove.PawnId);
                 return next;
             }
 
-            var mobAction = action as StateAction.MobAction;
-            if (mobAction != null) {
+            if (action is StateAction.IMobAction mobAction) {
                 MobState prevMob;
                 if (prev.TryGetValue(mobAction.PawnId, out prevMob)) {
                     return new MobsState(prev) {
@@ -32,31 +29,27 @@
         }
 
         private static MobState ReduceMob(in MobState prev, in object action) {
-            var approachPosition = action as StateAction.MobApproachPosition;
-            if (approachPosition != null) {
+            if (action is StateAction.MobApproachPosition approachPosition) {
                 return new MobState(prev) {
                     Stage = ApproachStage.Position,
                     ApproachPosition = approachPosition.Position
                 };
             }
 
-            var approachTarget = action as StateAction.MobApproachTarget;
-            if (approachTarget != null) {
+            if (action is StateAction.MobApproachTarget approachTarget) {
                 return new MobState(prev) {
                     Stage = ApproachStage.Target,
                     Target = approachTarget.TargetId
                 };
             }
 
-            var approachInterrupted = action as StateAction.MobApproachInterrupted;
-            if (approachInterrupted != null) {
+            if (action is StateAction.MobApproachInterrupted approachInterrupted) {
                 return new MobState(prev) {
                     Stage = ApproachStage.Interrupted
                 };
             }
 
-            var approachCompleted = action as StateAction.MobApproachCompleted;
-            if (approachCompleted != null) {
+            if (action is StateAction.MobApproachCompleted approachCompleted) {
                 return new MobState(prev) {
                     Stage = ApproachStage.Complete
                 };

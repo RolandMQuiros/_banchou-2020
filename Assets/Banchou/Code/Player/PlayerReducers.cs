@@ -3,9 +3,8 @@ using Banchou.Pawn;
 
 namespace Banchou.Player {
     public static partial class PlayerReducers {
-        public static PlayersState ReducePlayers(in PlayersState prev, in object action) {
-            var add = action as StateAction.AddPlayer;
-            if (add != null && !prev.ContainsKey(add.PlayerId)) {
+        public static PlayersState Reduce(in PlayersState prev, in object action) {
+            if (action is StateAction.AddPlayer add && !prev.ContainsKey(add.PlayerId)) {
                 NetworkInfo netInfo = null;
                 if (add.Source == InputSource.Network) {
                     netInfo = new NetworkInfo {
@@ -22,15 +21,13 @@ namespace Banchou.Player {
                 };
             }
 
-            var remove = action as StateAction.RemovePlayer;
-            if (remove != null) {
+            if (action is StateAction.RemovePlayer remove) {
                 var next = new PlayersState(prev);
                 next.Remove(remove.PlayerId);
                 return next;
             }
 
-            var addPawn = action as Pawn.StateAction.AddPawn;
-            if (addPawn != null) {
+            if (action is Pawn.StateAction.AddPawn addPawn) {
                 PlayerState prevPlayer;
                 if (prev.TryGetValue(addPawn.PlayerId, out prevPlayer)) {
                     return new PlayersState(prev) {
@@ -39,19 +36,16 @@ namespace Banchou.Player {
                 }
             }
 
-            var removePawn = action as Pawn.StateAction.AddPawn;
-            if (removePawn != null) {
-                PlayerState prevPlayer;
-                if (prev.TryGetValue(removePawn.PlayerId, out prevPlayer)) {
-                    return new PlayersState(prev) {
-                        [removePawn.PlayerId] = ReducePlayer(prevPlayer, action)
-                    };
-                }
-            }
+            // if (action is Pawn.StateAction.RemovePawn removePawn) {
+            //     PlayerState prevPlayer;
+            //     if (prev.TryGetValue(removePawn.PlayerId, out prevPlayer)) {
+            //         return new PlayersState(prev) {
+            //             [removePawn.PlayerId] = ReducePlayer(prevPlayer, action)
+            //         };
+            //     }
+            // }
 
-
-            var playerAction = action as StateAction.PlayerAction;
-            if (playerAction != null) {
+            if (action is StateAction.IPlayerAction playerAction) {
                 PlayerState prevPlayer;
                 prev.TryGetValue(playerAction.PlayerId, out prevPlayer);
                 return new PlayersState(prev) {
@@ -63,22 +57,19 @@ namespace Banchou.Player {
         }
 
         private static PlayerState ReducePlayer(in PlayerState prev, in object action) {
-            var attach = action as StateAction.AttachPlayerToPawn;
-            if (attach != null) {
+            if (action is StateAction.AttachPlayerToPawn attach) {
                 return new PlayerState(prev) {
                     Pawn = attach.PawnId
                 };
             }
 
-            var detach = action as StateAction.DetachPlayerFromPawn;
-            if (detach != null) {
+            if (action is StateAction.DetachPlayerFromPawn detach) {
                 return new PlayerState(prev) {
                     Pawn = PawnId.Empty
                 };
             }
 
-            var addTarget = action as StateAction.AddPlayerTarget;
-            if (addTarget != null && !prev.Targets.Contains(addTarget.Target)) {
+            if (action is StateAction.AddPlayerTarget addTarget && !prev.Targets.Contains(addTarget.Target)) {
                 var targets = new HashSet<PawnId>(prev.Targets);
                 targets.Add(addTarget.Target);
 
@@ -87,8 +78,7 @@ namespace Banchou.Player {
                 };
             }
 
-            var removeTarget = action as StateAction.RemovePlayerTarget;
-            if (removeTarget != null) {
+            if (action is StateAction.RemovePlayerTarget removeTarget) {
                 var target = removeTarget.Target;
 
                 // Remove target from current targeting list

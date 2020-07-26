@@ -6,10 +6,11 @@ using Newtonsoft.Json;
 using Redux;
 using Redux.Reactive;
 
-using Banchou.Player;
-using Banchou.Mob;
-using Banchou.Pawn;
 using Banchou.Combatant;
+using Banchou.Mob;
+using Banchou.Network;
+using Banchou.Pawn;
+using Banchou.Player;
 
 namespace Banchou {
     namespace StateAction {
@@ -44,11 +45,11 @@ namespace Banchou {
 
             if (_devToolsSession == null) {
                 _store = new Store<GameState>(
-                    Reducer, initialState, Redux.Middlewares.Thunk
+                    Reducer, initialState, Redux.Middlewares.Thunk, NetworkServer.Install<GameState>()
                 );
             } else {
                 _store = new Store<GameState>(
-                    Reducer, initialState, Redux.Middlewares.Thunk, _devToolsSession.Install<GameState>()
+                    Reducer, initialState, Redux.Middlewares.Thunk, NetworkServer.Install<GameState>(), _devToolsSession.Install<GameState>()
                 );
             }
 
@@ -61,8 +62,10 @@ namespace Banchou {
 
         protected virtual GameState Reducer(in GameState prev, in object action) {
             return new GameState {
-                Players = PlayerReducers.ReducePlayers(prev.Players, action),
+                Network = NetworkReducers.Reduce(prev.Network, action),
+                Players = PlayerReducers.Reduce(prev.Players, action),
                 Pawns = PawnsReducers.Reduce(prev.Pawns, action),
+                PawnSync = PawnSyncReducers.Reduce(prev.PawnSync, action),
                 Mobs = MobsReducers.Reduce(prev.Mobs, action),
                 Combatants = CombatantsReducers.Reduce(prev.Combatants, action)
             };

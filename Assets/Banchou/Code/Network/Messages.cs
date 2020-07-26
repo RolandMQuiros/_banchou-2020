@@ -22,6 +22,7 @@ namespace Banchou.Network.Message {
     [StructLayout(LayoutKind.Sequential)]
     public struct PlayerConnected {
         public PlayerId PlayerId;
+        public GameState GameState;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -43,5 +44,6 @@ namespace Banchou.Network.Message {
         public Quaternion Rotation;
     }
 
+    public delegate void PullPawnSync(SyncPawn syncPawn);
     public delegate void PushPawnSync(SyncPawn syncPawn);
 }

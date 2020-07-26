@@ -10,8 +10,8 @@ namespace Banchou.Pawn {
         [SerializeField] private PawnFactory _pawnFactory = null;
 
         private BoardActions _boardActions = new BoardActions();
-        private MobActions _mobActions = new MobActions();
-        private CombatantActions _combatantActions = new CombatantActions();
+        private MobActions _mobActions;
+        private CombatantActions _combatantActions;
 
         public void Construct(
             IObservable<GameState> observeState,
@@ -19,6 +19,10 @@ namespace Banchou.Pawn {
             Instantiator instantiate
         ) {
             _pawnFactory.Construct(_pawnParent ?? transform, observeState, getState, instantiate);
+
+            _boardActions = new BoardActions();
+            _mobActions = new MobActions();
+            _combatantActions = new CombatantActions(_boardActions);
         }
 
         public void InstallBindings(DiContainer container) {

@@ -1,23 +1,29 @@
 ﻿using UnityEngine;
+using Redux;
+
 using Banchou.Pawn;
 
 namespace Banchou.Combatant {
     namespace StateAction {
-        public class AddCombatant : Pawn.StateAction.AddPawn {
+        public struct AddCombatant {
+            public PawnId PawnId;
             public int Health;
         }
 
-        public class CombatantAction {
-            public PawnId CombatantId;
+        public interface ICombatantAction {
+            PawnId CombatantId { get; }
         }
 
-        public class LockOn : CombatantAction {
+        public struct LockOn : ICombatantAction {
+            public PawnId CombatantId { get; set; }
             public PawnId To;
         }
 
-        public class LockOff : CombatantAction { }
+        public struct LockOff : ICombatantAction {
+            public PawnId CombatantId { get; set; }
+        }
 
-        public class Hit {
+        public struct Hit {
             public PawnId From;
             public PawnId To;
             public HitMedium Medium;
@@ -28,11 +34,18 @@ namespace Banchou.Combatant {
     }
 
     public class CombatantActions {
-        public StateAction.AddCombatant Add(PawnId pawnId) {
-            return new StateAction.AddCombatant {
-                PawnId = pawnId
-            };
+        private BoardActions _boardActions;
+        public CombatantActions(BoardActions boardActions) {
+            _boardActions = boardActions;
         }
+
+        public ActionsCreator<GameState> Add(PawnId pawnId) => (dispatch, getState) => {
+            dispatch(_boardActions.Add(pawnId));
+            dispatch(new StateAction.AddCombatant {
+                PawnId = pawnId,
+                Health = 100
+            });
+        };
 
         public StateAction.LockOn LockOn(PawnId combatantId, PawnId to) {
             return new StateAction.LockOn {

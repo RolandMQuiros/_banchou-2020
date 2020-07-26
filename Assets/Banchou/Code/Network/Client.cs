@@ -17,23 +17,17 @@ namespace Banchou.Network {
         private EventBasedNetListener _listener;
         private NetManager _client;
         private NetPeer _peer;
-        private IPEndPoint _host;
         private IDisposable _poll;
 
         public NetworkClient(
-            IPEndPoint host,
             Dispatcher dispatch,
-            PushPawnSync pushPawnSync,
-            PlayerInputStreams playerInput
+            PlayerInputStreams playerInput,
+            Action<SyncPawn> pullPawnSync
         ) {
-            _host = host;
             _listener = new EventBasedNetListener();
             _client = new NetManager(_listener);
 
             var serializer = new JsonSerializer();
-            serializer.Converters.Add(new Vec2Conv());
-            serializer.Converters.Add(new Vec3Conv());
-            serializer.Converters.Add(new Vec4Conv());
             serializer.TypeNameHandling = TypeNameHandling.All;
 
             var buffer = new MemoryStream();
@@ -58,7 +52,7 @@ namespace Banchou.Network {
                         dispatch(payload);
                     break;
                     case PayloadType.SyncPawn:
-                        pushPawnSync((SyncPawn)payload);
+                        pullPawnSync((SyncPawn)payload);
                     break;
                     case PayloadType.PlayerCommand: {
                         var playerCommand = (PlayerCommand)payload;
@@ -75,14 +69,16 @@ namespace Banchou.Network {
             };
         }
 
-        public void Start<T>(IObservable<T> pollInterval) {
+        public NetworkClient Start<T>(IPEndPoint host, IObservable<T> pollInterval) {
             _client.Start();
-            _peer = _client.Connect(_host, "BanchouConnectionKey");
+            _peer = _client.Connect(host, "BanchouConnectionKey");
 
             _poll = pollInterval
                 .Subscribe(_ => {
                     _client.PollEvents();
                 });
+
+            return this;
         }
 
         public void Dispose() {

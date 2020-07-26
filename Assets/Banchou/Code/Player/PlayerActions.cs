@@ -11,54 +11,37 @@ using Banchou.Combatant;
 
 namespace Banchou.Player {
     namespace StateAction {
-        public class PlayerAction {
-            public PlayerId PlayerId;
+        public interface IPlayerAction {
+            PlayerId PlayerId { get; }
         }
 
-        public class AddPlayer {
+        public struct AddPlayer {
             public PlayerId PlayerId;
             public InputSource Source;
             public IPEndPoint IP;
             public int PeerId;
         }
 
-        public class RemovePlayer {
+        public struct RemovePlayer {
             public PlayerId PlayerId;
         }
 
-        public class AttachPlayerToPawn : PlayerAction {
+        public struct AttachPlayerToPawn : IPlayerAction {
+            public PlayerId PlayerId { get; set; }
             public PawnId PawnId;
         }
 
-        public class DetachPlayerFromPawn : PlayerAction { }
-
-        public class PlayerMove : PlayerAction, ICollapsibleAction {
-            public Vector2 Direction;
-            public object Collapse(in object next) {
-                var nextMove = next as PlayerMove;
-                if (nextMove != null) {
-                    Direction += nextMove.Direction;
-                }
-                return this;
-            }
+        public struct DetachPlayerFromPawn : IPlayerAction {
+            public PlayerId PlayerId { get; set; }
         }
 
-        public class PlayerLook : PlayerAction, ICollapsibleAction {
-            public Vector2 Direction;
-            public object Collapse(in object next) {
-                var nextLook = next as PlayerLook;
-                if (nextLook != null) {
-                    Direction += nextLook.Direction;
-                }
-                return this;
-            }
-        }
-
-        public class AddPlayerTarget : PlayerAction {
+        public struct AddPlayerTarget : IPlayerAction {
+            public PlayerId PlayerId { get; set; }
             public PawnId Target;
         }
 
-        public class RemovePlayerTarget : PlayerAction {
+        public struct RemovePlayerTarget : IPlayerAction {
+            public PlayerId PlayerId { get; set; }
             public PawnId Target;
         }
     }

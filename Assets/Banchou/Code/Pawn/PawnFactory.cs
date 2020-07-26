@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using UniRx;
+using System.Collections;
 
 namespace Banchou.Pawn {
     [CreateAssetMenu(fileName = "PawnFactory.asset", menuName = "Banchou/Pawn Factory")]
@@ -16,6 +17,16 @@ namespace Banchou.Pawn {
         private Dictionary<PawnId, PawnContext> _instances = new Dictionary<PawnId, PawnContext>();
         private IDisposable _addedSubscription = null;
         private IDisposable _removedSubscription = null;
+
+        public ICollection<PawnId> Keys => throw new NotImplementedException();
+
+        public ICollection<IPawnInstance> Values => throw new NotImplementedException();
+
+        public int Count => throw new NotImplementedException();
+
+        public bool IsReadOnly => throw new NotImplementedException();
+
+        public IPawnInstance this[PawnId key] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public void Construct(
             Transform pawnParent,
@@ -85,5 +96,8 @@ namespace Banchou.Pawn {
                 _instances.Add(pawnId, pawnContext);
             }
         }
+
+        public IEnumerator<IPawnInstance> GetEnumerator() => _instances.Values.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => _instances.Values.GetEnumerator();
     }
 }

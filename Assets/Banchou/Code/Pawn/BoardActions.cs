@@ -2,13 +2,13 @@
 
 namespace Banchou.Pawn {
     namespace StateAction {
-        public class AddPawn {
+        public struct AddPawn {
             public PawnId PawnId;
             public PlayerId PlayerId;
             public string PrefabKey;
         }
 
-        public class RemovePawn {
+        public struct RemovePawn {
             public PawnId PawnId;
         }
     }

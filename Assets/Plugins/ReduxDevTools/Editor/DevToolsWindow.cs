@@ -66,10 +66,7 @@ namespace Redux.DevTools {
                 .ToList();
 
             // Create a custom serializer for Unity classes that don't handle it well by default
-            _serializer = new JsonSerializer();
-            _serializer.Converters.Add(new Vec2Conv());
-            _serializer.Converters.Add(new Vec3Conv());
-            _serializer.Converters.Add(new Vec4Conv());
+            _serializer = JsonSerializer.Create(JsonConvert.DefaultSettings());
             _serializer.TypeNameHandling = TypeNameHandling.All;
 
             var path = AssetDatabase.FindAssets("t:DevToolsSession")

@@ -3,8 +3,7 @@
 namespace Banchou.Combatant {
     public static class CombatantsReducers{
         public static CombatantsState Reduce(in CombatantsState prev, in object action) {
-            var add = action as StateAction.AddCombatant;
-            if (add != null) {
+            if (action is StateAction.AddCombatant add) {
                 CombatantState pawn;
                 if (!prev.TryGetValue(add.PawnId, out pawn)) {
                     return new CombatantsState(prev) {
@@ -15,15 +14,13 @@ namespace Banchou.Combatant {
                 }
             }
 
-            var remove = action as Pawn.StateAction.RemovePawn;
-            if (remove != null) {
+            if (action is Pawn.StateAction.RemovePawn remove) {
                 var next = new CombatantsState(prev);
                 next.Remove(remove.PawnId);
                 return next;
             }
 
-            var combatantAction = action as StateAction.CombatantAction;
-            if (combatantAction != null) {
+            if (action is StateAction.ICombatantAction combatantAction) {
                 CombatantState prevCombatant;
                 if (prev.TryGetValue(combatantAction.CombatantId, out prevCombatant)) {
                     return new CombatantsState(prev) {
@@ -32,11 +29,10 @@ namespace Banchou.Combatant {
                 }
             }
 
-            var hit = action as StateAction.Hit;
-            if (hit != null) {
+            if (action is StateAction.Hit hit) {
                 CombatantState from, to;
                 if (prev.TryGetValue(hit.From, out from) && prev.TryGetValue(hit.To, out to)) {
-                    var lastHit = new Hit {
+                    var listHit = new Hit {
                         From = hit.From,
                         To = hit.To,
                         Medium = hit.Medium,
@@ -47,10 +43,10 @@ namespace Banchou.Combatant {
 
                     return new CombatantsState(prev) {
                         [hit.From] = new CombatantState(from) {
-                            HitDealt = lastHit
+                            HitDealt = listHit
                         },
                         [hit.To] = new CombatantState(to) {
-                            HitTaken = lastHit
+                            HitTaken = listHit
                         }
                     };
                 }
@@ -59,16 +55,14 @@ namespace Banchou.Combatant {
             return prev;
         }
 
-        public static CombatantState ReduceCombatant(in CombatantState prev, in StateAction.CombatantAction action) {
-            var lockOn = action as StateAction.LockOn;
-            if (lockOn != null) {
+        private static CombatantState ReduceCombatant(in CombatantState prev, in StateAction.ICombatantAction action) {
+            if (action is StateAction.LockOn lockOn) {
                 return new CombatantState(prev) {
                     LockOnTarget = lockOn.To
                 };
             }
 
-            var lockOff = action as StateAction.LockOff;
-            if (lockOff != null) {
+            if (action is StateAction.LockOff lockOff) {
                 return new CombatantState(prev) {
                     LockOnTarget = PawnId.Empty
                 };

@@ -8,7 +8,7 @@ namespace Banchou.Combatant {
         private PawnId _pawnId;
         private GetState _getState;
         private Dispatcher _dispatch;
-        private CombatantActions _combatantActions = new CombatantActions();
+        private CombatantActions _combatantActions;
 
         public void Construct(
             PawnId pawnId,

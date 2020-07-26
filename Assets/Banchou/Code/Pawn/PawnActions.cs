@@ -2,24 +2,31 @@
 
 namespace Banchou.Pawn {
     namespace StateAction {
-        public class PawnAction {
-            public PawnId PawnId;
+        public interface IPawnAction {
+            PawnId PawnId { get; }
         }
 
-        public class FSMStateChanged : PawnAction {
+        public struct FSMStateChanged : IPawnAction {
+            public PawnId PawnId { get; set; }
             public int Statehash;
             public bool IsLoop;
             public float ClipLength;
             public float When;
         }
 
-        public class RollbackStarted : PawnAction { }
-        public class FastForwarding : PawnAction {
+        public struct RollbackStarted : IPawnAction {
+            public PawnId PawnId { get; set; }
+        }
+        public struct FastForwarding : IPawnAction {
+            public PawnId PawnId { get; set; }
             public float CorrectionTime;
         }
-        public class RollbackComplete : PawnAction { }
+        public struct RollbackComplete : IPawnAction {
+            public PawnId PawnId { get; set; }
+        }
 
-        public class SyncPawn : PawnAction {
+        public struct SyncPawn : IPawnAction {
+            public PawnId PawnId { get; set; }
             public Vector3 Position;
             public Quaternion Rotation;
             public int StateHash;

@@ -8,7 +8,7 @@ namespace Banchou.Pawn {
         Vector3 Forward { get; }
     }
 
-    public interface IPawnInstances {
+    public interface IPawnInstances : IEnumerable<IPawnInstance> {
         IPawnInstance Get(PawnId pawnId);
         IEnumerable<IPawnInstance> GetMany(IEnumerable<PawnId> pawnIds);
         void Set(PawnId pawnId, IPawnInstance instance);

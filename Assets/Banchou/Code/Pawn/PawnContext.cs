@@ -47,13 +47,14 @@ namespace Banchou.Pawn {
         private float _deltaTime = 0f;
 
         public void Construct(
+            IObservable<GameState> observeState,
             Dispatcher dispatch,
             BoardActions boardActions,
             MobActions mobActions,
             GetState getState,
-            IObservable<GameState> observeState,
             IPawnInstances pawnInstances,
-            PlayerInputStreams playerInput
+            PlayerInputStreams playerInput,
+            IObservable<Network.Message.SyncPawn> observePawnSyncs = null
         ) {
             _dispatch = dispatch;
             _pawnActions = new PawnActions(PawnId);
@@ -146,6 +147,24 @@ namespace Banchou.Pawn {
                             _dispatch(_pawnActions.RollbackComplete());
                         } else {
                             _commandSubject.OnNext(unit.Command);
+                        }
+                    })
+                    .AddTo(this);
+            }
+
+            if (observePawnSyncs != null) {
+                observePawnSyncs
+                    .Subscribe(syncPawn => {
+                        if (_rigidbody != null) {
+                            _rigidbody.position = syncPawn.Position;
+                        } else {
+                            transform.position = syncPawn.Position;
+                        }
+
+                        if (_orientation != null) {
+                            _orientation.transform.rotation = syncPawn.Rotation;
+                        } else {
+                            transform.rotation = syncPawn.Rotation;
                         }
                     })
                     .AddTo(this);

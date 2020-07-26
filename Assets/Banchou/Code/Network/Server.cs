@@ -6,12 +6,12 @@ using System.Collections.Generic;
 using LiteNetLib;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
+using Newtonsoft.Json.UnityConverters;
 using Redux;
 using UniRx;
 using UnityEngine;
 
 using Banchou.Player;
-using Banchou.Pawn;
 using Banchou.Network.Message;
 
 namespace Banchou.Network {
@@ -21,16 +21,18 @@ namespace Banchou.Network {
         private Dictionary<PlayerId, NetPeer> _peers;
         private JsonSerializer _serializer;
         private IDisposable _poll;
-        private IDisposable _connectionReply;
+        private IDisposable _connectReply;
 
         public NetworkServer(
+            IObservable<GameState> observeState,
             Dispatcher dispatch,
             PlayerActions playerActions
         ) {
             _listener = new EventBasedNetListener();
             _server = new NetManager(_listener);
             _peers = new Dictionary<PlayerId, NetPeer>();
-            _serializer = new JsonSerializer();
+            _serializer = JsonSerializer.Create(JsonConvert.DefaultSettings());
+            _serializer.TypeNameHandling = TypeNameHandling.All;
 
             _listener.ConnectionRequestEvent += request => {
                 if (_server.ConnectedPeersCount < 10) {
@@ -44,26 +46,37 @@ namespace Banchou.Network {
                 var playerId = PlayerId.Create();
                 _peers[playerId] = peer;
                 dispatch(playerActions.AddNetworkPlayer(playerId, peer.EndPoint, peer.Id));
-
-                var memoryStream = new MemoryStream();
-                using (var writer = new BsonWriter(memoryStream)) {
-                    _serializer.Serialize(writer, new PlayerConnected { PlayerId = playerId });
-                }
-                peer.Send(memoryStream.ToArray(), DeliveryMethod.ReliableSequenced);
             };
             _instances.Add(this);
+
+            _connectReply = observeState
+                .DistinctUntilChanged(state => state.GetPlayers())
+                .Pairwise()
+                .Subscribe(delta => {
+                    var newPlayers = delta.Current.GetPlayerIds().Except(delta.Previous.GetPlayerIds());
+
+                    foreach (var playerId in newPlayers) {
+                        NetPeer peer;
+                        if (_peers.TryGetValue(playerId, out peer)) {
+                            var memoryStream = new MemoryStream();
+                            using (var writer = new BsonWriter(memoryStream)) {
+                                _serializer.Serialize(writer, new PlayerConnected {
+                                    PlayerId = playerId,
+                                    GameState = delta.Current
+                                });
+                            }
+                            peer.Send(memoryStream.ToArray(), DeliveryMethod.ReliableSequenced);
+                        }
+                    }
+                });
         }
 
-        public void SyncPawn(PawnId pawnId, Vector3 position, Quaternion rotation) {
+        public void SyncPawn(SyncPawn syncPawn) {
             byte[] syncData = null;
             using (var writer = new BsonWriter(new MemoryStream())) {
                 _serializer.Serialize(writer, new Envelope {
                     PayloadType = PayloadType.SyncPawn,
-                    Payload = new SyncPawn {
-                        PawnId = pawnId,
-                        Position = position,
-                        Rotation = rotation
-                    }
+                    Payload = syncPawn
                 });
             }
 
@@ -74,46 +87,49 @@ namespace Banchou.Network {
             }
         }
 
-        public void Start<T>(IObservable<T> pollInterval) {
+        public NetworkServer Start<T>(IObservable<T> pollInterval) {
             _server.Start(9050);
+            Debug.Log($"Server started on port {_server.LocalPort}");
+
             _poll = pollInterval
                 .Subscribe(_ => {
                     _server.PollEvents();
                 });
+            return this;
         }
 
         public void Dispose() {
             _server.Stop();
-            _connectionReply.Dispose();
             _poll.Dispose();
+            _connectReply.Dispose();
             _instances.Remove(this);
         }
 
         #region Redux Middleware
         private static List<NetworkServer> _instances = new List<NetworkServer>();
         public static Middleware<TState> Install<TState>() {
-            MemoryStream memoryStream = new MemoryStream();
-            var serializer = new JsonSerializer();
+            var serializer = JsonSerializer.Create(JsonConvert.DefaultSettings());
+            serializer.TypeNameHandling = TypeNameHandling.All;
 
             return store => next => action => {
                 byte[] actionData = null;
                 for (int i = 0; i < _instances.Count; i++) {
-                    // Serialize the action into a BSON bytestring if we haven't already
-                    if (actionData == null) {
-                        using (var writer = new BsonWriter(memoryStream)) {
-                            serializer.Serialize(
-                                writer,
-                                new Envelope {
-                                    PayloadType = PayloadType.Action,
-                                    Payload = action
-                                }
-                            );
-                        }
-                        actionData = memoryStream.ToArray();
-                    }
-
                     // Send the action to all peers
                     foreach (var peer in _instances[i]._peers.Values) {
+                        // Serialize the action into a BSON bytestring if we haven't already
+                        if (actionData == null) {
+                            var memoryStream = new MemoryStream();
+                            using (var writer = new BsonWriter(memoryStream)) {
+                                serializer.Serialize(
+                                    writer,
+                                    new Envelope {
+                                        PayloadType = PayloadType.Action,
+                                        Payload = action
+                                    }
+                                );
+                            }
+                            actionData = memoryStream.ToArray();
+                        }
                         peer.Send(actionData, DeliveryMethod.ReliableUnordered);
                     }
                 }
