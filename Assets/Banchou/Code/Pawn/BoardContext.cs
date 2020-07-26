@@ -9,7 +9,7 @@ namespace Banchou.Pawn {
         [SerializeField] private Transform _pawnParent = null;
         [SerializeField] private PawnFactory _pawnFactory = null;
 
-        private BoardActions _boardActions = new BoardActions();
+        private BoardActions _boardActions;
         private MobActions _mobActions;
         private CombatantActions _combatantActions;
 

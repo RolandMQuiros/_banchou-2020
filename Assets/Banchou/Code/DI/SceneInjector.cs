@@ -15,7 +15,9 @@ namespace Banchou {
                 var climb = xform;
                 var stack = new List<IContext>();
                 while (climb != null) {
-                    var contexts = climb.GetComponents<IContext>();
+                    // Traverse the hierarchy from bottom to top, while traversing each gameObject's contexts from top to bottom
+                    // This lets multiple contexts on a single gameObject depend on each other in a predictable way
+                    var contexts = climb.GetComponents<IContext>().Reverse();
                     foreach (var context in contexts) {
                         stack.Add(context);
                     }
