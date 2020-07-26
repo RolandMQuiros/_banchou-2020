@@ -1,4 +1,6 @@
-﻿namespace Banchou.Pawn {
+﻿using UnityEngine;
+
+namespace Banchou.Pawn {
     namespace StateAction {
         public class PawnAction {
             public PawnId PawnId;
@@ -16,6 +18,13 @@
             public float CorrectionTime;
         }
         public class RollbackComplete : PawnAction { }
+
+        public class SyncPawn : PawnAction {
+            public Vector3 Position;
+            public Quaternion Rotation;
+            public int StateHash;
+            public float NormalizedTime;
+        }
     }
 
     public class PawnActions {
@@ -31,6 +40,20 @@
             IsLoop = isLoop,
             ClipLength = clipLength,
             When = when
+        };
+
+        public StateAction.SyncPawn SyncPawn(Vector3 position, Quaternion rotation) => new StateAction.SyncPawn {
+            PawnId = _pawnId,
+            Position = position,
+            Rotation = rotation
+        };
+
+        public StateAction.SyncPawn SyncPawn(Vector3 position, Quaternion rotation, int stateHash, float normalizedTime) => new StateAction.SyncPawn {
+            PawnId = _pawnId,
+            Position = position,
+            Rotation = rotation,
+            StateHash = stateHash,
+            NormalizedTime = normalizedTime
         };
 
         public StateAction.RollbackStarted RollbackStarted() => new StateAction.RollbackStarted { PawnId = _pawnId };

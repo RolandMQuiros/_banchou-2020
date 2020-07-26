@@ -10,7 +10,7 @@ namespace Banchou.Player {
         [SerializeField] private Transform _playerParent = null;
         [SerializeField] private PlayerFactory _playerFactory = null;
 
-        private PlayerActions _playerActions = new PlayerActions();
+        private PlayerActions _playerActions;
         private PlayerInputStreams _playerInputStreams = new PlayerInputStreams();
 
         public void Construct(
@@ -22,8 +22,7 @@ namespace Banchou.Player {
             Instantiator instantiator
         ) {
             _playerFactory.Construct(_playerParent ?? transform, observeState, getState, instantiator);
-            _playerActions.Construct(pawnInstances, mobActions, combatantActions);
-            // TODO: hook up PlayerInput detection events to state
+            _playerActions = new PlayerActions(pawnInstances, combatantActions);
         }
 
         public void InstallBindings(DiContainer container) {

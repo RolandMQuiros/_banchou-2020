@@ -133,4 +133,19 @@ namespace Banchou.Pawn {
             return prev;
         }
     }
+
+    public static class PawnSyncReducers {
+        public static PawnSyncState Reduce(PawnSyncState prev, object action) {
+            var syncPawn = action as StateAction.SyncPawn;
+            if (syncPawn != null) {
+                return new PawnSyncState {
+                    PawnId = syncPawn.PawnId,
+                    Position = syncPawn.Position,
+                    Rotation = syncPawn.Rotation
+                };
+            }
+
+            return prev;
+        }
+    }
 }

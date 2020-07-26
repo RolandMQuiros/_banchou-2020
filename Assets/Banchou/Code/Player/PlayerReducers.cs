@@ -6,9 +6,18 @@ namespace Banchou.Player {
         public static PlayersState ReducePlayers(in PlayersState prev, in object action) {
             var add = action as StateAction.AddPlayer;
             if (add != null && !prev.ContainsKey(add.PlayerId)) {
+                NetworkInfo netInfo = null;
+                if (add.Source == InputSource.Network) {
+                    netInfo = new NetworkInfo {
+                        IP = add.IP,
+                        PeerId = add.PeerId
+                    };
+                }
+
                 return new PlayersState(prev) {
                     [add.PlayerId] = new PlayerState() {
-                        Source = add.Source
+                        Source = add.Source,
+                        NetworkInfo = netInfo
                     }
                 };
             }

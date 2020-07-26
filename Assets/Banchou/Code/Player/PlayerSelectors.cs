@@ -22,6 +22,10 @@ namespace Banchou.Player {
             return state.GetPlayer(playerId).Source;
         }
 
+        public static NetworkInfo GetPlayerNetworkInfo(this GameState state, PlayerId playerId) {
+            return state.GetPlayer(playerId).NetworkInfo;
+        }
+
         public static IDictionary<PlayerId, PlayerState> GetPlayers(this GameState state) {
             return state.Players;
         }

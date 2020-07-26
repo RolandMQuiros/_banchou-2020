@@ -1,13 +1,13 @@
-﻿using System.Linq;
+﻿using System.Net;
+using System.Linq;
 using System.Collections.Generic;
-using UnityEngine;
 
 using Redux;
 using Redux.DevTools;
+using UnityEngine;
 
 using Banchou.Pawn;
 using Banchou.Combatant;
-using Banchou.Mob;
 
 namespace Banchou.Player {
     namespace StateAction {
@@ -18,6 +18,8 @@ namespace Banchou.Player {
         public class AddPlayer {
             public PlayerId PlayerId;
             public InputSource Source;
+            public IPEndPoint IP;
+            public int PeerId;
         }
 
         public class RemovePlayer {
@@ -73,10 +75,26 @@ namespace Banchou.Player {
             _combatantActions = combatantActions;
         }
 
-        public StateAction.AddPlayer Add(PlayerId playerId, InputSource source) {
+        public StateAction.AddPlayer AddLocalPlayer(PlayerId playerId) {
             return new StateAction.AddPlayer {
                 PlayerId = playerId,
-                Source = source
+                Source = InputSource.Local
+            };
+        }
+
+        public StateAction.AddPlayer AddAIPlayer(PlayerId playerId) {
+            return new StateAction.AddPlayer {
+                PlayerId = playerId,
+                Source = InputSource.AI
+            };
+        }
+
+        public StateAction.AddPlayer AddNetworkPlayer(PlayerId playerId, IPEndPoint ip, int peerId) {
+            return new StateAction.AddPlayer {
+                PlayerId = playerId,
+                Source = InputSource.Network,
+                IP = ip,
+                PeerId = peerId
             };
         }
 
@@ -96,20 +114,6 @@ namespace Banchou.Player {
         public StateAction.DetachPlayerFromPawn Detach(PlayerId playerId) {
             return new StateAction.DetachPlayerFromPawn {
                 PlayerId = playerId
-            };
-        }
-
-        public StateAction.PlayerMove Move(PlayerId playerId, Vector3 direction) {
-            return new StateAction.PlayerMove {
-                PlayerId = playerId,
-                Direction = direction
-            };
-        }
-
-        public StateAction.PlayerLook Look(PlayerId playerId, Vector2 direction) {
-            return new StateAction.PlayerLook {
-                PlayerId = playerId,
-                Direction = direction
             };
         }
 

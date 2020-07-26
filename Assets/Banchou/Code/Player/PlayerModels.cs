@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Net;
 using System.Collections.Generic;
 
 using UnityEngine;
@@ -11,11 +11,12 @@ namespace Banchou.Player {
     [JsonConverter(typeof(PlayerIdConverter))]
     public struct PlayerId {
         public static readonly PlayerId Empty = new PlayerId();
-        public Guid Id;
+        private static int _idCounter = 0;
+        public int Id;
 
         public static PlayerId Create() {
             return new PlayerId {
-                Id = Guid.NewGuid()
+                Id = _idCounter++
             };
         }
 
@@ -32,21 +33,29 @@ namespace Banchou.Player {
     }
 
     public enum InputSource {
-        LocalSingle,
-        LocalMulti,
+        Local,
         Network,
         AI
     }
 
+    public class NetworkInfo {
+        public IPEndPoint IP;
+        public int PeerId;
+    }
+
     public class PlayerState {
-        public InputSource Source = InputSource.LocalSingle;
+        public InputSource Source = InputSource.Local;
+        public string Name = null;
+        public NetworkInfo NetworkInfo = null;
 
         public PawnId Pawn = PawnId.Empty;
         public HashSet<PawnId> Targets = new HashSet<PawnId>();
+
         public PlayerState() { }
         public PlayerState(in PlayerState prev) {
             Source = prev.Source;
-
+            Name = prev.Name;
+            NetworkInfo = prev.NetworkInfo;
             Pawn = prev.Pawn;
             Targets = prev.Targets;
         }

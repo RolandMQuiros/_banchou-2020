@@ -1,11 +1,11 @@
 ﻿namespace Banchou.Player {
-    public enum InputCommand {
+    public enum InputCommand : byte {
         None,
         LightAttack,
         HeavyAttack
     }
 
-    public enum StickDirection {
+    public enum StickDirection : byte {
         Neutral,
         Forward,
         ForwardRight,

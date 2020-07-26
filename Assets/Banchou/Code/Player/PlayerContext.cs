@@ -48,7 +48,7 @@ namespace Banchou.Player {
                             .DistinctUntilChanged(),
                         (look, player) => (look, player)
                     )
-                    .Where(t => t.player?.Source == InputSource.LocalSingle || t.player?.Source == InputSource.LocalMulti)
+                    .Where(t => t.player?.Source == InputSource.Local)
                     .Select(t => t.look)
             );
 
@@ -62,7 +62,7 @@ namespace Banchou.Player {
                             .DistinctUntilChanged(),
                         (move, player) => (move, player)
                     )
-                    .Where(t => t.player?.Source == InputSource.LocalSingle || t.player?.Source == InputSource.LocalMulti)
+                    .Where(t => t.player?.Source == InputSource.Local)
                     .Select(t => t.move)
             );
         }
@@ -72,7 +72,15 @@ namespace Banchou.Player {
             var player = state.GetPlayer(PlayerId);
             if (player == null) {
                 _playerInstances.Set(PlayerId, gameObject);
-                _dispatch(_playerActions.Add(PlayerId, _playerInputSource));
+
+                switch (_playerInputSource) {
+                    case InputSource.Local:
+                        _dispatch(_playerActions.AddLocalPlayer(PlayerId));
+                        break;
+                    case InputSource.AI:
+                        _dispatch(_playerActions.AddAIPlayer(PlayerId));
+                        break;
+                }
             }
         }
     }

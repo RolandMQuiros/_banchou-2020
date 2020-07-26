@@ -14,9 +14,8 @@ namespace Banchou.Utility {
             bool hasExistingValue,
             JsonSerializer serializer
         ) {
-            var obj = JObject.ReadFrom(reader);
-            var guid = obj.ToObject<Guid>();
-            return new PlayerId { Id = guid };
+            var id = reader.ReadAsInt32() ?? -1;
+            return new PlayerId { Id = id };
         }
 
         public override void WriteJson(JsonWriter writer, PlayerId value, JsonSerializer serializer) {
@@ -32,9 +31,8 @@ namespace Banchou.Utility {
             bool hasExistingValue,
             JsonSerializer serializer
         ) {
-            var obj = JObject.ReadFrom(reader);
-            var guid = obj.ToObject<Guid>();
-            return new PawnId { Id = guid };
+            var id = reader.ReadAsInt32() ?? -1;
+            return new PawnId { Id = id };
         }
 
         public override void WriteJson(JsonWriter writer, PawnId value, JsonSerializer serializer) {

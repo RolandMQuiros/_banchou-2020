@@ -7,8 +7,7 @@ using UniRx;
 namespace Banchou.Player {
     [CreateAssetMenu(fileName = "PlayerFactory.asset", menuName = "Banchou/Player Factory")]
     public class PlayerFactory : ScriptableObject, IPlayerInstances {
-        [SerializeField] private GameObject _localSinglePlayerPrefab = null;
-        [SerializeField] private GameObject _localMultiPlayerPrefab = null;
+        [SerializeField] private GameObject _localPlayerPrefab = null;
         [SerializeField] private GameObject _networkedPlayerPrefab = null;
         [SerializeField] private GameObject _AIPlayerPrefab = null;
 
@@ -37,11 +36,8 @@ namespace Banchou.Player {
                     var inputSource = getState().GetPlayerInputSource(addedId);
                     GameObject instance = null;
                     switch (inputSource) {
-                        case InputSource.LocalSingle:
-                            instance = instantiate(_localSinglePlayerPrefab, parent: playerParent);
-                            break;
-                        case InputSource.LocalMulti:
-                            instance = instantiate(_localMultiPlayerPrefab, parent: playerParent);
+                        case InputSource.Local:
+                            instance = instantiate(_localPlayerPrefab, parent: playerParent);
                             break;
                         case InputSource.AI:
                             instance = instantiate(_AIPlayerPrefab, parent: playerParent);

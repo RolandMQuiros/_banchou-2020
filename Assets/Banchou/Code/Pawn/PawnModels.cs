@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using Newtonsoft.Json;
+using UnityEngine;
 
 using Banchou.Player;
 using Banchou.Utility;
@@ -9,11 +11,12 @@ namespace Banchou.Pawn {
     [JsonConverter(typeof(PawnIdConverter))]
     public struct PawnId {
         public static readonly PawnId Empty = new PawnId();
-        public Guid Id;
+        private static int _idCounter = 0;
+        public int Id;
 
         public static PawnId Create() {
             return new PawnId {
-                Id = Guid.NewGuid()
+                Id = _idCounter++
             };
         }
 
@@ -65,6 +68,17 @@ namespace Banchou.Pawn {
             RollbackState = prev.RollbackState;
             RollbackCorrectionTime = prev.RollbackCorrectionTime;
             FSMState = prev.FSMState;
+        }
+    }
+
+    public class PawnSyncState {
+        public PawnId PawnId;
+        public Vector3 Position;
+        public Quaternion Rotation;
+
+        public PawnSyncState() { }
+        public PawnSyncState(in PawnSyncState prev) {
+            PawnId = prev.PawnId;
         }
     }
 

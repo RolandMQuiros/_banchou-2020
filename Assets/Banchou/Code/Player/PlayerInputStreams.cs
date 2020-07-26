@@ -7,6 +7,10 @@ namespace Banchou.Player {
     public delegate IObservable<Vector2> ObservePlayerLook();
     public delegate IObservable<InputCommand> ObservePlayerCommand();
 
+    public delegate void PushMove(Vector3 direction, float when);
+    public delegate void PushLook(Vector2 look, float when);
+    public delegate void PushCommand(InputCommand command, float when);
+
     public class PlayerInputStreams {
         public struct LookUnit {
             public PlayerId PlayerId;

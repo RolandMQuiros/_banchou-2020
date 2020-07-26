@@ -25,7 +25,7 @@ namespace Banchou.Pawn.Part {
 
         private void Start() {
             var playerId = _getState().Players
-                .Where(p => p.Value.Source == InputSource.LocalSingle)
+                .Where(p => p.Value.Source == InputSource.Local)
                 .Select(p => p.Key)
                 .First();
             _dispatch(_playerActions.Attach(playerId, _pawnId));
