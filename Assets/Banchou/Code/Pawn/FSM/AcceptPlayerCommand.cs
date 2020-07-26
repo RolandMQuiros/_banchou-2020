@@ -6,7 +6,6 @@ using Banchou.Player;
 namespace Banchou.Pawn.FSM {
     public class AcceptPlayerCommand : FSMBehaviour {
         [SerializeField] private InputCommand _acceptedCommand = InputCommand.None;
-        [SerializeField] private string _outputTrigger = null;
 
         [SerializeField, Range(0f, 1f), Tooltip("The normalized state time after which the command is accepted")]
         private float _acceptFromStateTime = 0f;
@@ -26,7 +25,7 @@ namespace Banchou.Pawn.FSM {
         ) {
             var enterTime = Time.fixedTime;
             var exitTime = Time.fixedTime;
-            var commandHash = Animator.StringToHash(_outputTrigger);
+            var commandHash = Animator.StringToHash($"C:{_acceptedCommand.ToString()}");
             var wasTriggered = false;
 
             observeCommand()

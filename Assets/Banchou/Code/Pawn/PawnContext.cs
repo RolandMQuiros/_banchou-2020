@@ -80,9 +80,8 @@ namespace Banchou.Pawn {
             if (_animator != null) {
                 var history = new LinkedList<PawnFSMState>();
                 observeState
-                    .Select(state => state.GetPawn(PawnId))
-                    .Where(pawn => pawn != null)
-                    .Select(pawn => pawn.FSMState)
+                    .Select(state => state.GetLatestFSMChange())
+                    .Where(change => change.PawnId == PawnId)
                     .Where(s => s.StateHash != 0)
                     .DistinctUntilChanged()
                     .Subscribe(fsmState => {

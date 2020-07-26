@@ -38,7 +38,6 @@ namespace Banchou.Pawn {
         public bool IsLoop;
         public float ClipLength;
         public float FixedTimeAtChange;
-
         public PawnFSMState() { }
         public PawnFSMState(in PawnFSMState prev) {
             PawnId = prev.PawnId;
@@ -46,6 +45,19 @@ namespace Banchou.Pawn {
             IsLoop = prev.IsLoop;
             ClipLength = prev.ClipLength;
             FixedTimeAtChange = prev.FixedTimeAtChange;
+        }
+    }
+
+
+    public class PawnSyncState {
+        public PawnId PawnId;
+        public Vector3 Position;
+        public Quaternion Rotation;
+        public PawnSyncState() { }
+        public PawnSyncState(in PawnSyncState prev) {
+            PawnId = prev.PawnId;
+            Position = prev.Position;
+            Rotation = prev.Rotation;
         }
     }
 
@@ -72,19 +84,6 @@ namespace Banchou.Pawn {
             RollbackState = prev.RollbackState;
             RollbackCorrectionTime = prev.RollbackCorrectionTime;
             FSMState = prev.FSMState;
-        }
-    }
-
-    public class PawnSyncState {
-        public PawnId PawnId;
-        public Vector3 Position;
-        public Quaternion Rotation;
-
-        public PawnSyncState() { }
-        public PawnSyncState(in PawnSyncState prev) {
-            PawnId = prev.PawnId;
-            Position = prev.Position;
-            Rotation = prev.Rotation;
         }
     }
 

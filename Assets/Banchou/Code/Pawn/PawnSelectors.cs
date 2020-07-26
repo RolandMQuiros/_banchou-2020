@@ -45,6 +45,10 @@ namespace Banchou.Pawn {
             return state.GetPlayer(state.GetPawnPlayerId(pawnId))?.Targets ?? Enumerable.Empty<PawnId>();
         }
 
+        public static PawnFSMState GetLatestFSMChange(this GameState state) {
+            return state.Pawns.LatestFSMChange;
+        }
+
         public static PawnRollbackState GetPawnRollbackState(this GameState state, PawnId pawnId) {
             return state.GetPawn(pawnId).RollbackState;
         }
