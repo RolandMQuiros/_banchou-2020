@@ -14,7 +14,7 @@ namespace Banchou.Combatant {
                 }
             }
 
-            if (action is Pawn.StateAction.RemovePawn remove) {
+            if (action is Board.StateAction.RemovePawn remove) {
                 var next = new CombatantsState(prev);
                 next.Remove(remove.PawnId);
                 return next;

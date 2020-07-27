@@ -1,9 +1,12 @@
 {
-    "name": "ReduxDevTools",
+    "name": "ReduxDevToolsEditor",
     "references": [
-        "GUID:4a7763c79611d7944a2ae2a0fd957100"
+        "GUID:cb89ef4577e2abf4ea4db5cfb29cd53e",
+        "GUID:76c9f9ce23ba2a946b591893ad5a6e02"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

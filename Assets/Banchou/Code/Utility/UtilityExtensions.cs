@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Runtime.InteropServices;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,6 +23,25 @@ namespace Banchou {
         public static Vector3 Centroid(this IEnumerable<Vector3> positions) {
             return positions
                 .Aggregate(Vector3.zero, (sum, position) => sum + position) / positions.Count();
+        }
+
+        public static byte[] ToByteArray<T>(this T obj) where T : struct {
+            var size = Marshal.SizeOf(obj);
+            var arr = new byte[size];
+            var ptr = Marshal.AllocHGlobal(size);
+            Marshal.StructureToPtr(obj, ptr, true);
+            Marshal.Copy(ptr, arr, 0, size);
+            Marshal.FreeHGlobal(ptr);
+            return arr;
+        }
+
+        public static T ToObject<T>(this byte[] arr, ref T obj) where T : struct {
+            var size = Marshal.SizeOf(obj);
+            var ptr = Marshal.AllocHGlobal(size);
+            Marshal.Copy(arr, 0, ptr, size);
+            obj = Marshal.PtrToStructure<T>(ptr);
+            Marshal.FreeHGlobal(ptr);
+            return obj;
         }
     }
 }

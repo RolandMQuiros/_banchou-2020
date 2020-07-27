@@ -6,7 +6,7 @@ using Banchou.Player;
 namespace Banchou.Pawn {
     public static class PawnsReducers {
         public static PawnsState Reduce(in PawnsState prev, in object action) {
-            if (action is StateAction.AddPawn add) {
+            if (action is Board.StateAction.AddPawn add) {
                 PawnState pawn;
                 if (!prev.States.TryGetValue(add.PawnId, out pawn)) {
                     return new PawnsState(prev) {
@@ -20,7 +20,7 @@ namespace Banchou.Pawn {
                 }
             }
 
-            if (action is StateAction.RemovePawn remove) {
+            if (action is Board.StateAction.RemovePawn remove) {
                 var next = new PawnsState(prev);
                 next.States.Remove(remove.PawnId);
                 return next;

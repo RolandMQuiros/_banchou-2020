@@ -7,9 +7,10 @@ using UnityEngine.AI;
 using Redux;
 using UniRx;
 
-using Banchou.Player;
-using Banchou.Pawn.Part;
+using Banchou.Board;
 using Banchou.Mob;
+using Banchou.Pawn.Part;
+using Banchou.Player;
 
 namespace Banchou.Pawn {
     public delegate float GetDeltaTime();
@@ -75,7 +76,6 @@ namespace Banchou.Pawn {
                 _agent.updatePosition = false;
                 _agent.updateRotation = false;
             }
-
 
             if (_animator != null) {
                 var history = new LinkedList<PawnFSMState>();
@@ -206,7 +206,7 @@ namespace Banchou.Pawn {
                 _pawnInstances.Set(PawnId, this);
 
                 // Let the state know about us
-                _dispatch(_boardActions.Add(PawnId));
+                _dispatch(_boardActions.AddPawn(PawnId));
 
                 if (_agent != null) {
                     _dispatch(_mobActions.Add(PawnId));

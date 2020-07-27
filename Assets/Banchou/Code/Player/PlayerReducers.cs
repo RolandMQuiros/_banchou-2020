@@ -27,7 +27,7 @@ namespace Banchou.Player {
                 return next;
             }
 
-            if (action is Pawn.StateAction.AddPawn addPawn) {
+            if (action is Board.StateAction.AddPawn addPawn) {
                 PlayerState prevPlayer;
                 if (prev.TryGetValue(addPawn.PlayerId, out prevPlayer)) {
                     return new PlayersState(prev) {

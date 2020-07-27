@@ -40,7 +40,7 @@ namespace Banchou.Network {
                         case Mode.Client:
                             _client = new NetworkClient(dispatch, playerInput, sync => _pulledPawnSync.OnNext(sync))
                                 .Start(
-                                    new IPEndPoint(IPAddress.Parse("localhost"), 9050),
+                                    new IPEndPoint(IPAddress.Parse("0.0.0.0"), 9050),
                                     Observable.Interval(TimeSpan.FromSeconds(1))
                                 );
                             _agent = _client;

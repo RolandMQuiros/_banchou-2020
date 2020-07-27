@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Redux;
 
+using Banchou.Board;
 using Banchou.Pawn;
 
 namespace Banchou.Combatant {
@@ -40,7 +41,7 @@ namespace Banchou.Combatant {
         }
 
         public ActionsCreator<GameState> Add(PawnId pawnId) => (dispatch, getState) => {
-            dispatch(_boardActions.Add(pawnId));
+            dispatch(_boardActions.AddPawn(pawnId));
             dispatch(new StateAction.AddCombatant {
                 PawnId = pawnId,
                 Health = 100

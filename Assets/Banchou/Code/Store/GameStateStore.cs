@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Redux;
 using Redux.Reactive;
 
+using Banchou.Board;
 using Banchou.Combatant;
 using Banchou.Mob;
 using Banchou.Network;
@@ -63,6 +64,7 @@ namespace Banchou {
         protected virtual GameState Reducer(in GameState prev, in object action) {
             return new GameState {
                 Network = NetworkReducers.Reduce(prev.Network, action),
+                Board = BoardReducers.Reduce(prev.Board, action),
                 Players = PlayerReducers.Reduce(prev.Players, action),
                 Pawns = PawnsReducers.Reduce(prev.Pawns, action),
                 PawnSync = PawnSyncReducers.Reduce(prev.PawnSync, action),

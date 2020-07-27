@@ -36,8 +36,8 @@ namespace Banchou.Pawn {
         ) {
             var catalog = _prefabCatalog.ToDictionary(p => p.Key, p => p.Prefab);
             var observePawnIdDeltas = observeState
+                .DistinctUntilChanged(state => state.GetPawns())
                 .Select(state => state.GetPawnIds())
-                .DistinctUntilChanged()
                 .Pairwise();
 
             // If a pawn was added, instantiate it

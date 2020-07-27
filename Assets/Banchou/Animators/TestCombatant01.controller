@@ -1353,7 +1353,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _acceptedCommand: 1
-  _outputTrigger: C:LightAttack
+  _outputTrigger: 
   _acceptFromStateTime: 0
   _acceptUntilStateTime: 1
   _bufferUntilStateTime: 0.56
@@ -1963,6 +1963,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e34e4b0fc0d12f4e946303b7a4b287b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _forceMode: 0
 --- !u!114 &8294680612948315758
 MonoBehaviour:
   m_ObjectHideFlags: 1
