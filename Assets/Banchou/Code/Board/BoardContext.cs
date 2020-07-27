@@ -34,6 +34,7 @@ namespace Banchou.Board {
             // Load scenes
             observeState.Select(state => state.GetLatestScene())
                 .DistinctUntilChanged()
+                .Where(scene => scene != null)
                 .SelectMany(
                     scene => SceneManager
                         .LoadSceneAsync(scene, LoadSceneMode.Additive)

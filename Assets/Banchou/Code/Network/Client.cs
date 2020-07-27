@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Net;
-using System.IO;
 
 using LiteNetLib;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
 using Redux;
 using UnityEngine;
 using UniRx;
@@ -27,44 +24,31 @@ namespace Banchou.Network {
             _listener = new EventBasedNetListener();
             _client = new NetManager(_listener);
 
-            var serializer = new JsonSerializer();
-            serializer.TypeNameHandling = TypeNameHandling.All;
-
-            var buffer = new MemoryStream();
-
             // Receiving data from server
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
                 // Calculate when the event was sent
                 var when = Time.fixedUnscaledTime - (fromPeer.Ping / 1000f);
 
-                // Extract payload type
-                var payloadType = (PayloadType)dataReader.GetByte();
+                Envelope envelope = new Envelope();
+                dataReader.RawData.ToObject(ref envelope);
 
-                // Deserialize payload
-                buffer.Write(dataReader.RawData, 1, dataReader.RawDataSize);
-                object payload;
-                using (var reader = new BsonReader(buffer)) {
-                    payload = serializer.Deserialize(reader);
-                }
-
-                switch (payloadType) {
+                switch (envelope.PayloadType) {
                     case PayloadType.Action:
-                        dispatch(payload);
+                        dispatch(envelope.Payload);
                     break;
                     case PayloadType.SyncPawn:
-                        pullPawnSync((SyncPawn)payload);
+                        pullPawnSync((SyncPawn)envelope.Payload);
                     break;
                     case PayloadType.PlayerCommand: {
-                        var playerCommand = (PlayerCommand)payload;
+                        var playerCommand = (PlayerCommand)envelope.Payload;
                         playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, when);
                     } break;
                     case PayloadType.PlayerMove: {
-                        var playerMove = (PlayerMove)payload;
+                        var playerMove = (PlayerMove)envelope.Payload;
                         playerInput.PushMove(playerMove.PlayerId, playerMove.Direction, when);
                     } break;
                 }
 
-                buffer.SetLength(0);
                 dataReader.Recycle();
             };
         }

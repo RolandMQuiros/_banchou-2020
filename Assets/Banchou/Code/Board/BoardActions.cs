@@ -27,6 +27,12 @@ namespace Banchou.Board {
     }
 
     public class BoardActions {
+        public StateAction.AddPawn AddPawn(string prefabKey) => new StateAction.AddPawn {
+            PawnId = PawnId.Create(),
+            PlayerId = PlayerId.Empty,
+            PrefabKey = prefabKey
+        };
+
         public StateAction.AddPawn AddPawn(PawnId pawnId, string prefabKey = null) => new StateAction.AddPawn {
             PawnId = pawnId,
             PlayerId = PlayerId.Empty,

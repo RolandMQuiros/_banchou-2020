@@ -6,7 +6,7 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Banchou/Scenes/SampleScene.unity
+    path: Assets/Banchou/Scenes/BanchouBoard.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: baf618ea84e0a7a46849313b02de9f93,

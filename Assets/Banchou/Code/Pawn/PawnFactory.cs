@@ -18,16 +18,6 @@ namespace Banchou.Pawn {
         private IDisposable _addedSubscription = null;
         private IDisposable _removedSubscription = null;
 
-        public ICollection<PawnId> Keys => throw new NotImplementedException();
-
-        public ICollection<IPawnInstance> Values => throw new NotImplementedException();
-
-        public int Count => throw new NotImplementedException();
-
-        public bool IsReadOnly => throw new NotImplementedException();
-
-        public IPawnInstance this[PawnId key] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
         public void Construct(
             Transform pawnParent,
             IObservable<GameState> observeState,
@@ -74,6 +64,17 @@ namespace Banchou.Pawn {
                         GameObject.Destroy(instance.gameObject);
                     }
                 });
+        }
+
+        public IEnumerable<string> GetPrefabKeys() {
+            return _prefabCatalog.Select(p => p.Key);
+        }
+
+        public GameObject GetPrefab(string prefabKey) {
+            return _prefabCatalog
+                .Where(c => c.Key == prefabKey)
+                .Select(c => c.Prefab)
+                .FirstOrDefault();
         }
 
         public IPawnInstance Get(PawnId pawnId) {

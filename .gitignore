@@ -76,3 +76,6 @@ crashlytics-build.properties
 # TextMeshPro
 /[Aa]ssets/TextMesh Pro/
 /[Aa]ssets/TextMesh Pro.meta
+
+# NuGet packages
+/[Aa]ssets/Packages/

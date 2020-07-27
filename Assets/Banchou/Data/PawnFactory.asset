@@ -12,4 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29ab2de2ae15a7c409613ba2a1cd53f5, type: 3}
   m_Name: PawnFactory
   m_EditorClassIdentifier: 
-  _prefabCatalog: []
+  _prefabCatalog:
+  - Key: Isaac
+    Prefab: {fileID: 1048794789454655895, guid: d3ce816099f098a4181b39db57888b38,
+      type: 3}
+  - Key: Punching Bag
+    Prefab: {fileID: 3743094190015798963, guid: b3c1de517889b9d46bc752834b36eae9,
+      type: 3}
+  - Key: Dumpster
+    Prefab: {fileID: 8234168381333428731, guid: 074c3ccaff3d1ac4f8603f6aef6a804a,
+      type: 3}
