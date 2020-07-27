@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
+
 using UniRx;
+using UnityEngine;
+
+using Banchou.DependencyInjection;
 
 namespace Banchou.Player {
     [CreateAssetMenu(fileName = "PlayerFactory.asset", menuName = "Banchou/Player Factory")]
-    public class PlayerFactory : ScriptableObject, IPlayerInstances {
+    public class PlayerFactory : ScriptableObject, IPlayerInstances, IDisposable {
         [SerializeField] private GameObject _localPlayerPrefab = null;
         [SerializeField] private GameObject _networkedPlayerPrefab = null;
         [SerializeField] private GameObject _AIPlayerPrefab = null;
@@ -28,7 +31,6 @@ namespace Banchou.Player {
                 .Pairwise();
 
             // Create new Players based on state
-            _addedSubscription?.Dispose();
             _addedSubscription = observePlayersChanges
                 .SelectMany(pair => pair.Current.Except(pair.Previous))
                 .Where(addedId => !_instances.ContainsKey(addedId))
@@ -37,28 +39,30 @@ namespace Banchou.Player {
                     GameObject instance = null;
                     switch (inputSource) {
                         case InputSource.Local:
-                            instance = instantiate(_localPlayerPrefab, parent: playerParent);
+                            instance = instantiate(
+                                _localPlayerPrefab,
+                                parent: playerParent,
+                                additionalBindings: addedId
+                            );
                             break;
                         case InputSource.AI:
-                            instance = instantiate(_AIPlayerPrefab, parent: playerParent);
+                            instance = instantiate(
+                                _AIPlayerPrefab,
+                                parent: playerParent,
+                                additionalBindings: addedId
+                            );
                             break;
                         case InputSource.Network:
-                            instance = instantiate(_networkedPlayerPrefab, parent: playerParent);
+                            instance = instantiate(
+                                _networkedPlayerPrefab,
+                                parent: playerParent,
+                                additionalBindings: addedId
+                            );
                             break;
                     }
 
                     if (instance != null) {
-                        // Set the PlayerId for the new instance
-                        var contexts = instance.GetComponentsInChildren<PlayerContext>();
-                        foreach (var context in contexts) {
-                            context.PlayerId = addedId;
-                        }
-
-                        // Add the instance to our dictionary
                         _instances[addedId] = instance;
-
-                        // Player objects persist between all scene changes
-                        GameObject.DontDestroyOnLoad(instance);
                     }
                 });
 
@@ -94,6 +98,10 @@ namespace Banchou.Player {
             }
 
             _instances.Add(playerId, gameObject);
+        }
+
+        public void Dispose() {
+            _addedSubscription?.Dispose();
         }
     }
 }

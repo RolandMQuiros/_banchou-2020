@@ -7,7 +7,10 @@ namespace Banchou.Board {
                 if (!prev.LoadingScenes.Contains(add.Scene) && !prev.LoadedScenes.Contains(add.Scene)) {
                     var loading = new HashSet<string>(prev.LoadingScenes);
                     loading.Add(add.Scene);
-                    return new BoardState(prev) { LoadingScenes = loading };
+                    return new BoardState(prev) {
+                        LatestScene = add.Scene,
+                        LoadingScenes = loading
+                    };
                 }
             }
 
@@ -17,6 +20,7 @@ namespace Banchou.Board {
                     loading.Add(set.Scene);
 
                     return new BoardState(prev) {
+                        LatestScene = set.Scene,
                         LoadingScenes = loading,
                         LoadedScenes = new HashSet<string>()
                     };
@@ -31,8 +35,8 @@ namespace Banchou.Board {
                 loaded.Add(done.Scene);
 
                 return new BoardState(prev) {
-                    LatestScene = done.Scene,
-                    LoadedScenes = loaded
+                    LoadedScenes = loaded,
+                    LoadingScenes = loading
                 };
             }
 

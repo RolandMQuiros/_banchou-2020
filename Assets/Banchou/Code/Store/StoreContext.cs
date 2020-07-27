@@ -2,6 +2,8 @@
 using UnityEngine;
 using Redux;
 
+using Banchou.DependencyInjection;
+
 namespace Banchou {
     public class StoreContext : MonoBehaviour, IContext {
         [SerializeField] private GameStateStore _store = null;

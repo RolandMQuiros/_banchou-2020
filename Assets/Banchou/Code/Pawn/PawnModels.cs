@@ -11,13 +11,17 @@ namespace Banchou.Pawn {
     [JsonConverter(typeof(PawnIdConverter))]
     public struct PawnId {
         public static readonly PawnId Empty = new PawnId();
-        private static int _idCounter = 0;
-        public int Id;
+        private static int _idCounter = 1;
+        public int Id { get; private set; }
 
         public static PawnId Create() {
             return new PawnId {
                 Id = _idCounter++
             };
+        }
+
+        public PawnId(int id) {
+            Id = id;
         }
 
         #region Equality boilerplate

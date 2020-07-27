@@ -1,9 +1,10 @@
 ﻿using System;
 using UnityEngine;
 
-using Banchou.Pawn;
 using Banchou.Combatant;
+using Banchou.DependencyInjection;
 using Banchou.Mob;
+using Banchou.Pawn;
 
 namespace Banchou.Player {
     public class PlayersContext : MonoBehaviour, IContext {

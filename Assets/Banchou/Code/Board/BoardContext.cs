@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 using Banchou.Combatant;
+using Banchou.DependencyInjection;
 using Banchou.Mob;
 using Banchou.Pawn;
 
@@ -21,37 +22,14 @@ namespace Banchou.Board {
 
         public void Construct(
             IObservable<GameState> observeState,
-            Dispatcher dispatch,
             GetState getState,
             Instantiator instantiate
         ) {
-            _pawnFactory.Construct(_pawnParent ?? transform, observeState, getState, instantiate);
+            _pawnFactory?.Construct(_pawnParent ?? transform, observeState, getState, instantiate);
 
             _boardActions = new BoardActions();
             _mobActions = new MobActions();
-            _combatantActions = new CombatantActions(_boardActions);
-
-            // Load scenes
-            observeState.Select(state => state.GetLatestScene())
-                .DistinctUntilChanged()
-                .Where(scene => scene != null)
-                .SelectMany(
-                    scene => SceneManager
-                        .LoadSceneAsync(scene, LoadSceneMode.Additive)
-                        .AsObservable()
-                        .Select(_ => scene)
-                        .Last()
-                )
-                .Subscribe(scene => { dispatch(_boardActions.SceneLoaded(scene)); })
-                .AddTo(this);
-
-            // Unload scenes
-            observeState.Select(state => state.GetLoadedScenes())
-                .DistinctUntilChanged()
-                .Pairwise()
-                .SelectMany(pair => pair.Previous.Except(pair.Current))
-                .Subscribe(scene => SceneManager.UnloadSceneAsync(scene))
-                .AddTo(this);
+            _combatantActions = new CombatantActions();
         }
 
         public void InstallBindings(DiContainer container) {

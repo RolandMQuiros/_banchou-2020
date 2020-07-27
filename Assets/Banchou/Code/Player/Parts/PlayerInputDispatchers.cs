@@ -29,8 +29,10 @@ namespace Banchou.Player.Part {
             _playerInputStreams = playerInputStreams;
 
             this.FixedUpdateAsObservable()
-                .Subscribe(_ => {
-                    _playerInputStreams.PushMove(_playerId, _moveInput.CameraPlaneProject(), Time.fixedUnscaledTime);
+                .Select(_ => _moveInput.CameraPlaneProject())
+                .DistinctUntilChanged()
+                .Subscribe(direction => {
+                    _playerInputStreams.PushMove(_playerId, direction, Time.fixedUnscaledTime);
                 })
                 .AddTo(this);
         }

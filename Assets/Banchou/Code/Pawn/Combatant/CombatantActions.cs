@@ -35,17 +35,9 @@ namespace Banchou.Combatant {
     }
 
     public class CombatantActions {
-        private BoardActions _boardActions;
-        public CombatantActions(BoardActions boardActions) {
-            _boardActions = boardActions;
-        }
-
-        public ActionsCreator<GameState> Add(PawnId pawnId) => (dispatch, getState) => {
-            dispatch(_boardActions.AddPawn(pawnId));
-            dispatch(new StateAction.AddCombatant {
-                PawnId = pawnId,
-                Health = 100
-            });
+        public StateAction.AddCombatant Add(PawnId pawnId) => new StateAction.AddCombatant {
+            PawnId = pawnId,
+            Health = 100
         };
 
         public StateAction.LockOn LockOn(PawnId combatantId, PawnId to) {

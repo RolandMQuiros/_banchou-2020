@@ -15,7 +15,7 @@ namespace Banchou.Utility {
             JsonSerializer serializer
         ) {
             var id = reader.ReadAsInt32() ?? -1;
-            return new PlayerId { Id = id };
+            return new PlayerId(id);
         }
 
         public override void WriteJson(JsonWriter writer, PlayerId value, JsonSerializer serializer) {
@@ -32,7 +32,7 @@ namespace Banchou.Utility {
             JsonSerializer serializer
         ) {
             var id = reader.ReadAsInt32() ?? -1;
-            return new PawnId { Id = id };
+            return new PawnId(id);
         }
 
         public override void WriteJson(JsonWriter writer, PawnId value, JsonSerializer serializer) {

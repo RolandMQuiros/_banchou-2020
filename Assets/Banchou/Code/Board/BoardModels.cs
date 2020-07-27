@@ -3,8 +3,8 @@
 namespace Banchou.Board {
     public class BoardState {
         public string LatestScene = null;
-        public HashSet<string> LoadingScenes;
-        public HashSet<string> LoadedScenes;
+        public HashSet<string> LoadingScenes = new HashSet<string>();
+        public HashSet<string> LoadedScenes = new HashSet<string>();
 
         public BoardState() { }
         public BoardState(in BoardState prev) {

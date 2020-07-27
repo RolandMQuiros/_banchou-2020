@@ -47,10 +47,11 @@ namespace Banchou.Player {
 
             if (action is StateAction.IPlayerAction playerAction) {
                 PlayerState prevPlayer;
-                prev.TryGetValue(playerAction.PlayerId, out prevPlayer);
-                return new PlayersState(prev) {
-                    [playerAction.PlayerId] = ReducePlayer(prevPlayer, action)
-                };
+                if (prev.TryGetValue(playerAction.PlayerId, out prevPlayer)) {
+                    return new PlayersState(prev) {
+                        [playerAction.PlayerId] = ReducePlayer(prevPlayer, action)
+                    };
+                }
             }
 
             return prev;
@@ -83,7 +84,7 @@ namespace Banchou.Player {
 
                 // Remove target from current targeting list
                 var targets = prev.Targets;
-                if (targets.Contains(target)) {
+                if (targets?.Contains(target) == true) {
                     targets = new HashSet<PawnId>(prev.Targets);
                     targets.Remove(target);
                 }

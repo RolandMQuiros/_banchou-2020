@@ -11,13 +11,17 @@ namespace Banchou.Player {
     [JsonConverter(typeof(PlayerIdConverter))]
     public struct PlayerId {
         public static readonly PlayerId Empty = new PlayerId();
-        private static int _idCounter = 0;
-        public int Id;
+        private static int _idCounter = 1;
+        public int Id { get; private set; }
 
         public static PlayerId Create() {
             return new PlayerId {
                 Id = _idCounter++
             };
+        }
+
+        public PlayerId(int id) {
+            Id = id;
         }
 
         #region Equality boilerplate

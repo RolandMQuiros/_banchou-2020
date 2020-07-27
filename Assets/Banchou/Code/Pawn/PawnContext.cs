@@ -8,6 +8,7 @@ using Redux;
 using UniRx;
 
 using Banchou.Board;
+using Banchou.DependencyInjection;
 using Banchou.Mob;
 using Banchou.Pawn.Part;
 using Banchou.Player;
@@ -25,7 +26,7 @@ namespace Banchou.Pawn {
         [SerializeField] private NavMeshAgent _agent = null;
         private IMotor _motor = null;
 
-        public PawnId PawnId { get; private set; } = PawnId.Create();
+        public PawnId PawnId { get; private set; }
         public Rigidbody Body { get => _rigidbody; }
         public Transform Orientation { get => _orientation.transform; }
         public NavMeshAgent Agent { get => _agent; }
@@ -48,6 +49,7 @@ namespace Banchou.Pawn {
         private float _deltaTime = 0f;
 
         public void Construct(
+            PawnId pawnId,
             IObservable<GameState> observeState,
             Dispatcher dispatch,
             BoardActions boardActions,
@@ -57,6 +59,7 @@ namespace Banchou.Pawn {
             PlayerInputStreams playerInput,
             IObservable<Network.Message.SyncPawn> observePawnSyncs = null
         ) {
+            PawnId = pawnId;
             _dispatch = dispatch;
             _pawnActions = new PawnActions(PawnId);
             _boardActions = boardActions;
@@ -195,6 +198,7 @@ namespace Banchou.Pawn {
             );
 
             container.Bind<ObservePlayerCommand>(() => _commandSubject);
+            container.Bind<Subject<InputCommand>>(_commandSubject, t => t == typeof(Part.Rollback));
         }
 
         private void Start() {

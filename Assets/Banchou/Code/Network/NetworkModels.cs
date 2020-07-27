@@ -1,4 +1,6 @@
-﻿namespace Banchou.Network {
+﻿using System.Net;
+
+namespace Banchou.Network {
     public enum Mode {
         Local,
         Server,
@@ -8,9 +10,14 @@
     public class NetworkSettingsState {
         public Mode Mode = Mode.Local;
 
+        public bool IsConnecting = false;
+        public IPEndPoint Host;
+
         public NetworkSettingsState() { }
         public NetworkSettingsState(in NetworkSettingsState prev) {
             Mode = prev.Mode;
+            IsConnecting = prev.IsConnecting;
+            Host = prev.Host;
         }
     }
 }

@@ -1,15 +1,15 @@
 ﻿using System;
-using UnityEngine;
-using UniRx;
 
 using Redux;
+using UniRx;
+using UnityEngine;
+
+using Banchou.DependencyInjection;
 using Banchou.Pawn;
 
 namespace Banchou.Player {
     public class PlayerContext : MonoBehaviour, IContext {
-        public PlayerId PlayerId { get; set; } = PlayerId.Create();
-
-        [SerializeField] private InputSource _playerInputSource = InputSource.AI;
+        public PlayerId PlayerId { get; private set; }
 
         private GetState _getState;
         private IObservable<GameState> _observeState;
@@ -19,6 +19,7 @@ namespace Banchou.Player {
         private PlayerInputStreams _playerInputStreams;
 
         public void Construct(
+            PlayerId playerId,
             GetState getState,
             IObservable<GameState> observeState,
             Dispatcher dispatch,
@@ -27,6 +28,7 @@ namespace Banchou.Player {
             IPawnInstances pawnInstances,
             PlayerInputStreams playerInputStreams
         ) {
+            PlayerId = playerId;
             _getState = getState;
             _observeState = observeState;
             _dispatch = dispatch;
@@ -65,23 +67,6 @@ namespace Banchou.Player {
                     .Where(t => t.player?.Source == InputSource.Local)
                     .Select(t => t.move)
             );
-        }
-
-        private void Start() {
-            var state = _getState();
-            var player = state.GetPlayer(PlayerId);
-            if (player == null) {
-                _playerInstances.Set(PlayerId, gameObject);
-
-                switch (_playerInputSource) {
-                    case InputSource.Local:
-                        _dispatch(_playerActions.AddLocalPlayer(PlayerId));
-                        break;
-                    case InputSource.AI:
-                        _dispatch(_playerActions.AddAIPlayer(PlayerId));
-                        break;
-                }
-            }
         }
     }
 

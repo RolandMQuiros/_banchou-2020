@@ -14,12 +14,12 @@ namespace Banchou.Player.Targeting {
             IObservable<GameState> observeState,
             IPawnInstances pawnInstances
         ) {
-            var targetGroup = GetComponent<CinemachineTargetGroup>();
-
-            Func<PawnId, Transform> getAnchor = pawnId => {
+            Transform getAnchor(PawnId pawnId) {
                 var instance = pawnInstances.Get(pawnId) as PawnContext;
                 return instance?.GetComponentInChildren<Targetable>()?.transform ?? instance?.transform;
-            };
+            }
+
+            var targetGroup = GetComponent<CinemachineTargetGroup>();
 
             observeState
                 .Select(state => state.GetPlayerPawn(playerId))

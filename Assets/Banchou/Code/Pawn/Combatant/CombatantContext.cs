@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Redux;
 
+using Banchou.DependencyInjection;
 using Banchou.Pawn;
 
 namespace Banchou.Combatant {

@@ -1,9 +1,12 @@
 ﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-using UnityEngine;
-using UniRx;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+
+using UniRx;
+using UnityEngine;
+
+using Banchou.DependencyInjection;
 
 namespace Banchou.Pawn {
     [CreateAssetMenu(fileName = "PawnFactory.asset", menuName = "Banchou/Pawn Factory")]
@@ -39,7 +42,7 @@ namespace Banchou.Pawn {
                 .Subscribe(info => {
                     GameObject prefab;
                     if (catalog.TryGetValue(info.Pawn.PrefabKey, out prefab)) {
-                        var instance = instantiate(prefab, parent: pawnParent);
+                        var instance = instantiate(prefab, parent: pawnParent, additionalBindings: info.PawnId);
                         var pawnContext = instance.GetComponent<PawnContext>();
 
                         if (pawnContext == null) {
@@ -47,9 +50,6 @@ namespace Banchou.Pawn {
                         }
 
                         _instances[info.PawnId] = pawnContext;
-
-                        // By default, pawns persist between scenes, so it's up to the State + PawnFactory to clean them up
-                        GameObject.DontDestroyOnLoad(instance);
                     }
                 });
 
