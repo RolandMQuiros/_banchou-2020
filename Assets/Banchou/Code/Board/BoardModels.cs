@@ -5,14 +5,12 @@ namespace Banchou.Board {
         public string LatestScene = null;
         public HashSet<string> LoadingScenes = new HashSet<string>();
         public HashSet<string> LoadedScenes = new HashSet<string>();
-        public bool IsInjecting = true;
 
         public BoardState() { }
         public BoardState(in BoardState prev) {
             LatestScene = prev.LatestScene;
             LoadingScenes = prev.LoadingScenes;
             LoadedScenes = prev.LoadedScenes;
-            IsInjecting = prev.IsInjecting;
         }
     }
 }

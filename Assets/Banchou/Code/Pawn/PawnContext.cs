@@ -45,7 +45,6 @@ namespace Banchou.Pawn {
         private PlayerInputStreams _playerInput;
 
         private Subject<InputCommand> _commandSubject = new Subject<InputCommand>();
-        private bool _recordStateChanges = true;
         private float _deltaTime = 0f;
 
         public void Construct(
@@ -78,80 +77,6 @@ namespace Banchou.Pawn {
             if (_agent != null) {
                 _agent.updatePosition = false;
                 _agent.updateRotation = false;
-            }
-
-            if (_animator != null) {
-                var history = new LinkedList<PawnFSMState>();
-                observeState
-                    .Select(state => state.GetLatestFSMChange())
-                    .Where(change => change.PawnId == PawnId)
-                    .Where(s => s.StateHash != 0)
-                    .DistinctUntilChanged()
-                    .Subscribe(fsmState => {
-                        while (history.First?.Value.FixedTimeAtChange < Time.fixedUnscaledTime - 0.5f) {
-                            history.RemoveFirst();
-                        }
-                        history.AddLast(fsmState);
-                    })
-                    .AddTo(this);
-
-                // Handle rollbacks
-                observeState
-                    .Select(state => state.GetPawnPlayerId(PawnId))
-                    .DistinctUntilChanged()
-                    .SelectMany(
-                        playerId => playerInput.ObserveCommand(playerId)
-                            .Select(unit => (
-                                Command: unit.Command,
-                                When: unit.When,
-                                Diff: Time.fixedUnscaledTime - unit.When
-                            ))
-                    )
-                    .CatchIgnoreLog()
-                    .Subscribe(unit => {
-                        if (unit.Diff > 0f && unit.Diff < 1f) {
-                            var now = Time.fixedUnscaledTime;
-                            var deltaTime = Time.fixedUnscaledDeltaTime;
-
-                            var targetState = history.Aggregate((target, step) => {
-                                if (unit.When > step.FixedTimeAtChange) {
-                                    return step;
-                                }
-                                return target;
-                            });
-
-                            // Tell the RecordStateHistory FSMBehaviours to stop recording
-                            _dispatch(_pawnActions.RollbackStarted());
-
-                            // Revert to state when desync happened
-                            _animator.Play(
-                                stateNameHash: targetState.StateHash,
-                                layer: 0,
-                                normalizedTime: (now - targetState.FixedTimeAtChange - deltaTime)
-                                    / targetState.ClipLength
-                            );
-
-                            // Tells the RecordStateHistory FSMBehaviours to start recording again
-                            _dispatch(_pawnActions.FastForwarding(unit.Diff));
-
-                            // Kick off the fast-forward. Need to run this before pushing the commands so the _animator.Play can take
-                            _animator.Update(deltaTime);
-
-                            // Pump command into a stream somewhere
-                            _commandSubject.OnNext(unit.Command);
-
-                            // Resimulate to present
-                            var resimulationTime = deltaTime; // Skip the first update
-                            while (resimulationTime < unit.Diff) {
-                                _animator.Update(deltaTime);
-                                resimulationTime = Mathf.Min(resimulationTime + deltaTime, unit.Diff);
-                            }
-                            _dispatch(_pawnActions.RollbackComplete());
-                        } else {
-                            _commandSubject.OnNext(unit.Command);
-                        }
-                    })
-                    .AddTo(this);
             }
 
             if (observePawnSyncs != null) {

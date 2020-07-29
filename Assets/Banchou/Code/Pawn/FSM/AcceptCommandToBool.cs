@@ -24,7 +24,7 @@ namespace Banchou.Pawn.FSM {
                 .Subscribe(command => {
                     if (command == _enableCommand) {
                         stateMachine.SetBool(outputHash, true);
-                    } else {
+                    } else if (command == _disableCommand) {
                         stateMachine.SetBool(outputHash, false);
                     }
                 })

@@ -100,7 +100,11 @@ namespace Banchou.DependencyInjection {
                 if (injections.Length == parameters.Length) {
                     inject.Invoke(target, injections);
                 } else {
-                    var missingTypes = parameters.Select(p => p.ParameterType).Except(applicableBindings.Select(p => p.Key));
+                    var missingTypes = parameters
+                        .Select(p => p.ParameterType)
+                        .Where(m => !injections
+                            .Any(i => i.GetType().IsAssignableFrom(m))
+                        );
                     Debug.LogWarning(
                         $"Failed to satisfy the dependencies for {inject.DeclaringType}:{inject}\n" +
                         $"Missing bindings:\n\t{string.Join("\n\t", missingTypes)}"

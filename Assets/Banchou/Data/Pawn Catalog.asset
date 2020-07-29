@@ -9,8 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 29ab2de2ae15a7c409613ba2a1cd53f5, type: 3}
-  m_Name: Pawn Factory
+  m_Script: {fileID: 11500000, guid: ebfd297ac1529054a940e243e5de4b82, type: 3}
+  m_Name: Pawn Catalog
   m_EditorClassIdentifier: 
   _prefabCatalog:
   - Key: Isaac

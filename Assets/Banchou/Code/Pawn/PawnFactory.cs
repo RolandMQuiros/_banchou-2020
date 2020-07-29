@@ -4,49 +4,49 @@ using System.Collections.Generic;
 using System.Linq;
 
 using UniRx;
-using UniRx.Diagnostics;
 using UnityEngine;
 
 using Banchou.DependencyInjection;
 
 namespace Banchou.Pawn {
-    [CreateAssetMenu(fileName = "PawnFactory.asset", menuName = "Banchou/Pawn Factory")]
-    public class PawnFactory : ScriptableObject, IPawnInstances {
-        [Serializable]
-        private class PrefabPair {
-            public string Key = null;
-            public GameObject Prefab = null;
-        }
-        [SerializeField] private PrefabPair[] _prefabCatalog = null;
+    public class PawnFactory : MonoBehaviour, IPawnInstances {
+        [SerializeField] private PawnCatalog _catalog = null;
+        [SerializeField] private Transform _pawnParent = null;
+
+        private IObservable<GameState> _observeState;
+        private GetState _getState;
+        private Instantiator _instantiate;
+
         private Dictionary<PawnId, PawnContext> _instances = new Dictionary<PawnId, PawnContext>();
-        private IDisposable _addedSubscription = null;
-        private IDisposable _removedSubscription = null;
 
         public void Construct(
-            Transform pawnParent,
             IObservable<GameState> observeState,
             GetState getState,
             Instantiator instantiate
         ) {
-            var catalog = _prefabCatalog.ToDictionary(p => p.Key, p => p.Prefab);
-            var observePawnIdDeltas = observeState
-                .DistinctUntilChanged(state => state?.GetPawns())
-                .Where(state => state != null)
+            _observeState = observeState;
+            _getState = getState;
+            _instantiate = instantiate;
+        }
+
+        private void Start() {
+            var observePawnIdDeltas = _observeState
                 .Select(state => state.GetPawnIds())
+                .StartWith(Enumerable.Empty<PawnId>())
+                .DistinctUntilChanged()
                 .Pairwise();
 
             // If a pawn was added, instantiate it
-            _addedSubscription?.Dispose();
-            _addedSubscription = observePawnIdDeltas
+            observePawnIdDeltas
                 .SelectMany(pair => pair.Current.Except(pair.Previous))
                 .Where(id => !_instances.ContainsKey(id))
-                .Select(id => (PawnId: id, Pawn: getState().GetPawn(id)))
+                .Select(id => (PawnId: id, Pawn: _getState().GetPawn(id)))
                 .Subscribe(info => {
                     GameObject prefab;
-                    if (catalog.TryGetValue(info.Pawn.PrefabKey, out prefab)) {
-                        var instance = instantiate(
+                    if (_catalog.TryGetValue(info.Pawn.PrefabKey, out prefab)) {
+                        var instance = _instantiate(
                             prefab,
-                            parent: pawnParent,
+                            parent: _pawnParent,
                             position: info.Pawn.SpawnPosition,
                             rotation: info.Pawn.SpawnRotation,
                             additionalBindings: info.PawnId
@@ -59,11 +59,11 @@ namespace Banchou.Pawn {
 
                         _instances[info.PawnId] = pawnContext;
                     }
-                });
+                })
+                .AddTo(this);
 
             // If a pawn was removed, destroy it
-            _removedSubscription?.Dispose();
-            _removedSubscription = observePawnIdDeltas
+            observePawnIdDeltas
                 .SelectMany(pair => pair.Previous.Except(pair.Current))
                 .CatchIgnoreLog()
                 .Subscribe(id => {
@@ -72,18 +72,8 @@ namespace Banchou.Pawn {
                         _instances.Remove(id);
                         GameObject.Destroy(instance.gameObject);
                     }
-                });
-        }
-
-        public IEnumerable<string> GetPrefabKeys() {
-            return _prefabCatalog.Select(p => p.Key);
-        }
-
-        public GameObject GetPrefab(string prefabKey) {
-            return _prefabCatalog
-                .Where(c => c.Key == prefabKey)
-                .Select(c => c.Prefab)
-                .FirstOrDefault();
+                })
+                .AddTo(this);
         }
 
         public IPawnInstance Get(PawnId pawnId) {

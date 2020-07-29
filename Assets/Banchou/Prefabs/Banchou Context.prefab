@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5818984472406046524}
+  - component: {fileID: 5818984473057664783}
   m_Layer: 9
   m_Name: Pawns/
   m_TagString: Untagged
@@ -30,6 +31,20 @@ Transform:
   m_Father: {fileID: 5818984472866193342}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5818984473057664783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5818984472406046499}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29ab2de2ae15a7c409613ba2a1cd53f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _catalog: {fileID: 11400000, guid: 60e557a574bf52448acc66fc9f0f1899, type: 2}
+  _pawnParent: {fileID: 5818984472406046524}
 --- !u!1 &5818984472866193340
 GameObject:
   m_ObjectHideFlags: 0
@@ -45,7 +60,7 @@ GameObject:
   - component: {fileID: 5818984472866193337}
   - component: {fileID: 5818984472866193338}
   m_Layer: 0
-  m_Name: BanchouContext
+  m_Name: Banchou Context
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -106,8 +121,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6503128a3e2efb144ab3745338b0e5e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _pawnParent: {fileID: 5818984472406046524}
-  _pawnFactory: {fileID: 11400000, guid: 18bae96f8e706fb4ea40f9ef489364c1, type: 2}
 --- !u!114 &5818984472866193337
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -120,8 +133,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ea8e1a96d9311c4dbb1dae4d534ae4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _playerParent: {fileID: 5818984473693681663}
-  _playerFactory: {fileID: 11400000, guid: 9b66214c771f26543beecfb027c392da, type: 2}
 --- !u!114 &5818984472866193338
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -187,6 +198,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5818984473693681663}
+  - component: {fileID: 5818984473057664786}
   m_Layer: 0
   m_Name: Players/
   m_TagString: Untagged
@@ -208,6 +220,23 @@ Transform:
   m_Father: {fileID: 5818984472866193342}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5818984473057664786
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5818984473693681662}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7232495de5055e5479e464a61eeb2736, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _playerParent: {fileID: 5818984473693681663}
+  _localPlayerPrefab: {fileID: 5364267948310127331, guid: f698f6d655ee93940a2b6f55dd4172ce,
+    type: 3}
+  _networkedPlayerPrefab: {fileID: 0}
+  _AIPlayerPrefab: {fileID: 0}
 --- !u!1 &5818984474019672701
 GameObject:
   m_ObjectHideFlags: 0

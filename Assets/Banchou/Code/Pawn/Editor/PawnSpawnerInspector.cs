@@ -8,7 +8,7 @@ namespace Banchou.Pawn.UnityEditor {
     public class PawnSpawnerInspector : Editor {
         private PawnSpawner _target;
         private SerializedProperty _prefabKeyProperty;
-        private PawnFactory _pawnFactory;
+        private PawnCatalog _pawnCatalog;
         private string[] _prefabKeys;
         private (Mesh, Transform, Material)[] _previewMeshes;
 
@@ -16,13 +16,13 @@ namespace Banchou.Pawn.UnityEditor {
             _target = (PawnSpawner)target;
             _prefabKeyProperty = serializedObject.FindProperty("_prefabKey");
 
-            var factoryPath = AssetDatabase.FindAssets("t:PawnFactory")
+            var factoryPath = AssetDatabase.FindAssets("t:PawnCatalog")
                 .Select(guid => AssetDatabase.GUIDToAssetPath(guid))
                 .FirstOrDefault();
 
             if (factoryPath != null) {
-                _pawnFactory = AssetDatabase.LoadAssetAtPath<PawnFactory>(factoryPath);
-                _prefabKeys = _pawnFactory.GetPrefabKeys().ToArray();
+                _pawnCatalog = AssetDatabase.LoadAssetAtPath<PawnCatalog>(factoryPath);
+                _prefabKeys = _pawnCatalog.Keys.ToArray();
             }
 
         }
@@ -50,8 +50,8 @@ namespace Banchou.Pawn.UnityEditor {
         }
 
         private void SetViewModel(string prefabKey) {
-            var prefab = _pawnFactory.GetPrefab(prefabKey);
-            if (prefab != null) {
+            GameObject prefab;
+            if (_pawnCatalog.TryGetValue(prefabKey, out prefab)) {
                 _previewMeshes = prefab
                     .GetComponentsInChildren<MeshFilter>()
                     .Select(f => (f.sharedMesh, f.transform, f.GetComponent<Renderer>()?.material ))
