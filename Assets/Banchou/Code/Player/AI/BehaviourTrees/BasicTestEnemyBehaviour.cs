@@ -23,17 +23,7 @@ namespace Banchou.AI {
             IPawnInstances pawnInstances,
             PlayerInputStreams playerInput
         ) {
-            var targets = new List<PawnContext>();
             var trees = new List<IBehaviourTreeNode<GameState>>();
-
-            observeState
-                .Select(state => state.GetPlayerTargets(playerId))
-                .DistinctUntilChanged()
-                .Pairwise()
-                .SelectMany(pair => pair.Current.Except(pair.Previous))
-                .Select(targetId => pawnInstances.Get(targetId) as PawnContext)
-                .Subscribe(targetInstance => { targets.Add(targetInstance); })
-                .AddTo(this);
 
             var observeTrees = observeState
                 .Select(state => state.GetPlayerPawn(playerId))

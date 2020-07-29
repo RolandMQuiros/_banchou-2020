@@ -70,33 +70,6 @@ namespace Banchou.Player {
                 };
             }
 
-            if (action is StateAction.AddPlayerTarget addTarget && !prev.Targets.Contains(addTarget.Target)) {
-                var targets = new HashSet<PawnId>(prev.Targets);
-                targets.Add(addTarget.Target);
-
-                return new PlayerState(prev) {
-                    Targets = targets
-                };
-            }
-
-            if (action is StateAction.RemovePlayerTarget removeTarget) {
-                var target = removeTarget.Target;
-
-                // Remove target from current targeting list
-                var targets = prev.Targets;
-                if (targets?.Contains(target) == true) {
-                    targets = new HashSet<PawnId>(prev.Targets);
-                    targets.Remove(target);
-                }
-
-                // If any change is detected, update the PlayerState
-                if (targets != prev.Targets) {
-                    return new PlayerState(prev) {
-                        Targets = targets
-                    };
-                }
-            }
-
             return prev;
         }
     }

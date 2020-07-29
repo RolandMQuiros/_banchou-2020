@@ -41,10 +41,6 @@ namespace Banchou.Pawn {
             return state.GetPlayer(state.GetPawnPlayerId(pawnId));
         }
 
-        public static IEnumerable<PawnId> GetPawnPlayerTargets(this GameState state, PawnId pawnId) {
-            return state.GetPlayer(state.GetPawnPlayerId(pawnId))?.Targets ?? Enumerable.Empty<PawnId>();
-        }
-
         public static PawnFSMState GetLatestFSMChange(this GameState state) {
             return state.Pawns.LatestFSMChange;
         }

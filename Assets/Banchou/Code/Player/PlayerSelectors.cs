@@ -33,9 +33,5 @@ namespace Banchou.Player {
         public static IEnumerable<PlayerId> GetPlayerIds(this GameState state) {
             return state.Players.Keys;
         }
-
-        public static IEnumerable<PawnId> GetPlayerTargets(this GameState state, PlayerId playerId) {
-            return state.GetPlayer(playerId)?.Targets ?? Enumerable.Empty<PawnId>();
-        }
     }
 }

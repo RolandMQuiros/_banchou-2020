@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using System.Collections.Generic;
 
-using UnityEngine;
 using Newtonsoft.Json;
 
 using Banchou.Pawn;
@@ -51,9 +50,7 @@ namespace Banchou.Player {
         public InputSource Source = InputSource.Local;
         public string Name = null;
         public NetworkInfo NetworkInfo = null;
-
         public PawnId Pawn = PawnId.Empty;
-        public HashSet<PawnId> Targets = new HashSet<PawnId>();
 
         public PlayerState() { }
         public PlayerState(in PlayerState prev) {
@@ -61,7 +58,6 @@ namespace Banchou.Player {
             Name = prev.Name;
             NetworkInfo = prev.NetworkInfo;
             Pawn = prev.Pawn;
-            Targets = prev.Targets;
         }
     }
 
