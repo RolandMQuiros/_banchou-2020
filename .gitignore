@@ -79,3 +79,10 @@ crashlytics-build.properties
 
 # NuGet packages
 /[Aa]ssets/Packages/
+
+# Jetbrains Rider
+.idea
+
+# VSCode
+.vscode
+
