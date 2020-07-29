@@ -25,6 +25,10 @@ namespace Banchou.Combatant {
             return state.GetCombatant(combatantId)?.LockOnTarget ?? PawnId.Empty;
         }
 
+        public static IEnumerable<PawnId> GetCombatantTargets(this GameState state, PawnId combatantId) {
+            return state.GetCombatant(combatantId)?.Targets ?? Enumerable.Empty<PawnId>();
+        }
+
         public static IEnumerable<PawnId> GetCombatantIds(this GameState state) {
             return state.Combatants.Keys;
         }

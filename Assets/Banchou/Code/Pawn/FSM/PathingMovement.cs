@@ -53,7 +53,7 @@ namespace Banchou.Mob.FSM {
                     agent.speed = _movementSpeed;
                     agent.SetDestination(targetPosition.Value);
                 })
-                .AddTo(Streams);
+                .AddTo(this);
 
             ObserveStateUpdate
                 .WithLatestFrom(observeState, (_, state) => state.IsMobApproaching(pawnId))
@@ -63,7 +63,7 @@ namespace Banchou.Mob.FSM {
                 .Subscribe(_ => {
                     dispatch(pawnActions.ApproachInterrupted(pawnId));
                 })
-                .AddTo(Streams);
+                .AddTo(this);
 
             ObserveStateUpdate
                 .WithLatestFrom(observeState, (_, state) => state.IsMobApproaching(pawnId))
@@ -71,7 +71,7 @@ namespace Banchou.Mob.FSM {
                 .Subscribe(_ => {
                     dispatch(pawnActions.ApproachCompleted(pawnId));
                 })
-                .AddTo(Streams);
+                .AddTo(this);
 
 
             var speedOut = Animator.StringToHash(_movementSpeedOut);
@@ -93,7 +93,7 @@ namespace Banchou.Mob.FSM {
                         animator.SetFloat(forwardSpeedOut, Vector3.Dot(agent.desiredVelocity, orientation.transform.forward));
                     }
                 })
-                .AddTo(Streams);
+                .AddTo(this);
 
             // ObserveStateUpdate
             //     .Sample(TimeSpan.FromSeconds(1f / 15f))
@@ -107,7 +107,7 @@ namespace Banchou.Mob.FSM {
             //             animator.SetFloat(forwardSpeedOut, Vector3.Dot(velocity, _movementSpeed * orientation.transform.forward));
             //         }
             //     })
-            //     .AddTo(Streams);
+            //     .AddTo(this);
         }
     }
 }

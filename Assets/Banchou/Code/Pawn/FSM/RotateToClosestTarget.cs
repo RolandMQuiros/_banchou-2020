@@ -92,7 +92,7 @@ namespace Banchou.Pawn.FSM {
                         _rotationSpeed * Time.fixedDeltaTime
                     );
                 })
-                .AddTo(Streams);
+                .AddTo(this);
 
             if (_snapOnExit) {
                 ObserveStateExit
@@ -103,7 +103,7 @@ namespace Banchou.Pawn.FSM {
                             orientation.transform.rotation = Quaternion.LookRotation(faceDirection);
                         }
                     })
-                    .AddTo(Streams);
+                    .AddTo(this);
             }
         }
     }

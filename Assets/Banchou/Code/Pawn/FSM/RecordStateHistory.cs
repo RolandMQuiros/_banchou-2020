@@ -43,14 +43,14 @@ namespace Banchou.Pawn.FSM {
                 .Subscribe(pawn => {
                     fastForwardFrames += Time.fixedUnscaledDeltaTime;
                 })
-                .AddTo(Streams);
+                .AddTo(this);
 
             observeRollbackState
                 .Where(pawn => pawn?.RollbackState != PawnRollbackState.FastForward)
                 .Subscribe(_ => {
                     fastForwardFrames = 0f;
                 })
-                .AddTo(Streams);
+                .AddTo(this);
 
             ObserveStateEnter
                 .Select(fsmUnit => {
@@ -69,7 +69,7 @@ namespace Banchou.Pawn.FSM {
                         Dispatch(fsmUnit, now);
                     }
                 })
-                .AddTo(Streams);
+                .AddTo(this);
         }
     }
 }

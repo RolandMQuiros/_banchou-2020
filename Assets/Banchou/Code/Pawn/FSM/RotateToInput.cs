@@ -35,7 +35,7 @@ namespace Banchou.Pawn.FSM {
                     faceDirection = orientation.transform.forward;
                     flipTimer = 0f;
                 })
-                .AddTo(Streams);
+                .AddTo(this);
 
             ObserveStateUpdate
                 .Select(stateUnit => stateUnit.StateInfo.normalizedTime % 1)
@@ -63,7 +63,7 @@ namespace Banchou.Pawn.FSM {
                         );
                     }
                 })
-                .AddTo(Streams);
+                .AddTo(this);
 
             if (_snapOnExit) {
                 ObserveStateExit
@@ -72,7 +72,7 @@ namespace Banchou.Pawn.FSM {
                         // Helps face the character in the intended direction when jumping mid-turn.
                         orientation.transform.rotation = Quaternion.LookRotation(faceDirection.normalized);
                     })
-                    .AddTo(Streams);
+                    .AddTo(this);
             }
         }
     }

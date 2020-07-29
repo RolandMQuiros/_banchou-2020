@@ -38,7 +38,7 @@ namespace Banchou.Pawn.FSM {
                 .Subscribe(stateTime => {
                     wasTriggered = true;
                 })
-                .AddTo(Streams);
+                .AddTo(this);
 
             if (commandHash != 0) {
                 ObserveStateUpdate
@@ -46,7 +46,7 @@ namespace Banchou.Pawn.FSM {
                     .Subscribe(unit => {
                         animator.SetTrigger(commandHash);
                     })
-                    .AddTo(Streams);
+                    .AddTo(this);
             }
 
             ObserveStateExit
@@ -56,7 +56,7 @@ namespace Banchou.Pawn.FSM {
                         wasTriggered = false;
                     }
                 })
-                .AddTo(Streams);
+                .AddTo(this);
         }
     }
 }

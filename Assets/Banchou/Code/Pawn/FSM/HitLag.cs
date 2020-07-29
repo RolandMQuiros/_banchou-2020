@@ -22,12 +22,12 @@ namespace Banchou.Pawn.FSM {
 
             observeHits
                 .Subscribe(_ => { animator.speed = _lagSpeed; })
-                .AddTo(Streams);
+                .AddTo(this);
 
             observeHits
                 .Delay(TimeSpan.FromSeconds(_delay))
                 .Subscribe(_ => { animator.speed = _normalSpeed; })
-                .AddTo(Streams);
+                .AddTo(this);
         }
     }
 }

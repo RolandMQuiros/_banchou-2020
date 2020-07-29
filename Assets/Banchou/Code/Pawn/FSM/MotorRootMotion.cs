@@ -23,7 +23,7 @@ namespace Banchou.Pawn.FSM {
                         motor.Move(animator.deltaPosition);
                     }
                 })
-                .AddTo(Streams);
+                .AddTo(this);
         }
     }
 }

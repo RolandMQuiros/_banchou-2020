@@ -64,7 +64,7 @@ namespace Banchou.Pawn.FSM {
                         }
                     }
                 )
-                .AddTo(Streams);
+                .AddTo(this);
         }
     }
 }

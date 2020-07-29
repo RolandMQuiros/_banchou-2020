@@ -42,7 +42,7 @@ namespace Banchou.Pawn.FSM {
                         _rotationSpeed * Time.fixedDeltaTime
                     );
                 })
-                .AddTo(Streams);
+                .AddTo(this);
         }
     }
 }

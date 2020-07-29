@@ -1,5 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
+
 using UnityEngine;
 
 using Banchou.Pawn;
@@ -39,6 +40,7 @@ namespace Banchou.Combatant {
     public class CombatantState {
         public int Health = 0;
 
+        public IEnumerable<PawnId> Targets = Enumerable.Empty<PawnId>();
         public PawnId LockOnTarget = PawnId.Empty;
         public Hit HitTaken = null;
         public Hit HitDealt = null;
@@ -46,6 +48,7 @@ namespace Banchou.Combatant {
         public CombatantState() { }
         public CombatantState(in CombatantState prev) {
             Health = prev.Health;
+            Targets = prev.Targets;
             LockOnTarget = prev.LockOnTarget;
             HitTaken = prev.HitTaken;
             HitDealt = prev.HitDealt;

@@ -1,4 +1,5 @@
-﻿using Banchou.Pawn;
+﻿using System.Linq;
+using Banchou.Pawn;
 
 namespace Banchou.Combatant {
     public static class CombatantsReducers{
@@ -56,6 +57,18 @@ namespace Banchou.Combatant {
         }
 
         private static CombatantState ReduceCombatant(in CombatantState prev, in StateAction.ICombatantAction action) {
+            if (action is StateAction.AddTarget addTarget) {
+                return new CombatantState(prev) {
+                    Targets = prev.Targets.Append(addTarget.Target)
+                };
+            }
+
+            if (action is StateAction.RemoveTarget removeTarget) {
+                return new CombatantState(prev) {
+                    Targets = prev.Targets.Where(targetId => targetId != removeTarget.Target)
+                };
+            }
+
             if (action is StateAction.LockOn lockOn) {
                 return new CombatantState(prev) {
                     LockOnTarget = lockOn.To

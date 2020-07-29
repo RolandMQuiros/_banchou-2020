@@ -15,6 +15,16 @@ namespace Banchou.Combatant {
             PawnId CombatantId { get; }
         }
 
+        public struct AddTarget : ICombatantAction {
+            public PawnId CombatantId { get; set; }
+            public PawnId Target;
+        }
+
+        public struct RemoveTarget : ICombatantAction {
+            public PawnId CombatantId { get; set; }
+            public PawnId Target;
+        }
+
         public struct LockOn : ICombatantAction {
             public PawnId CombatantId { get; set; }
             public PawnId To;
@@ -38,6 +48,16 @@ namespace Banchou.Combatant {
         public StateAction.AddCombatant Add(PawnId pawnId) => new StateAction.AddCombatant {
             PawnId = pawnId,
             Health = 100
+        };
+
+        public StateAction.AddTarget AddTarget(PawnId combatantId, PawnId target) => new StateAction.AddTarget {
+            CombatantId = combatantId,
+            Target = target
+        };
+
+        public StateAction.RemoveTarget RemoveTarget(PawnId combatantId, PawnId target) => new StateAction.RemoveTarget {
+            CombatantId = combatantId,
+            Target = target
         };
 
         public StateAction.LockOn LockOn(PawnId combatantId, PawnId to) {

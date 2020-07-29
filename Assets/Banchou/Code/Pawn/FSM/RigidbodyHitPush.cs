@@ -19,7 +19,7 @@ namespace Banchou.Combatant.FSM {
                 .Subscribe(hit => {
                     body.AddForce(hit.Push, ForceMode.Force);
                 })
-                .AddTo(Streams);
+                .AddTo(this);
         }
     }
 }

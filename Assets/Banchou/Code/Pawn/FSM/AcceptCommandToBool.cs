@@ -28,7 +28,7 @@ namespace Banchou.Pawn.FSM {
                         stateMachine.SetBool(outputHash, false);
                     }
                 })
-                .AddTo(Streams);
+                .AddTo(this);
         }
     }
 }
