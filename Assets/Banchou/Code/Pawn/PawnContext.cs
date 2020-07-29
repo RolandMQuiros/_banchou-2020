@@ -35,13 +35,8 @@ namespace Banchou.Pawn {
         public Vector3 Position { get => _rigidbody?.position ?? transform.position; }
         public Vector3 Forward { get => _orientation?.transform.forward ?? transform.forward; }
 
-        private Dispatcher _dispatch;
         private PawnActions _pawnActions;
-        private BoardActions _boardActions;
-        private MobActions _mobActions;
-        private GetState _getState;
         private IObservable<GameState> _observeState;
-        private IPawnInstances _pawnInstances;
         private PlayerInputStreams _playerInput;
 
         private Subject<InputCommand> _commandSubject = new Subject<InputCommand>();
@@ -51,21 +46,12 @@ namespace Banchou.Pawn {
             PawnId pawnId,
             IObservable<GameState> observeState,
             Dispatcher dispatch,
-            BoardActions boardActions,
-            MobActions mobActions,
-            GetState getState,
-            IPawnInstances pawnInstances,
             PlayerInputStreams playerInput,
             IObservable<Network.Message.SyncPawn> observePawnSyncs = null
         ) {
             PawnId = pawnId;
-            _dispatch = dispatch;
-            _pawnActions = new PawnActions(PawnId);
-            _boardActions = boardActions;
-            _mobActions = mobActions;
-            _getState = getState;
             _observeState = observeState;
-            _pawnInstances = pawnInstances;
+            _pawnActions = new PawnActions(PawnId);
             _playerInput = playerInput;
 
             _animator = _animator == null ? GetComponentInChildren<Animator>(true) : _animator;
@@ -96,10 +82,13 @@ namespace Banchou.Pawn {
                     })
                     .AddTo(this);
             }
+
+            _pawnId = PawnId.ToString();
         }
 
         public void InstallBindings(DiContainer container) {
             container.Bind<PawnId>(PawnId);
+            container.Bind<IPawnInstance>(this);
             container.Bind<Animator>(_animator);
             container.Bind<Rigidbody>(_rigidbody);
             container.Bind<Part.Orientation>(_orientation);
@@ -124,24 +113,6 @@ namespace Banchou.Pawn {
 
             container.Bind<ObservePlayerCommand>(() => _commandSubject);
             container.Bind<Subject<InputCommand>>(_commandSubject, t => t == typeof(Part.Rollback));
-        }
-
-        private void Start() {
-            // Check if the Pawn exists in the state.
-            // If it doesn't, it's likely been embedded in a Scene or Prefab, which usually won't happen outside of testing.
-            var state = _getState();
-            if (!state.HasPawn(PawnId)) {
-                // Register this context with PawnInstances
-                _pawnInstances.Set(PawnId, this);
-
-                // Let the state know about us
-                _dispatch(_boardActions.AddPawn(PawnId));
-
-                if (_agent != null) {
-                    _dispatch(_mobActions.Add(PawnId));
-                }
-            }
-            _pawnId = PawnId.ToString();
         }
 
         private void OnDrawGizmos() {

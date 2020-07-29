@@ -1095,7 +1095,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1475462925595373482}
   - component: {fileID: 2616475919088967890}
-  - component: {fileID: 226985537625777749}
   m_Layer: 0
   m_Name: Free Roam Group
   m_TagString: Untagged
@@ -1111,7 +1110,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4965481658541936847}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 1.3000001, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 2922293610723753604}
@@ -1133,19 +1132,10 @@ MonoBehaviour:
   m_PositionMode: 1
   m_RotationMode: 0
   m_UpdateMethod: 1
-  m_Targets: []
---- !u!114 &226985537625777749
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4965481658541936847}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 35022d8074f8bf94c85e08058e2f3746, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Targets:
+  - target: {fileID: 1048794789466981816}
+    weight: 1
+    radius: 0
 --- !u!1 &6309178027618805422
 GameObject:
   m_ObjectHideFlags: 0

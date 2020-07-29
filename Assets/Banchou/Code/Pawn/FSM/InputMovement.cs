@@ -20,7 +20,6 @@ namespace Banchou.Pawn.FSM {
         [SerializeField] private string _velocityRightOut = string.Empty;
         [SerializeField] private string _velocityForwardOut = string.Empty;
 
-
         public void Construct(
             PawnId pawnId,
             IObservable<GameState> observeState,

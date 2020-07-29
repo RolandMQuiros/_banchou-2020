@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
-using UnityEngine;
-using UniRx;
 
+using UniRx;
+using UnityEngine;
+
+using Banchou.Combatant;
 using Banchou.Player;
 using Banchou.Pawn.Part;
 
@@ -39,7 +41,7 @@ namespace Banchou.Pawn.FSM {
             var chooseTargetOnEnter = ObserveStateEnter
                 .WithLatestFrom(
                     observeState
-                        .Select(state => state.GetPawnPlayerTargets(pawnId))
+                        .Select(state => state.GetCombatantTargets(pawnId))
                         .DistinctUntilChanged(),
                     (_, targets) => targets
                 )
@@ -84,6 +86,7 @@ namespace Banchou.Pawn.FSM {
                         body.transform.up
                     ).normalized
                 )
+                .CatchIgnoreLog()
                 .Subscribe(targetDirection => {
                     faceDirection = targetDirection;
                     orientation.transform.rotation = Quaternion.RotateTowards(

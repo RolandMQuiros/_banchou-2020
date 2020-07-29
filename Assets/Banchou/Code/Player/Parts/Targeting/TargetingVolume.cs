@@ -1,29 +1,25 @@
-﻿using System;
-using System.Linq;
-using UnityEngine;
+﻿using Redux;
 using UniRx;
 using UniRx.Triggers;
-using Redux;
+using UnityEngine;
+
 
 using Banchou.Pawn;
 using Banchou.Pawn.Part;
 
-namespace Banchou.Player.Targeting {
+namespace Banchou.Combatant {
     [RequireComponent(typeof(Collider))]
     public class TargetingVolume : MonoBehaviour {
         public void Construct(
-            PlayerId playerId,
-            GetState getState,
+            PawnId pawnId,
             Dispatcher dispatch,
-            PlayerTargetingActions targetingActions,
-            IPawnInstances pawnInstances,
-            IObservable<GameState> observeState
+            CombatantActions combatantActions
         ) {
             this.OnTriggerEnterAsObservable()
                 .Subscribe(collider => {
                     var targetable = collider.GetComponent<Targetable>();
-                    if (targetable != null && getState().GetPlayerPawn(playerId) != targetable.PawnId) {
-                        dispatch(targetingActions.AddTarget(targetable.PawnId));
+                    if (targetable?.PawnId != PawnId.Empty && pawnId != targetable.PawnId) {
+                        dispatch(combatantActions.AddTarget(pawnId, targetable.PawnId));
                     }
                 })
                 .AddTo(this);
@@ -31,8 +27,8 @@ namespace Banchou.Player.Targeting {
             this.OnTriggerExitAsObservable()
                 .Subscribe(collider => {
                     var targetable = collider.GetComponent<Targetable>();
-                    if (targetable != null && getState().GetPlayerPawn(playerId) != targetable.PawnId) {
-                        dispatch(targetingActions.RemoveTarget(targetable.PawnId));
+                    if (targetable?.PawnId != PawnId.Empty && pawnId != targetable.PawnId) {
+                        dispatch(combatantActions.RemoveTarget(pawnId, targetable.PawnId));
                     }
                 })
                 .AddTo(this);
