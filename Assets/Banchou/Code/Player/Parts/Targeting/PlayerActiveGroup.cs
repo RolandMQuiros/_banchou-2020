@@ -23,6 +23,7 @@ namespace Banchou.Player.Targeting {
 
             observeState
                 .Select(state => state.GetPlayerPawn(playerId))
+                .StartWith(PawnId.Empty)
                 .DistinctUntilChanged()
                 .Pairwise()
                 .Subscribe(pair => {

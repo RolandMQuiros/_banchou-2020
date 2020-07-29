@@ -88,6 +88,8 @@ namespace Banchou.Pawn {
             PlayerId = prev.PlayerId;
             PrefabKey = prev.PrefabKey;
             TimeScale = prev.TimeScale;
+            SpawnPosition = prev.SpawnPosition;
+            SpawnRotation = prev.SpawnRotation;
             RollbackState = prev.RollbackState;
             RollbackCorrectionTime = prev.RollbackCorrectionTime;
             FSMState = prev.FSMState;
