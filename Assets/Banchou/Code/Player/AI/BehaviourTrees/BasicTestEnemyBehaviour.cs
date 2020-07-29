@@ -18,7 +18,7 @@ namespace Banchou.AI {
             PlayerId playerId,
             IObservable<GameState> observeState,
             Dispatcher dispatch,
-            PlayerActions playerActions,
+            PlayerTargetingActions targetingActions,
             MobActions mobActions,
             CombatantActions combatantActions,
             IPawnInstances pawnInstances,
@@ -54,7 +54,7 @@ namespace Banchou.AI {
                                 if (state.GetCombatantLockOnTarget(pawnId) != PawnId.Empty) {
                                     return BehaviourTreeStatus.Success;
                                 } else {
-                                    dispatch(playerActions.LockOn(playerId));
+                                    dispatch(targetingActions.LockOn());
                                     return BehaviourTreeStatus.Running;
                                 }
                             })
@@ -102,7 +102,7 @@ namespace Banchou.AI {
                             })
                             .Do("Disengage", state => {
                                 if (state.GetCombatantLockOnTarget(pawn.PawnId) != PawnId.Empty) {
-                                    dispatch(playerActions.LockOff(playerId));
+                                    dispatch(targetingActions.LockOff());
                                     return BehaviourTreeStatus.Running;
                                 }
                                 poked = false;
@@ -117,7 +117,7 @@ namespace Banchou.AI {
             observeState
                 .DistinctUntilChanged()
                 .ThrottleFrame(1, FrameCountType.EndOfFrame)
-                .CatchIgnore((Exception error) => { Debug.LogException(error); })
+                .CatchIgnoreLog()
                 .Subscribe(state => {
                     foreach (var tree in trees) {
                         tree.Tick(state);

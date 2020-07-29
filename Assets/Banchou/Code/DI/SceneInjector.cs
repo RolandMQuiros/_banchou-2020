@@ -1,5 +1,8 @@
 ﻿using System.Linq;
+using Redux;
 using UnityEngine;
+
+using Banchou.Board;
 
 namespace Banchou.DependencyInjection {
     public class SceneInjector : MonoBehaviour {

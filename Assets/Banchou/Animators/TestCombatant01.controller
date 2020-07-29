@@ -75,7 +75,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 2
-    m_ConditionEvent: IsLockedOn
+    m_ConditionEvent: C:IsLockedOn
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 8943140411650234156}
@@ -100,7 +100,7 @@ AnimatorTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsLockedOn
+    m_ConditionEvent: C:IsLockedOn
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -4566374322182436931}
@@ -261,7 +261,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _acceptedCommand: 1
-  _outputTrigger: C:LightAttack
   _acceptFromStateTime: 0
   _acceptUntilStateTime: 1
   _bufferUntilStateTime: 0.45
@@ -661,7 +660,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _acceptedCommand: 2
-  _outputTrigger: C:HeavyAttack
   _acceptFromStateTime: 0
   _acceptUntilStateTime: 1
   _bufferUntilStateTime: 0
@@ -796,7 +794,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsLockedOn
+    m_ConditionEvent: C:IsLockedOn
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -4566374322182436931}
@@ -898,49 +896,49 @@ AnimatorController:
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 9100000}
+    m_Controller: {fileID: 0}
   - m_Name: Speed
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 9100000}
+    m_Controller: {fileID: 0}
   - m_Name: SpeedRight
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 9100000}
+    m_Controller: {fileID: 0}
   - m_Name: SpeedForward
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 9100000}
-  - m_Name: IsLockedOn
+    m_Controller: {fileID: 0}
+  - m_Name: C:IsLockedOn
     m_Type: 4
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 9100000}
+    m_Controller: {fileID: 0}
   - m_Name: C:LightAttack
     m_Type: 9
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 9100000}
+    m_Controller: {fileID: 0}
   - m_Name: C:HeavyAttack
     m_Type: 9
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 9100000}
+    m_Controller: {fileID: 0}
   - m_Name: C:Jump
     m_Type: 9
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 9100000}
+    m_Controller: {fileID: 0}
   m_AnimatorLayers:
   - serializedVersion: 5
     m_Name: Base Layer
@@ -999,17 +997,17 @@ AnimatorStateMachine:
   - first: {fileID: -2656140911337329954}
     second:
     - {fileID: 2843960693334129221}
+  - first: {fileID: 5446974990591655485}
+    second:
+    - {fileID: 800603664278688774}
+    - {fileID: 4109666263609142346}
+    - {fileID: -5211142258500256578}
   - first: {fileID: 7329845421908585584}
     second:
     - {fileID: 508372461740283836}
   - first: {fileID: 432173042041512248}
     second:
     - {fileID: -4468163216126841048}
-  - first: {fileID: 5446974990591655485}
-    second:
-    - {fileID: 800603664278688774}
-    - {fileID: 4109666263609142346}
-    - {fileID: -5211142258500256578}
   m_StateMachineBehaviours:
   - {fileID: 8186623742325980083}
   - {fileID: -1432470110364047314}
@@ -1018,6 +1016,21 @@ AnimatorStateMachine:
   m_ExitPosition: {x: 50, y: 400, z: 0}
   m_ParentStateMachinePosition: {x: 800, y: 20, z: 0}
   m_DefaultState: {fileID: 8943140411650234156}
+--- !u!114 &202430859117211148
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 957ff249f0b0db54b9a09f03924229f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _enableCommand: 3
+  _disableCommand: 4
+  _outputParameter: C:IsLockedOn
 --- !u!1101 &304000787263767947
 AnimatorStateTransition:
   m_ObjectHideFlags: 1
@@ -1353,7 +1366,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _acceptedCommand: 1
-  _outputTrigger: 
   _acceptFromStateTime: 0
   _acceptUntilStateTime: 1
   _bufferUntilStateTime: 0.56
@@ -1487,7 +1499,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _acceptedCommand: 1
-  _outputTrigger: C:LightAttack
   _acceptFromStateTime: 0
   _acceptUntilStateTime: 1
   _bufferUntilStateTime: 0
@@ -1886,7 +1897,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _acceptedCommand: 1
-  _outputTrigger: C:LightAttack
   _acceptFromStateTime: 0
   _acceptUntilStateTime: 1
   _bufferUntilStateTime: 0.37
@@ -1977,7 +1987,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _acceptedCommand: 1
-  _outputTrigger: C:LightAttack
   _acceptFromStateTime: 0
   _acceptUntilStateTime: 1
   _bufferUntilStateTime: 0.38
@@ -2019,7 +2028,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _acceptedCommand: 2
-  _outputTrigger: 
   _acceptFromStateTime: 0
   _acceptUntilStateTime: 1
   _bufferUntilStateTime: 0
@@ -2041,6 +2049,7 @@ AnimatorState:
   - {fileID: 422482906967188248}
   - {fileID: 13771025169612471}
   - {fileID: -8495432186583115246}
+  - {fileID: 202430859117211148}
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
   m_WriteDefaultValues: 1

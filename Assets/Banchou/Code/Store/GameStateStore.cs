@@ -1,6 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 using Newtonsoft.Json;
 using Redux;
@@ -14,10 +13,6 @@ using Banchou.Pawn;
 using Banchou.Player;
 
 namespace Banchou {
-    namespace StateAction {
-        public class SceneLoaded { }
-    }
-
     [CreateAssetMenu(fileName = "GameStateStore.asset", menuName = "Banchou/Game State Store")]
     public class GameStateStore : ScriptableObject, IStore<GameState> {
         [SerializeField] private TextAsset _initialState = null;
@@ -53,12 +48,6 @@ namespace Banchou {
                     Reducer, initialState, Redux.Middlewares.Thunk, NetworkServer.Install<GameState>(), _devToolsSession.Install<GameState>()
                 );
             }
-
-            SceneManager.sceneLoaded += (scene, loadSceneMode) => {
-                if (loadSceneMode == LoadSceneMode.Single) {
-                    _store.Dispatch(new StateAction.SceneLoaded());
-                }
-            };
         }
 
         protected virtual GameState Reducer(in GameState prev, in object action) {

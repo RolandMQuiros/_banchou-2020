@@ -17,7 +17,7 @@ namespace Banchou.Pawn.Part {
                 .Select(state => state.GetCombatantHitTaken(pawnId))
                 .DistinctUntilChanged()
                 .Where(hit => hit != null)
-                .CatchIgnore((Exception error) => Debug.LogException(error))
+                .CatchIgnoreLog()
                 .Subscribe(hit => {
                     body.AddForce(hit.Push, _forceMode);
                 })

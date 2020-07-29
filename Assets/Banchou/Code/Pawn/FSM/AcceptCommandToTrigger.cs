@@ -4,7 +4,7 @@ using UniRx;
 using Banchou.Player;
 
 namespace Banchou.Pawn.FSM {
-    public class AcceptPlayerCommand : FSMBehaviour {
+    public class AcceptCommandToTrigger : FSMBehaviour {
         [SerializeField] private InputCommand _acceptedCommand = InputCommand.None;
 
         [SerializeField, Range(0f, 1f), Tooltip("The normalized state time after which the command is accepted")]

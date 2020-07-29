@@ -76,6 +76,9 @@ namespace Banchou.Pawn {
         public string PrefabKey = string.Empty;
         public float TimeScale = 1f;
 
+        public Vector3 SpawnPosition = Vector3.zero;
+        public Quaternion SpawnRotation = Quaternion.identity;
+
         public PawnRollbackState RollbackState = PawnRollbackState.Complete;
         public float RollbackCorrectionTime = 0f;
         public PawnFSMState FSMState = new PawnFSMState();

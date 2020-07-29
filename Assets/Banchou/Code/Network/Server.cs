@@ -25,7 +25,7 @@ namespace Banchou.Network {
         public NetworkServer(
             IObservable<GameState> observeState,
             Dispatcher dispatch,
-            PlayerActions playerActions
+            PlayersActions playerActions
         ) {
             _listener = new EventBasedNetListener();
             _server = new NetManager(_listener);

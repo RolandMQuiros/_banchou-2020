@@ -4,6 +4,7 @@ using Redux;
 using UniRx;
 using UnityEngine;
 
+using Banchou.Combatant;
 using Banchou.DependencyInjection;
 using Banchou.Pawn;
 
@@ -14,7 +15,8 @@ namespace Banchou.Player {
         private GetState _getState;
         private IObservable<GameState> _observeState;
         private Dispatcher _dispatch;
-        private PlayerActions _playerActions;
+        private PlayersActions _playerActions;
+        private PlayerTargetingActions _targetingActions;
         private IPlayerInstances _playerInstances;
         private PlayerInputStreams _playerInputStreams;
 
@@ -23,7 +25,8 @@ namespace Banchou.Player {
             GetState getState,
             IObservable<GameState> observeState,
             Dispatcher dispatch,
-            PlayerActions playerActions,
+            CombatantActions combatantActions,
+            PlayersActions playersActions,
             IPlayerInstances playerInstances,
             IPawnInstances pawnInstances,
             PlayerInputStreams playerInputStreams
@@ -32,14 +35,16 @@ namespace Banchou.Player {
             _getState = getState;
             _observeState = observeState;
             _dispatch = dispatch;
-            _playerActions = playerActions;
+            _playerActions = playersActions;
             _playerInstances = playerInstances;
             _playerInputStreams = playerInputStreams;
+
+            _targetingActions = new PlayerTargetingActions(playerId, pawnInstances, combatantActions);
         }
 
         public void InstallBindings(DiContainer container) {
             container.Bind<PlayerId>(PlayerId);
-
+            container.Bind<PlayerTargetingActions>(_targetingActions);
             container.Bind<ObservePlayerLook>(
                 () => _playerInputStreams
                     .ObserveLook(PlayerId)

@@ -5,7 +5,7 @@ using Banchou.Board;
 
 namespace Banchou.Pawn {
     public class PawnSpawner : MonoBehaviour {
-        [SerializeField] private string _prefabKey;
+        [SerializeField] private string _prefabKey = null;
         private Dispatcher _dispatch;
         private BoardActions _boardActions;
 
@@ -15,7 +15,7 @@ namespace Banchou.Pawn {
         }
 
         private void Start() {
-            _dispatch(_boardActions.AddPawn(_prefabKey));
+            _dispatch(_boardActions.AddPawn(_prefabKey, transform.position, transform.rotation));
         }
     }
 }

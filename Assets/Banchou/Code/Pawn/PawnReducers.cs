@@ -13,7 +13,9 @@ namespace Banchou.Pawn {
                         States = new Dictionary<PawnId, PawnState>(prev.States) {
                             [add.PawnId] = new PawnState {
                                 PlayerId = add.PlayerId,
-                                PrefabKey = add.PrefabKey
+                                PrefabKey = add.PrefabKey,
+                                SpawnPosition = add.SpawnPosition,
+                                SpawnRotation = add.SpawnRotation
                             }
                         }
                     };
@@ -58,14 +60,6 @@ namespace Banchou.Pawn {
                 }
                 return new PawnsState(prev) {
                     States = next
-                };
-            }
-
-            // On scene load, remove all Pawns without Players
-            if (action is Banchou.StateAction.SceneLoaded) {
-                return new PawnsState(prev) {
-                    States = prev.States.Where(pair => pair.Value.PlayerId == PlayerId.Empty)
-                        .ToDictionary(pair => pair.Key, pair => pair.Value)
                 };
             }
 

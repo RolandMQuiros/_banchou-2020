@@ -17,7 +17,7 @@ namespace Banchou.Network {
         public void Construct(
             IObservable<GameState> observeState,
             Dispatcher dispatch,
-            PlayerActions playerActions,
+            PlayersActions playerActions,
             PlayerInputStreams playerInput
         ) {
             _agent.Construct(observeState, dispatch, playerActions, playerInput);

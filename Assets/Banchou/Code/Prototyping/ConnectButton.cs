@@ -23,7 +23,7 @@ namespace Banchou.Prototype {
             Dispatcher dispatch,
             NetworkActions networkActions,
             BoardActions boardActions,
-            PlayerActions playerActions
+            PlayersActions playerActions
         ) {
             _observeState = observeState;
             _dispatch = dispatch;

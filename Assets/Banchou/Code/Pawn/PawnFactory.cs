@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using UniRx;
+using UniRx.Diagnostics;
 using UnityEngine;
 
 using Banchou.DependencyInjection;
@@ -29,7 +30,8 @@ namespace Banchou.Pawn {
         ) {
             var catalog = _prefabCatalog.ToDictionary(p => p.Key, p => p.Prefab);
             var observePawnIdDeltas = observeState
-                .DistinctUntilChanged(state => state.GetPawns())
+                .DistinctUntilChanged(state => state?.GetPawns())
+                .Where(state => state != null)
                 .Select(state => state.GetPawnIds())
                 .Pairwise();
 
@@ -42,7 +44,13 @@ namespace Banchou.Pawn {
                 .Subscribe(info => {
                     GameObject prefab;
                     if (catalog.TryGetValue(info.Pawn.PrefabKey, out prefab)) {
-                        var instance = instantiate(prefab, parent: pawnParent, additionalBindings: info.PawnId);
+                        var instance = instantiate(
+                            prefab,
+                            parent: pawnParent,
+                            position: info.Pawn.SpawnPosition,
+                            rotation: info.Pawn.SpawnRotation,
+                            additionalBindings: info.PawnId
+                        );
                         var pawnContext = instance.GetComponent<PawnContext>();
 
                         if (pawnContext == null) {
@@ -57,6 +65,7 @@ namespace Banchou.Pawn {
             _removedSubscription?.Dispose();
             _removedSubscription = observePawnIdDeltas
                 .SelectMany(pair => pair.Previous.Except(pair.Current))
+                .CatchIgnoreLog()
                 .Subscribe(id => {
                     PawnContext instance;
                     if (_instances.TryGetValue(id, out instance)) {

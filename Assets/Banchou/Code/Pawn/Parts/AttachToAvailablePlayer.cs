@@ -9,13 +9,13 @@ namespace Banchou.Pawn.Part {
         private PawnId _pawnId;
         private GetState _getState;
         private Dispatcher _dispatch;
-        private PlayerActions _playerActions;
+        private PlayersActions _playerActions;
 
         public void Construct(
             PawnId pawnId,
             GetState getState,
             Dispatcher dispatch,
-            PlayerActions playerActions
+            PlayersActions playerActions
         ) {
             _pawnId = pawnId;
             _getState = getState;

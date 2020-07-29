@@ -39,7 +39,7 @@ namespace Banchou.Pawn.FSM {
 
             ObserveStateUpdate
                 .WithLatestFrom(observePlayerMove(), (_, move) => move)
-                .CatchIgnore((Exception error) => { Debug.LogException(error); })
+                .CatchIgnoreLog()
                 .Subscribe(
                     direction => {
                         var velocity = _movementSpeed * direction;

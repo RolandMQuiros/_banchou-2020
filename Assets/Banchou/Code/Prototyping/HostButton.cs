@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Redux;
+using UniRx;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -15,14 +16,14 @@ namespace Banchou.Prototype {
         private Dispatcher _dispatch;
         private BoardActions _boardActions;
         private NetworkActions _networkActions;
-        private PlayerActions _playerActions;
+        private PlayersActions _playerActions;
 
         public void Construct(
             IObservable<GameState> observeState,
             Dispatcher dispatch,
             NetworkActions networkActions,
             BoardActions boardActions,
-            PlayerActions playerActions
+            PlayersActions playerActions
         ) {
             _observeState = observeState;
             _dispatch = dispatch;
@@ -32,17 +33,20 @@ namespace Banchou.Prototype {
         }
 
         public void Host() {
-            var playerId = PlayerId.Create();
-            _dispatch(_playerActions.AddLocalPlayer(playerId));
-            _dispatch(_boardActions.SetScene("TestingGrounds"));
-
-            var pawnId = PawnId.Create();
-            _dispatch(_boardActions.AddPawn(pawnId, "Isaac"));
-            _dispatch(_boardActions.AddPawn("Dumpster"));
-
-            _dispatch(_playerActions.Attach(playerId, pawnId));
-
             SceneManager.LoadScene("BanchouBoard");
+
+            Observable.Timer(TimeSpan.FromSeconds(1))
+                .Subscribe(_ => {
+                    var playerId = PlayerId.Create();
+                    _dispatch(_playerActions.AddLocalPlayer(playerId));
+                    _dispatch(_boardActions.SetScene("TestingGrounds"));
+
+                    var pawnId = PawnId.Create();
+                    _dispatch(_boardActions.AddPawn(pawnId, "Isaac", new Vector3(0f, 3f, 0f)));
+                    _dispatch(_boardActions.AddPawn("Dumpster", new Vector3(10f, 3f, 5f)));
+
+                    _dispatch(_playerActions.Attach(playerId, pawnId));
+                });
         }
     }
 }

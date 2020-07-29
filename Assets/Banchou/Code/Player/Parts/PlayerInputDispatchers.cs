@@ -10,7 +10,7 @@ namespace Banchou.Player.Part {
         private PlayerId _playerId;
         private Dispatcher _dispatch;
 
-        private PlayerActions _playerActions;
+        private PlayerTargetingActions _targetingActions;
         private PlayerInputStreams _playerInputStreams;
 
         private Vector2 _moveInput;
@@ -19,13 +19,13 @@ namespace Banchou.Player.Part {
             PlayerId playerId,
             IObservable<GameState> observeState,
             Dispatcher dispatch,
-            PlayerActions playerActions,
+            PlayerTargetingActions playerTargetingActions,
             PlayerInputStreams playerInputStreams
         ) {
             _playerId = playerId;
             _dispatch = dispatch;
 
-            _playerActions = playerActions;
+            _targetingActions = playerTargetingActions;
             _playerInputStreams = playerInputStreams;
 
             this.FixedUpdateAsObservable()
@@ -61,15 +61,18 @@ namespace Banchou.Player.Part {
 
         public void DispatchLockOn(InputAction.CallbackContext callbackContext) {
             if (callbackContext.performed) {
-                _dispatch(_playerActions.LockOn(_playerId));
+                _dispatch(_targetingActions.LockOn());
+                _playerInputStreams.PushCommand(_playerId, InputCommand.LockOn, Time.fixedUnscaledTime);
             } else {
-                _dispatch(_playerActions.LockOff(_playerId));
+                _dispatch(_targetingActions.LockOff());
+                _playerInputStreams.PushCommand(_playerId, InputCommand.LockOff, Time.fixedUnscaledTime);
             }
         }
 
         public void DispatchLockOff(InputAction.CallbackContext callbackContext) {
             if (callbackContext.performed) {
-                _dispatch(_playerActions.LockOff(_playerId));
+                _dispatch(_targetingActions.LockOff());
+                _playerInputStreams.PushCommand(_playerId, InputCommand.LockOff, Time.fixedUnscaledTime);
             }
         }
     }

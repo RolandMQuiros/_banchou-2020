@@ -22,7 +22,7 @@ namespace Banchou.Network {
         public void Construct(
             IObservable<GameState> observeState,
             Dispatcher dispatch,
-            PlayerActions playerActions,
+            PlayersActions playerActions,
             PlayerInputStreams playerInput
         ) {
             _modeSubscription = _modeSubscription ?? observeState

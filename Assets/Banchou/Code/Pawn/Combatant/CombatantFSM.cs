@@ -26,12 +26,12 @@ namespace Banchou.Combatant {
                 .Subscribe(health => animator.SetFloat(healthHash, health))
                 .AddTo(this);
 
-            observeState
-                .Select(state => state.GetCombatantLockOnTarget(pawnId))
-                .DistinctUntilChanged()
-                .Select(target => target != PawnId.Empty)
-                .Subscribe(isLockedOn => animator.SetBool(isLockedOnHash, isLockedOn))
-                .AddTo(this);
+            // observeState
+            //     .Select(state => state.GetCombatantLockOnTarget(pawnId))
+            //     .DistinctUntilChanged()
+            //     .Select(target => target != PawnId.Empty)
+            //     .Subscribe(isLockedOn => animator.SetBool(isLockedOnHash, isLockedOn))
+            //     .AddTo(this);
         }
 
         private void OnAnimatorMove() { }

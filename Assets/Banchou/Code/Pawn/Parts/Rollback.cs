@@ -48,7 +48,7 @@ namespace Banchou.Pawn.Part {
                                 Diff: Time.fixedUnscaledTime - unit.When
                             ))
                     )
-                    .CatchIgnore((Exception error) => { Debug.LogException(error); })
+                    .CatchIgnoreLog()
                     .Subscribe(unit => {
                         if (unit.Diff > 0f && unit.Diff < 1f) {
                             var now = Time.fixedUnscaledTime;

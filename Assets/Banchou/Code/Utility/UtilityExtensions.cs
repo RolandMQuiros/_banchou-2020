@@ -1,5 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using UnityEngine;
 using UniRx;
@@ -23,6 +24,10 @@ namespace Banchou {
         public static Vector3 Centroid(this IEnumerable<Vector3> positions) {
             return positions
                 .Aggregate(Vector3.zero, (sum, position) => sum + position) / positions.Count();
+        }
+
+        public static IObservable<T> CatchIgnoreLog<T>(this IObservable<T> stream) {
+            return stream.CatchIgnore((Exception error) => { Debug.LogException(error); });
         }
 
         public static byte[] ToByteArray<T>(this T obj) where T : struct {

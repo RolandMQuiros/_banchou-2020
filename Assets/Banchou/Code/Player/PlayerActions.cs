@@ -46,18 +46,7 @@ namespace Banchou.Player {
         }
     }
 
-    public class PlayerActions {
-        private IPawnInstances _pawnInstances;
-        private CombatantActions _combatantActions;
-
-        public PlayerActions(
-            IPawnInstances pawnInstances,
-            CombatantActions combatantActions
-        ) {
-            _pawnInstances = pawnInstances;
-            _combatantActions = combatantActions;
-        }
-
+    public class PlayersActions {
         public StateAction.AddPlayer AddLocalPlayer(PlayerId playerId) {
             return new StateAction.AddPlayer {
                 PlayerId = playerId,
@@ -99,32 +88,48 @@ namespace Banchou.Player {
                 PlayerId = playerId
             };
         }
+    }
 
-        public StateAction.AddPlayerTarget AddTarget(PlayerId playerId, PawnId target) {
+    public class PlayerTargetingActions {
+        private PlayerId _playerId;
+        private IPawnInstances _pawnInstances;
+        private CombatantActions _combatantActions;
+
+        public PlayerTargetingActions(
+            PlayerId playerId,
+            IPawnInstances pawnInstances,
+            CombatantActions combatantActions
+        ) {
+            _playerId = playerId;
+            _pawnInstances = pawnInstances;
+            _combatantActions = combatantActions;
+        }
+
+        public StateAction.AddPlayerTarget AddTarget(PawnId target) {
             return new StateAction.AddPlayerTarget {
-                PlayerId = playerId,
+                PlayerId = _playerId,
                 Target = target
             };
         }
 
-        public ActionsCreator<GameState> RemoveTarget(PlayerId playerId, PawnId target) => (dispatch, getState) => {
+        public ActionsCreator<GameState> RemoveTarget(PawnId target) => (dispatch, getState) => {
             dispatch(new StateAction.RemovePlayerTarget {
-                PlayerId = playerId,
+                PlayerId = _playerId,
                 Target = target
             });
 
-            var pawn = getState().GetPlayerPawn(playerId);
+            var pawn = getState().GetPlayerPawn(_playerId);
             if (getState().GetCombatantLockOnTarget(pawn) == target) {
                 dispatch(_combatantActions.LockOff(pawn));
             }
         };
 
-        public ActionsCreator<GameState> LockOn(PlayerId playerId) => (dispatch, getState) => {
-            var player = getState().GetPlayer(playerId);
-            var pawn = getState().GetPlayerPawn(playerId);
+        public ActionsCreator<GameState> LockOn() => (dispatch, getState) => {
+            var player = getState().GetPlayer(_playerId);
+            var pawn = getState().GetPlayerPawn(_playerId);
 
             if (player != null && pawn != PawnId.Empty) {
-                var to = ChooseTarget(pawn, getState().GetPlayerTargets(playerId));
+                var to = ChooseTarget(pawn, getState().GetPlayerTargets(_playerId));
 
                 dispatch(_combatantActions.LockOn(
                     combatantId: pawn,
@@ -133,19 +138,19 @@ namespace Banchou.Player {
             }
         };
 
-        public ActionsCreator<GameState> LockOff(PlayerId playerId) => (dispatch, getState) => {
-            var pawn = getState().GetPlayerPawn(playerId);
+        public ActionsCreator<GameState> LockOff() => (dispatch, getState) => {
+            var pawn = getState().GetPlayerPawn(_playerId);
             if (pawn != PawnId.Empty) {
                 dispatch(_combatantActions.LockOff(pawn));
             }
         };
 
-        public ActionsCreator<GameState> ToggleLockOn(PlayerId playerId) => (dispatch, getState) => {
+        public ActionsCreator<GameState> ToggleLockOn() => (dispatch, getState) => {
             var state = getState();
-            var pawn = state.GetPlayerPawn(playerId);
+            var pawn = state.GetPlayerPawn(_playerId);
 
             if (pawn != PawnId.Empty) {
-                var to = ChooseTarget(pawn, state.GetPlayerTargets(playerId));
+                var to = ChooseTarget(pawn, state.GetPlayerTargets(_playerId));
                 if (to != PawnId.Empty) {
                     if (state.GetCombatantLockOnTarget(pawn) != PawnId.Empty) {
                         dispatch(_combatantActions.LockOff(pawn));

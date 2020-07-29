@@ -47,7 +47,7 @@ namespace Banchou.Mob.FSM {
                     return null;
                 })
                 .Where(targetPosition => targetPosition != null)
-                .CatchIgnore((Exception error) => { Debug.LogException(error); })
+                .CatchIgnoreLog()
                 .Subscribe(targetPosition => {
                     agent.nextPosition = body.position;
                     agent.speed = _movementSpeed;
@@ -59,7 +59,7 @@ namespace Banchou.Mob.FSM {
                 .WithLatestFrom(observeState, (_, state) => state.IsMobApproaching(pawnId))
                 .Where(isApproaching => isApproaching && agent.isPathStale)
                 .DistinctUntilChanged()
-                .CatchIgnore((Exception error) => { Debug.LogException(error); })
+                .CatchIgnoreLog()
                 .Subscribe(_ => {
                     dispatch(pawnActions.ApproachInterrupted(pawnId));
                 })
@@ -82,7 +82,7 @@ namespace Banchou.Mob.FSM {
             ObserveStateUpdate
                 .WithLatestFrom(observeState, (_, state) => state.IsMobApproaching(pawnId))
                 .Where(isApproaching => isApproaching)
-                .CatchIgnore((Exception error) => { Debug.LogException(error); })
+                .CatchIgnoreLog()
                 .Subscribe(_ => {
                     motor.Move(agent.desiredVelocity * Time.fixedDeltaTime);
 

@@ -2,7 +2,9 @@
     public enum InputCommand : byte {
         None,
         LightAttack,
-        HeavyAttack
+        HeavyAttack,
+        LockOn,
+        LockOff
     }
 
     public enum StickDirection : byte {

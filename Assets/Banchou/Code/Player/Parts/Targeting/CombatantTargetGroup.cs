@@ -12,6 +12,7 @@ using Banchou.Pawn.Part;
 using Banchou.Combatant;
 
 namespace Banchou.Player.Targeting {
+    [RequireComponent(typeof(CinemachineTargetGroup))]
     public class CombatantTargetGroup : MonoBehaviour {
         public void Construct(
             PlayerId playerId,
@@ -44,7 +45,7 @@ namespace Banchou.Player.Targeting {
                         Weight: 1f
                     ))
                 )
-                .CatchIgnore((Exception error) => { Debug.LogException(error); })
+                .CatchIgnoreLog()
                 .Subscribe(target => {
                     var index = targetGroup.FindMember(target.Anchor);
                     if (index == -1) {
@@ -67,7 +68,7 @@ namespace Banchou.Player.Targeting {
                 .SelectMany(pair => pair.Previous.Except(pair.Current))
                 .Select(target => getAnchor(target))
                 .Where(anchor => anchor != null && targetGroup.FindMember(anchor) != -1)
-                .CatchIgnore((Exception error) => { Debug.LogException(error); })
+                .CatchIgnoreLog()
                 .Subscribe(anchor => { targetGroup.RemoveMember(anchor); })
                 .AddTo(this);
         }

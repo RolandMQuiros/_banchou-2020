@@ -15,7 +15,7 @@ namespace Banchou.Player.Targeting {
             PlayerId playerId,
             GetState getState,
             Dispatcher dispatch,
-            PlayerActions playerActions,
+            PlayerTargetingActions targetingActions,
             IPawnInstances pawnInstances,
             IObservable<GameState> observeState
         ) {
@@ -23,7 +23,7 @@ namespace Banchou.Player.Targeting {
                 .Subscribe(collider => {
                     var targetable = collider.GetComponent<Targetable>();
                     if (targetable != null && getState().GetPlayerPawn(playerId) != targetable.PawnId) {
-                        dispatch(playerActions.AddTarget(playerId, targetable.PawnId));
+                        dispatch(targetingActions.AddTarget(targetable.PawnId));
                     }
                 })
                 .AddTo(this);
@@ -32,7 +32,7 @@ namespace Banchou.Player.Targeting {
                 .Subscribe(collider => {
                     var targetable = collider.GetComponent<Targetable>();
                     if (targetable != null && getState().GetPlayerPawn(playerId) != targetable.PawnId) {
-                        dispatch(playerActions.RemoveTarget(playerId, targetable.PawnId));
+                        dispatch(targetingActions.RemoveTarget(targetable.PawnId));
                     }
                 })
                 .AddTo(this);
