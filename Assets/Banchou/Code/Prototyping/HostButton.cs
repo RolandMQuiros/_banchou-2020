@@ -34,7 +34,7 @@ namespace Banchou.Prototype {
 
         public void Host() {
             SceneManager.LoadScene("BanchouBoard");
-
+            _dispatch(_networkActions.SetMode(Mode.Server));
 
             var playerId = PlayerId.Create();
             _dispatch(_playerActions.AddLocalPlayer(playerId));

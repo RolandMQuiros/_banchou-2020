@@ -34,8 +34,10 @@ namespace Banchou.Network {
             _serializer.TypeNameHandling = TypeNameHandling.All;
 
             _listener.ConnectionRequestEvent += request => {
+                Debug.Log($"Connection request from {request.RemoteEndPoint.ToString()}");
                 if (_server.ConnectedPeersCount < 10) {
                     request.AcceptIfKey("BanchouConnectionKey");
+                    Debug.Log($"Accepted connection from {request.RemoteEndPoint.ToString()}");
                 } else {
                     request.Reject();
                 }
@@ -46,7 +48,6 @@ namespace Banchou.Network {
                 _peers[playerId] = peer;
                 dispatch(playerActions.AddNetworkPlayer(playerId, peer.EndPoint, peer.Id));
             };
-            _instances.Add(this);
 
             _connectReply = observeState
                 .DistinctUntilChanged(state => state.GetPlayers())
@@ -68,6 +69,9 @@ namespace Banchou.Network {
                         }
                     }
                 });
+
+            _instances.Add(this);
+            Debug.Log("Server constructed");
         }
 
         public void SyncPawn(SyncPawn syncPawn) {
@@ -102,6 +106,7 @@ namespace Banchou.Network {
             _poll.Dispose();
             _connectReply.Dispose();
             _instances.Remove(this);
+            Debug.Log("Server stopped");
         }
 
         #region Redux Middleware

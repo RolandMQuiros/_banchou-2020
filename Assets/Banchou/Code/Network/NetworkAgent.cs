@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Net;
 
+using LiteNetLib;
 using Redux;
-using UnityEngine;
 using UniRx;
+using UniRx.Triggers;
+using UnityEngine;
 
 using Banchou.Network.Message;
 using Banchou.Player;
 
 namespace Banchou.Network {
-    [CreateAssetMenu(fileName = "Network Agent.asset", menuName = "Banchou/Network Agent")]
-    public class NetworkAgent : ScriptableObject {
+    public class NetworkAgent : MonoBehaviour, INetLogger {
         public IObservable<SyncPawn> PulledPawnSync => _pulledPawnSync;
-
-        private IDisposable _modeSubscription;
         private IDisposable _agent;
         private NetworkClient _client;
         private NetworkServer _server;
@@ -26,8 +25,11 @@ namespace Banchou.Network {
             NetworkActions networkActions,
             PlayerInputStreams playerInput
         ) {
-            _modeSubscription = _modeSubscription ?? observeState
+            NetDebug.Logger = this;
+
+            observeState
                 .Select(state => state.GetNetworkMode())
+                .StartWith(Mode.Local)
                 .DistinctUntilChanged()
                 .Subscribe(mode => {
                     if (mode != Mode.Local && _agent != null) {
@@ -45,15 +47,23 @@ namespace Banchou.Network {
                             break;
                         case Mode.Server:
                             _server = new NetworkServer(observeState, dispatch, playerActions)
-                                .Start(Observable.Interval(TimeSpan.FromSeconds(1)));
+                                .Start(this.LateUpdateAsObservable());
                             _agent = _server;
                             break;
                     }
-                });
+                }).AddTo(this);
+        }
+
+        public void OnDestroy() {
+            _agent?.Dispose();
         }
 
         public void PushPawnSync(SyncPawn syncPawn) {
             _server?.SyncPawn(syncPawn);
+        }
+
+        public void WriteNet(NetLogLevel level, string str, params object[] args) {
+            Debug.LogFormat($"{level}{str}", args);
         }
     }
 }
