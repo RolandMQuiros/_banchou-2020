@@ -13,6 +13,12 @@ using Banchou.Pawn;
 using Banchou.Player;
 
 namespace Banchou {
+    namespace StateAction {
+        public struct Hydrate {
+            public GameState GameState;
+        }
+    }
+
     [CreateAssetMenu(fileName = "GameStateStore.asset", menuName = "Banchou/Game State Store")]
     public class GameStateStore : ScriptableObject, IStore<GameState> {
         [SerializeField] private TextAsset _initialState = null;
@@ -51,6 +57,10 @@ namespace Banchou {
         }
 
         protected virtual GameState Reducer(in GameState prev, in object action) {
+            if (action is StateAction.Hydrate hydrate) {
+                return hydrate.GameState;
+            }
+
             return new GameState {
                 Network = NetworkReducers.Reduce(prev.Network, action),
                 Board = BoardReducers.Reduce(prev.Board, action),

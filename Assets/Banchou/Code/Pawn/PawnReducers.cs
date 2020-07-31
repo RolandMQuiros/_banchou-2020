@@ -86,6 +86,10 @@ namespace Banchou.Pawn {
                 }
             }
 
+            if (action is Network.StateAction.SyncGameState sync) {
+                return sync.GameState.Pawns;
+            }
+
             return prev;
         }
 
@@ -133,6 +137,10 @@ namespace Banchou.Pawn {
                     Position = syncPawn.Position,
                     Rotation = syncPawn.Rotation
                 };
+            }
+
+            if (action is Network.StateAction.SyncGameState sync) {
+                return sync.GameState.PawnSync;
             }
 
             return prev;

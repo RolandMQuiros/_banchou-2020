@@ -59,7 +59,7 @@ namespace Banchou.Network {
                         if (_peers.TryGetValue(playerId, out peer)) {
                             var memoryStream = new MemoryStream();
                             using (var writer = new BsonWriter(memoryStream)) {
-                                _serializer.Serialize(writer, new PlayerConnected {
+                                _serializer.Serialize(writer, new SyncClient {
                                     PlayerId = playerId,
                                     GameState = delta.Current
                                 });

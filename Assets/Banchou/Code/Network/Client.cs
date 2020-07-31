@@ -21,6 +21,7 @@ namespace Banchou.Network {
 
         public NetworkClient(
             Dispatcher dispatch,
+            NetworkActions networkActions,
             PlayerInputStreams playerInput,
             Action<SyncPawn> pullPawnSync
         ) {
@@ -48,6 +49,10 @@ namespace Banchou.Network {
                 }
 
                 switch (payloadType) {
+                    case PayloadType.SyncClient:
+                        var syncClient = (SyncClient)payload;
+                        dispatch(networkActions.SyncGameState(syncClient.GameState));
+                    break;
                     case PayloadType.Action:
                         dispatch(payload);
                     break;
@@ -71,7 +76,7 @@ namespace Banchou.Network {
 
         public NetworkClient Start<T>(IPEndPoint host, IObservable<T> pollInterval) {
             _client.Start();
-            _peer = _client.Connect(host, "BanchouConnectionKey");
+            _peer = _client.Connect("localhost", 9050, "BanchouConnectionKey");
 
             _poll = pollInterval
                 .Subscribe(_ => {

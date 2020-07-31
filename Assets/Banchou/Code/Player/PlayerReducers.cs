@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Linq;
+using System.Collections.Generic;
 using Banchou.Pawn;
 
 namespace Banchou.Player {
@@ -52,6 +53,32 @@ namespace Banchou.Player {
                         [playerAction.PlayerId] = ReducePlayer(prevPlayer, action)
                     };
                 }
+            }
+
+            if (action is Network.StateAction.SyncGameState sync) {
+                var prevPlayers = prev;
+                return new PlayersState(
+                    sync.GameState.GetPlayers()
+                        .Select(pair => {
+                            var syncedPlayerId = pair.Key;
+                            var syncedPlayer = pair.Value;
+
+                            PlayerState prevPlayer;
+                            if (!prevPlayers.TryGetValue(syncedPlayerId, out prevPlayer)) {
+                                return new KeyValuePair<PlayerId, PlayerState>(
+                                    syncedPlayerId,
+                                    new PlayerState(syncedPlayer) {
+                                        Source = InputSource.Network
+                                    }
+                                );
+                            }
+
+                            return new KeyValuePair<PlayerId, PlayerState>(
+                                syncedPlayerId, prevPlayer
+                            );
+                        })
+                        .ToDictionary(p => p.Key, p => p.Value)
+                );
             }
 
             return prev;

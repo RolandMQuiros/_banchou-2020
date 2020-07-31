@@ -23,6 +23,7 @@ namespace Banchou.Network {
             IObservable<GameState> observeState,
             Dispatcher dispatch,
             PlayersActions playerActions,
+            NetworkActions networkActions,
             PlayerInputStreams playerInput
         ) {
             _modeSubscription = _modeSubscription ?? observeState
@@ -35,7 +36,7 @@ namespace Banchou.Network {
 
                     switch (mode) {
                         case Mode.Client:
-                            _client = new NetworkClient(dispatch, playerInput, sync => _pulledPawnSync.OnNext(sync))
+                            _client = new NetworkClient(dispatch, networkActions, playerInput, sync => _pulledPawnSync.OnNext(sync))
                                 .Start(
                                     new IPEndPoint(IPAddress.Parse("0.0.0.0"), 9050),
                                     Observable.Interval(TimeSpan.FromSeconds(1))

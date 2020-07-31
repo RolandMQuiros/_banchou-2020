@@ -25,6 +25,10 @@
                 }
             }
 
+            if (action is Network.StateAction.SyncGameState sync) {
+                return sync.GameState.Mobs;
+            }
+
             return prev;
         }
 

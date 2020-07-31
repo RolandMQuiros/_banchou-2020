@@ -6,7 +6,7 @@ using Banchou.Pawn;
 namespace Banchou.Network.Message {
     public enum PayloadType : byte {
         Action,
-        PlayerConnected,
+        SyncClient,
         PlayerMove,
         PlayerCommand,
         SyncPawn,
@@ -17,7 +17,7 @@ namespace Banchou.Network.Message {
         public object Payload;
     }
 
-    public struct PlayerConnected {
+    public struct SyncClient {
         public PlayerId PlayerId;
         public GameState GameState;
     }

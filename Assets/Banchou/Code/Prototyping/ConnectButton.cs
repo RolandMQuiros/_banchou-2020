@@ -33,8 +33,8 @@ namespace Banchou.Prototype {
         }
 
         public void Connect() {
-            _dispatch(_networkActions.SetMode(Mode.Server));
             SceneManager.LoadScene("BanchouBoard");
+            _dispatch(_networkActions.SetMode(Mode.Client));
         }
     }
 }

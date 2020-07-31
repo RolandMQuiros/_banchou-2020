@@ -20,13 +20,16 @@ namespace Banchou.Network {
             PlayersActions playerActions,
             PlayerInputStreams playerInput
         ) {
-            _agent.Construct(observeState, dispatch, playerActions, playerInput);
+            _agent?.Construct(observeState, dispatch, playerActions, _networkActions, playerInput);
         }
 
         public void InstallBindings(DiContainer container) {
-            container.Bind<IObservable<SyncPawn>>(_agent.PulledPawnSync);
             container.Bind<NetworkActions>(_networkActions);
-            container.Bind<PushPawnSync>(_agent.PushPawnSync);
+
+            if (_agent != null) {
+                container.Bind<IObservable<SyncPawn>>(_agent?.PulledPawnSync);
+                container.Bind<PushPawnSync>(_agent.PushPawnSync);
+            }
         }
     }
 }
