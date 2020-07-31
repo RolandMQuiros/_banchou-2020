@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Net;
+
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 using Banchou.Pawn;
 using Banchou.Player;
@@ -37,6 +38,28 @@ namespace Banchou.Utility {
 
         public override void WriteJson(JsonWriter writer, PawnId value, JsonSerializer serializer) {
             serializer.Serialize(writer, value.Id);
+        }
+    }
+
+    public class IPEndPointConverter : JsonConverter<IPEndPoint> {
+        public override IPEndPoint ReadJson(JsonReader reader, Type objectType, IPEndPoint existingValue, bool hasExistingValue, JsonSerializer serializer)
+        {
+            var str = reader.ReadAsString();
+            var ipAndPort = str.Split(':');
+
+            IPAddress ip;
+            if (ipAndPort.Length > 0 && IPAddress.TryParse(ipAndPort[0], out ip)) {
+                int port;
+                if (ipAndPort.Length > 1 && int.TryParse(ipAndPort[1], out port)) {
+                    return new IPEndPoint(ip, port);
+                }
+            };
+            throw new JsonSerializationException($"Could not read IPEndPoint from {str}");
+        }
+
+        public override void WriteJson(JsonWriter writer, IPEndPoint value, JsonSerializer serializer)
+        {
+            writer.WriteValue($"{value.Address.ToString()}:{value.Port}");
         }
     }
 }

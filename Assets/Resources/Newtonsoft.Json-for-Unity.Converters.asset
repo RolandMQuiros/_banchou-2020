@@ -32,6 +32,22 @@ MonoBehaviour:
   - enabled: 0
     converterName: Vec4Conv, ReduxDevTools, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
     settings: []
+  - enabled: 1
+    converterName: Banchou.Utility.IPEndPointConverter, Assembly-CSharp, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+    settings: []
+  - enabled: 0
+    converterName: Vec2Conv, ReduxDevToolsEditor, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    settings: []
+  - enabled: 0
+    converterName: Vec3Conv, ReduxDevToolsEditor, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    settings: []
+  - enabled: 0
+    converterName: Vec4Conv, ReduxDevToolsEditor, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    settings: []
   useAllUnityConverters: 1
   unityConverters:
   - enabled: 1
