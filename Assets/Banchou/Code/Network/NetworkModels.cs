@@ -1,17 +1,19 @@
-﻿using System.Net;
+﻿using MessagePack;
+using System.Net;
 
 namespace Banchou.Network {
-    public enum Mode {
+    public enum Mode : byte {
         Local,
         Server,
         Client
     }
 
+    [MessagePackObject]
     public class NetworkSettingsState {
-        public Mode Mode = Mode.Local;
+        [Key(0)] public Mode Mode = Mode.Local;
 
-        public bool IsConnecting = false;
-        public IPEndPoint Host;
+        [Key(1)] public bool IsConnecting = false;
+        [Key(2)] public IPEndPoint Host;
 
         public NetworkSettingsState() { }
         public NetworkSettingsState(in NetworkSettingsState prev) {

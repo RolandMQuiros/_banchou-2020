@@ -1,11 +1,15 @@
-﻿namespace Banchou.Network {
+﻿using MessagePack;
+
+namespace Banchou.Network {
     namespace StateAction {
+        [MessagePackObject]
         public struct SetNetworkMode {
-            public Mode Mode;
+            [Key(0)] public Mode Mode;
         }
 
+        [MessagePackObject]
         public struct SyncGameState {
-            public GameState GameState;
+            [Key(0)] public GameState GameState;
         }
     }
 

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+using MessagePack;
 using Banchou.Player;
 using Banchou.Pawn;
 
@@ -12,30 +13,29 @@ namespace Banchou.Network.Message {
         SyncPawn,
     }
 
-    public struct Envelope {
-        public PayloadType PayloadType;
-        public object Payload;
-    }
-
+    [MessagePackObject]
     public struct SyncClient {
-        public PlayerId PlayerId;
-        public GameState GameState;
+        [Key(0)] public PlayerId PlayerId;
+        [Key(1)] public GameState GameState;
     }
 
+    [MessagePackObject]
     public struct PlayerMove {
-        public PlayerId PlayerId;
-        public Vector3 Direction;
+        [Key(0)] public PlayerId PlayerId;
+        [Key(1)] public Vector3 Direction;
     }
 
+    [MessagePackObject]
     public struct PlayerCommand {
-        public PlayerId PlayerId;
-        public InputCommand Command;
+        [Key(0)] public PlayerId PlayerId;
+        [Key(1)] public InputCommand Command;
     }
 
+    [MessagePackObject]
     public struct SyncPawn {
-        public PawnId PawnId;
-        public Vector3 Position;
-        public Quaternion Rotation;
+        [Key(0)] public PawnId PawnId;
+        [Key(1)] public Vector3 Position;
+        [Key(2)] public Quaternion Rotation;
     }
 
     public delegate void PullPawnSync(SyncPawn syncPawn);

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Net;
-using System.IO;
 
 using LiteNetLib;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
+using MessagePack;
+using MessagePack.Resolvers;
 using Redux;
 using UnityEngine;
 using UniRx;
@@ -28,10 +27,7 @@ namespace Banchou.Network {
             _listener = new EventBasedNetListener();
             _client = new NetManager(_listener);
 
-            var serializer = new JsonSerializer();
-            serializer.TypeNameHandling = TypeNameHandling.All;
-
-            var buffer = new MemoryStream();
+            var buffer = new byte[256];
 
             // Receiving data from server
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
@@ -41,35 +37,38 @@ namespace Banchou.Network {
                 // Extract payload type
                 var payloadType = (PayloadType)dataReader.GetByte();
 
-                // Deserialize payload
-                buffer.Write(dataReader.RawData, 1, dataReader.RawDataSize);
-                object payload;
-                using (var reader = new BsonReader(buffer)) {
-                    payload = serializer.Deserialize(reader);
+                // Expand the buffer if needed
+                if (dataReader.AvailableBytes > buffer.Length) {
+                    Array.Resize(ref buffer, dataReader.AvailableBytes);
                 }
 
+                // Read the remainder of the message into the buffer
+                dataReader.GetBytes(buffer, dataReader.AvailableBytes);
+
+                // Using the type flag, check what we need to deserialize message into
                 switch (payloadType) {
                     case PayloadType.SyncClient:
-                        var syncClient = (SyncClient)payload;
+                        var syncClient = MessagePackSerializer.Deserialize<SyncClient>(buffer);
                         dispatch(networkActions.SyncGameState(syncClient.GameState));
                     break;
                     case PayloadType.Action:
-                        dispatch(payload);
+                        var action = MessagePackSerializer.Deserialize<object>(buffer, ContractlessStandardResolver.Options);
+                        dispatch(action);
                     break;
                     case PayloadType.SyncPawn:
-                        pullPawnSync((SyncPawn)payload);
+                        var pawnSync = MessagePackSerializer.Deserialize<SyncPawn>(buffer);
+                        pullPawnSync(pawnSync);
                     break;
                     case PayloadType.PlayerCommand: {
-                        var playerCommand = (PlayerCommand)payload;
+                        var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(buffer);
                         playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, when);
                     } break;
                     case PayloadType.PlayerMove: {
-                        var playerMove = (PlayerMove)payload;
+                        var playerMove = MessagePackSerializer.Deserialize<PlayerMove>(buffer);
                         playerInput.PushMove(playerMove.PlayerId, playerMove.Direction, when);
                     } break;
                 }
 
-                buffer.SetLength(0);
                 dataReader.Recycle();
             };
         }
@@ -79,9 +78,7 @@ namespace Banchou.Network {
             _peer = _client.Connect("localhost", 9050, "BanchouConnectionKey");
 
             _poll = pollInterval
-                .Subscribe(_ => {
-                    _client.PollEvents();
-                });
+                .Subscribe(_ => { _client.PollEvents(); });
 
             return this;
         }

@@ -1,17 +1,18 @@
 ﻿using System.Net;
 using System.Collections.Generic;
 
+using MessagePack;
 using Newtonsoft.Json;
 
 using Banchou.Pawn;
 using Banchou.Utility;
 
 namespace Banchou.Player {
-    [JsonConverter(typeof(PlayerIdConverter))]
+    [JsonConverter(typeof(PlayerIdConverter)), MessagePackObject]
     public struct PlayerId {
         public static readonly PlayerId Empty = new PlayerId();
         private static int _idCounter = 1;
-        public int Id { get; private set; }
+        [Key(0)] public int Id { get; private set; }
 
         public static PlayerId Create() {
             return new PlayerId {
@@ -35,22 +36,24 @@ namespace Banchou.Player {
         #endregion
     }
 
-    public enum InputSource {
+    public enum InputSource : byte {
         Local,
         Network,
         AI
     }
 
+    [MessagePackObject]
     public class NetworkInfo {
-        public IPEndPoint IP;
-        public int PeerId;
+        [Key(0)] public IPEndPoint IP;
+        [Key(1)] public int PeerId;
     }
 
+    [MessagePackObject]
     public class PlayerState {
-        public InputSource Source = InputSource.Local;
-        public string Name = null;
-        public NetworkInfo NetworkInfo = null;
-        public PawnId Pawn = PawnId.Empty;
+        [Key(0)] public InputSource Source = InputSource.Local;
+        [Key(1)] public string Name = null;
+        [Key(2)] public NetworkInfo NetworkInfo = null;
+        [Key(3)] public PawnId Pawn = PawnId.Empty;
 
         public PlayerState() { }
         public PlayerState(in PlayerState prev) {

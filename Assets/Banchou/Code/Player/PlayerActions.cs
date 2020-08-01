@@ -1,5 +1,6 @@
 ﻿using System.Net;
 
+using MessagePack;
 using Banchou.Pawn;
 
 namespace Banchou.Player {
@@ -8,24 +9,28 @@ namespace Banchou.Player {
             PlayerId PlayerId { get; }
         }
 
+        [MessagePackObject]
         public struct AddPlayer {
-            public PlayerId PlayerId;
-            public InputSource Source;
-            public IPEndPoint IP;
-            public int PeerId;
+            [Key(0)] public PlayerId PlayerId;
+            [Key(1)] public InputSource Source;
+            [Key(2)] public IPEndPoint IP;
+            [Key(3)] public int PeerId;
         }
 
+        [MessagePackObject]
         public struct RemovePlayer {
-            public PlayerId PlayerId;
+            [Key(0)] public PlayerId PlayerId;
         }
 
+        [MessagePackObject]
         public struct AttachPlayerToPawn : IPlayerAction {
-            public PlayerId PlayerId { get; set; }
-            public PawnId PawnId;
+            [Key(0)] public PlayerId PlayerId { get; set; }
+            [Key(0)] public PawnId PawnId;
         }
 
+        [MessagePackObject]
         public struct DetachPlayerFromPawn : IPlayerAction {
-            public PlayerId PlayerId { get; set; }
+            [Key(0)] public PlayerId PlayerId { get; set; }
         }
     }
 

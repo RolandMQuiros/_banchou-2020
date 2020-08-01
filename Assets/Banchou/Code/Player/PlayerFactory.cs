@@ -48,25 +48,31 @@ namespace Banchou.Player {
                     GameObject instance = null;
                     switch (inputSource) {
                         case InputSource.Local:
-                            instance = _instantiate(
-                                _localPlayerPrefab,
-                                parent: _playerParent,
-                                additionalBindings: addedId
-                            );
+                            if (_localPlayerPrefab != null) {
+                                instance = _instantiate(
+                                    _localPlayerPrefab,
+                                    parent: _playerParent,
+                                    additionalBindings: addedId
+                                );
+                            }
                             break;
                         case InputSource.AI:
-                            instance = _instantiate(
-                                _AIPlayerPrefab,
-                                parent: _playerParent,
-                                additionalBindings: addedId
-                            );
+                            if (_AIPlayerPrefab != null) {
+                                instance = _instantiate(
+                                    _AIPlayerPrefab,
+                                    parent: _playerParent,
+                                    additionalBindings: addedId
+                                );
+                            }
                             break;
                         case InputSource.Network:
-                            instance = _instantiate(
-                                _networkedPlayerPrefab,
-                                parent: _playerParent,
-                                additionalBindings: addedId
-                            );
+                            if (_networkedPlayerPrefab) {
+                                instance = _instantiate(
+                                    _networkedPlayerPrefab,
+                                    parent: _playerParent,
+                                    additionalBindings: addedId
+                                );
+                            }
                             break;
                     }
 

@@ -46,7 +46,7 @@ namespace Banchou.Network {
                             _agent = _client;
                             break;
                         case Mode.Server:
-                            _server = new NetworkServer(observeState, dispatch, playerActions)
+                            _server = new NetworkServer(observeState, dispatch, playerActions, playerInput)
                                 .Start(this.LateUpdateAsObservable());
                             _agent = _server;
                             break;

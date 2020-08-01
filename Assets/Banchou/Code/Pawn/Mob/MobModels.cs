@@ -1,21 +1,24 @@
 ﻿using System.Collections.Generic;
+
+using MessagePack;
 using UnityEngine;
 
 using Banchou.Pawn;
 
 namespace Banchou.Mob {
-    public enum ApproachStage {
+    public enum ApproachStage : byte {
         Complete,
         Target,
         Position,
         Interrupted
     }
 
+    [MessagePackObject]
     public class MobState {
-        public ApproachStage Stage = ApproachStage.Complete;
-        public Vector3 ApproachPosition = Vector3.zero;
-        public PawnId Target = PawnId.Empty;
-        public float StoppingDistance = 1f;
+        [Key(0)] public ApproachStage Stage = ApproachStage.Complete;
+        [Key(1)] public Vector3 ApproachPosition = Vector3.zero;
+        [Key(2)] public PawnId Target = PawnId.Empty;
+        [Key(3)] public float StoppingDistance = 1f;
 
         public MobState() { }
         public MobState(in MobState prev) {
@@ -26,6 +29,7 @@ namespace Banchou.Mob {
         }
     }
 
+    [MessagePackObject]
     public class MobsState : Dictionary<PawnId, MobState> {
         public MobsState() { }
         public MobsState(in MobsState prev) : base(prev) { }

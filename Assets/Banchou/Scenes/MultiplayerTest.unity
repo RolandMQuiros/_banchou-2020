@@ -1654,7 +1654,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 160, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2099980661
@@ -1775,6 +1775,7 @@ GameObject:
   - component: {fileID: 5818984471882510114}
   - component: {fileID: 5818984471882510115}
   - component: {fileID: 5818984471882510112}
+  - component: {fileID: 5818984471882510120}
   m_Layer: 0
   m_Name: Banchou Context
   m_TagString: Untagged
@@ -1795,3 +1796,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _store: {fileID: 11400000, guid: 59528e74a7c047446a0f2e06de6b61cf, type: 2}
+--- !u!114 &5818984471882510120
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5818984471882510118}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d4f816fb462e7144b2b3e57db18a983, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

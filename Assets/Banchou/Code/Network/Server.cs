@@ -4,8 +4,7 @@ using System.Linq;
 using System.Collections.Generic;
 
 using LiteNetLib;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
+using MessagePack;
 using Redux;
 using UniRx;
 using UnityEngine;
@@ -18,20 +17,18 @@ namespace Banchou.Network {
         private EventBasedNetListener _listener;
         private NetManager _server;
         private Dictionary<PlayerId, NetPeer> _peers;
-        private JsonSerializer _serializer;
         private IDisposable _poll;
         private IDisposable _connectReply;
 
         public NetworkServer(
             IObservable<GameState> observeState,
             Dispatcher dispatch,
-            PlayersActions playerActions
+            PlayersActions playerActions,
+            PlayerInputStreams playerInput
         ) {
             _listener = new EventBasedNetListener();
             _server = new NetManager(_listener);
             _peers = new Dictionary<PlayerId, NetPeer>();
-            _serializer = JsonSerializer.Create(JsonConvert.DefaultSettings());
-            _serializer.TypeNameHandling = TypeNameHandling.All;
 
             _listener.ConnectionRequestEvent += request => {
                 Debug.Log($"Connection request from {request.RemoteEndPoint.ToString()}");
@@ -49,6 +46,30 @@ namespace Banchou.Network {
                 dispatch(playerActions.AddNetworkPlayer(playerId, peer.EndPoint, peer.Id));
             };
 
+            _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
+                // Calculate when the event was sent
+                var when = Time.fixedUnscaledTime - (fromPeer.Ping / 1000f);
+
+                // Extract payload type
+                var payloadType = (PayloadType)dataReader.GetByte();
+
+                // Deserialize payload
+                var payloadBytes = dataReader.GetRemainingBytes();
+
+                switch (payloadType) {
+                    case PayloadType.PlayerCommand: {
+                        var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(payloadBytes);
+                        playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, when);
+                    } break;
+                    case PayloadType.PlayerMove: {
+                        var playerMove = MessagePackSerializer.Deserialize<PlayerMove>(payloadBytes);
+                        playerInput.PushMove(playerMove.PlayerId, playerMove.Direction, when);
+                    } break;
+                }
+
+                dataReader.Recycle();
+            };
+
             _connectReply = observeState
                 .DistinctUntilChanged(state => state.GetPlayers())
                 .Pairwise()
@@ -59,12 +80,16 @@ namespace Banchou.Network {
                         NetPeer peer;
                         if (_peers.TryGetValue(playerId, out peer)) {
                             var memoryStream = new MemoryStream();
-                            using (var writer = new BsonWriter(memoryStream)) {
-                                _serializer.Serialize(writer, new SyncClient {
+                            memoryStream.WriteByte((byte)PayloadType.SyncClient);
+
+                            MessagePackSerializer.Serialize(
+                                memoryStream,
+                                new SyncClient {
                                     PlayerId = playerId,
                                     GameState = delta.Current
-                                });
-                            }
+                                }
+                            );
+
                             peer.Send(memoryStream.ToArray(), DeliveryMethod.ReliableSequenced);
                         }
                     }
@@ -75,18 +100,15 @@ namespace Banchou.Network {
         }
 
         public void SyncPawn(SyncPawn syncPawn) {
-            byte[] syncData = null;
-            using (var writer = new BsonWriter(new MemoryStream())) {
-                _serializer.Serialize(writer, new Envelope {
-                    PayloadType = PayloadType.SyncPawn,
-                    Payload = syncPawn
-                });
-            }
+            var memoryStream = new MemoryStream();
+            memoryStream.WriteByte((byte)PayloadType.SyncPawn);
+            MessagePackSerializer.Serialize(
+                memoryStream,
+                syncPawn
+            );
 
-            if (syncData != null) {
-                foreach (var peer in _peers.Values) {
-                    peer.Send(syncData, DeliveryMethod.Sequenced);
-                }
+            foreach (var peer in _peers.Values) {
+                peer.Send(memoryStream.ToArray(), DeliveryMethod.Sequenced);
             }
         }
 
@@ -112,29 +134,17 @@ namespace Banchou.Network {
         #region Redux Middleware
         private static List<NetworkServer> _instances = new List<NetworkServer>();
         public static Middleware<TState> Install<TState>() {
-            var serializer = JsonSerializer.Create(JsonConvert.DefaultSettings());
-            serializer.TypeNameHandling = TypeNameHandling.All;
-
             return store => next => action => {
-                byte[] actionData = null;
+                MemoryStream memoryStream = null;
                 for (int i = 0; i < _instances.Count; i++) {
                     // Send the action to all peers
                     foreach (var peer in _instances[i]._peers.Values) {
                         // Serialize the action into a BSON bytestring if we haven't already
-                        if (actionData == null) {
-                            var memoryStream = new MemoryStream();
-                            using (var writer = new BsonWriter(memoryStream)) {
-                                serializer.Serialize(
-                                    writer,
-                                    new Envelope {
-                                        PayloadType = PayloadType.Action,
-                                        Payload = action
-                                    }
-                                );
-                            }
-                            actionData = memoryStream.ToArray();
+                        if (memoryStream == null) {
+                            memoryStream = new MemoryStream();
+                            MessagePackSerializer.Serialize(memoryStream, action);
                         }
-                        peer.Send(actionData, DeliveryMethod.ReliableUnordered);
+                        peer.Send(memoryStream.ToArray(), DeliveryMethod.ReliableUnordered);
                     }
                 }
                 return next(action);

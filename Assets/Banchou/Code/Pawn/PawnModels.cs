@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
+using MessagePack;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -8,11 +8,11 @@ using Banchou.Player;
 using Banchou.Utility;
 
 namespace Banchou.Pawn {
-    [JsonConverter(typeof(PawnIdConverter))]
+    [JsonConverter(typeof(PawnIdConverter)), MessagePackObject]
     public struct PawnId {
         public static readonly PawnId Empty = new PawnId();
         private static int _idCounter = 1;
-        public int Id { get; private set; }
+        [Key(0)] public int Id { get; private set; }
 
         public static PawnId Create() {
             return new PawnId {
@@ -36,12 +36,13 @@ namespace Banchou.Pawn {
         #endregion
     }
 
+    [MessagePackObject]
     public class PawnFSMState {
-        public PawnId PawnId;
-        public int StateHash;
-        public bool IsLoop;
-        public float ClipLength;
-        public float FixedTimeAtChange;
+        [Key(0)] public PawnId PawnId;
+        [Key(1)] public int StateHash;
+        [Key(2)] public bool IsLoop;
+        [Key(3)] public float ClipLength;
+        [Key(4)] public float FixedTimeAtChange;
         public PawnFSMState() { }
         public PawnFSMState(in PawnFSMState prev) {
             PawnId = prev.PawnId;
@@ -52,11 +53,11 @@ namespace Banchou.Pawn {
         }
     }
 
-
+    [MessagePackObject]
     public class PawnSyncState {
-        public PawnId PawnId;
-        public Vector3 Position;
-        public Quaternion Rotation;
+        [Key(0)] public PawnId PawnId;
+        [Key(1)] public Vector3 Position;
+        [Key(2)] public Quaternion Rotation;
         public PawnSyncState() { }
         public PawnSyncState(in PawnSyncState prev) {
             PawnId = prev.PawnId;
@@ -65,23 +66,24 @@ namespace Banchou.Pawn {
         }
     }
 
-    public enum PawnRollbackState {
+    public enum PawnRollbackState : byte {
         Complete,
         RollingBack,
         FastForward
     }
 
+    [MessagePackObject]
     public class PawnState {
-        public PlayerId PlayerId;
-        public string PrefabKey = string.Empty;
-        public float TimeScale = 1f;
+        [Key(0)] public PlayerId PlayerId;
+        [Key(1)] public string PrefabKey = string.Empty;
+        [Key(2)] public float TimeScale = 1f;
 
-        public Vector3 SpawnPosition = Vector3.zero;
-        public Quaternion SpawnRotation = Quaternion.identity;
+        [Key(3)] public Vector3 SpawnPosition = Vector3.zero;
+        [Key(4)] public Quaternion SpawnRotation = Quaternion.identity;
 
-        public PawnRollbackState RollbackState = PawnRollbackState.Complete;
-        public float RollbackCorrectionTime = 0f;
-        public PawnFSMState FSMState = new PawnFSMState();
+        [Key(5)] public PawnRollbackState RollbackState = PawnRollbackState.Complete;
+        [Key(6)] public float RollbackCorrectionTime = 0f;
+        [Key(7)] public PawnFSMState FSMState = new PawnFSMState();
 
         public PawnState() { }
         public PawnState(in PawnState prev) {
@@ -96,10 +98,11 @@ namespace Banchou.Pawn {
         }
     }
 
+    [MessagePackObject]
     public class PawnsState {
-        public Dictionary<PawnId, PawnState> States = new Dictionary<PawnId, PawnState>();
-        public PawnSyncState LatestSync = new PawnSyncState();
-        public PawnFSMState LatestFSMChange = new PawnFSMState();
+        [Key(0)] public Dictionary<PawnId, PawnState> States = new Dictionary<PawnId, PawnState>();
+        [Key(1)] public PawnSyncState LatestSync = new PawnSyncState();
+        [Key(2)] public PawnFSMState LatestFSMChange = new PawnFSMState();
 
         public PawnsState() { }
         public PawnsState(in PawnsState prev) {
