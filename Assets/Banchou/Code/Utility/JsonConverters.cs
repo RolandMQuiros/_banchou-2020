@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.ComponentModel;
 
 using MessagePack.Formatters;
 using Newtonsoft.Json;
@@ -17,12 +18,36 @@ namespace Banchou.Utility {
             bool hasExistingValue,
             JsonSerializer serializer
         ) {
-            var id = reader.ReadAsInt32() ?? -1;
-            return new PlayerId(id);
+            if (reader.TokenType == JsonToken.Integer) {
+                if (reader.Value is int id32) {
+                    return new PlayerId(id32);
+                } else if (reader.Value is long id64) { // BsonReader is doing some dumb shit
+                                                        // where it's storing an int as a long, but only tries to parse ints
+                    return new PlayerId((int)id64);
+                }
+            }
+            return new PlayerId(-1);
         }
 
         public override void WriteJson(JsonWriter writer, PlayerId value, JsonSerializer serializer) {
-            serializer.Serialize(writer, value.Id);
+            writer.WriteValue(value.Id);
+        }
+    }
+
+    public class PlayerIdTypeConverter : TypeConverter {
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) {
+            return destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
+        }
+
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) {
+            return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+        }
+
+        public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value) {
+            if (value is string str) {
+                return new PlayerId(int.Parse(str));
+            }
+            throw new NotSupportedException();
         }
     }
 
@@ -34,29 +59,56 @@ namespace Banchou.Utility {
             bool hasExistingValue,
             JsonSerializer serializer
         ) {
-            var id = reader.ReadAsInt32() ?? -1;
-            return new PawnId(id);
+            if (reader.TokenType == JsonToken.Integer) {
+                if (reader.Value is int id32) {
+                    return new PawnId(id32);
+                } else if (reader.Value is long id64) { // BsonReader is doing some dumb shit
+                                                        // where it's storing an int as a long, but only tries to parse ints
+                    return new PawnId((int)id64);
+                }
+            }
+            return new PawnId(-1);
         }
 
         public override void WriteJson(JsonWriter writer, PawnId value, JsonSerializer serializer) {
-            serializer.Serialize(writer, value.Id);
+            writer.WriteValue(value.Id);
+        }
+    }
+
+    public class PawnIdTypeConverter : TypeConverter {
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) {
+            return destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
+        }
+
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) {
+            return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+        }
+
+        public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value) {
+            if (value is string str) {
+                return new PawnId(int.Parse(str));
+            }
+            throw new NotSupportedException();
         }
     }
 
     public class IPEndPointConverter : JsonConverter<IPEndPoint> {
         public override IPEndPoint ReadJson(JsonReader reader, Type objectType, IPEndPoint existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            var str = reader.ReadAsString();
-            var ipAndPort = str.Split(':');
+            if (reader.Value != null) {
+                var str = reader.Value.ToString();
+                var ipAndPort = str.Split(':');
 
-            IPAddress ip;
-            if (ipAndPort.Length > 0 && IPAddress.TryParse(ipAndPort[0], out ip)) {
-                int port;
-                if (ipAndPort.Length > 1 && int.TryParse(ipAndPort[1], out port)) {
-                    return new IPEndPoint(ip, port);
-                }
-            };
-            throw new JsonSerializationException($"Could not read IPEndPoint from {str}");
+                IPAddress ip;
+                if (ipAndPort.Length > 0 && IPAddress.TryParse(ipAndPort[0], out ip)) {
+                    int port;
+                    if (ipAndPort.Length > 1 && int.TryParse(ipAndPort[1], out port)) {
+                        return new IPEndPoint(ip, port);
+                    }
+                };
+                throw new JsonSerializationException($"Could not read IPEndPoint from {str}");
+            }
+            return null;
         }
 
         public override void WriteJson(JsonWriter writer, IPEndPoint value, JsonSerializer serializer)

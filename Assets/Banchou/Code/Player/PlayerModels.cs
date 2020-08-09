@@ -1,14 +1,14 @@
 ﻿using System.Net;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 using MessagePack;
-using Newtonsoft.Json;
 
 using Banchou.Pawn;
 using Banchou.Utility;
 
 namespace Banchou.Player {
-    [JsonConverter(typeof(PlayerIdConverter)), MessagePackObject]
+    [TypeConverter(typeof(PlayerIdTypeConverter)), MessagePackObject]
     public struct PlayerId {
         public static readonly PlayerId Empty = new PlayerId();
         private static int _idCounter = 1;
@@ -25,10 +25,7 @@ namespace Banchou.Player {
         }
 
         #region Equality boilerplate
-        public override bool Equals(object obj) {
-            return GetType() == obj.GetType() && Id == ((PlayerId)obj).Id;
-        }
-
+        public override bool Equals(object obj) => GetType() == obj.GetType() && Id == ((PlayerId)obj).Id;
         public override int GetHashCode() => base.GetHashCode();
         public override string ToString() => Id.ToString();
         public static bool operator==(PlayerId first, PlayerId second) => first.Equals(second);

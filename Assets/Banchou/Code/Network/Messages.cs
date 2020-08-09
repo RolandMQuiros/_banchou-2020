@@ -22,7 +22,7 @@ namespace Banchou.Network.Message {
     [MessagePackObject]
     public struct SyncClient {
         [Key(0)] public PlayerId PlayerId;
-        [Key(1)] public GameState GameState;
+        [Key(1)] public byte[] GameStateBytes;
     }
 
     [MessagePackObject]
@@ -42,12 +42,6 @@ namespace Banchou.Network.Message {
         [Key(0)] public PawnId PawnId;
         [Key(1)] public Vector3 Position;
         [Key(2)] public Quaternion Rotation;
-    }
-
-    [MessagePackObject]
-    public struct ReduxAction {
-        [Key(0)] public string ActionType;
-        [Key(1)] public byte[] ActionData;
     }
 
     public delegate void PullPawnSync(SyncPawn syncPawn);

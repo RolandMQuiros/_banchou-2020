@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Net;
 
+using MessagePack;
 using LiteNetLib;
+using Newtonsoft.Json;
 using Redux;
 using UniRx;
 using UniRx.Triggers;
@@ -23,9 +25,13 @@ namespace Banchou.Network {
             Dispatcher dispatch,
             PlayersActions playerActions,
             NetworkActions networkActions,
-            PlayerInputStreams playerInput
+            PlayerInputStreams playerInput,
+            JsonSerializer serializer
         ) {
             NetDebug.Logger = this;
+            var messagePackOptions = MessagePackSerializerOptions
+                .Standard
+                .WithCompression(MessagePackCompression.Lz4BlockArray);;
 
             observeState
                 .Select(state => state.GetNetworkMode())
@@ -38,7 +44,7 @@ namespace Banchou.Network {
 
                     switch (mode) {
                         case Mode.Client:
-                            _client = new NetworkClient(dispatch, networkActions, playerInput, sync => _pulledPawnSync.OnNext(sync))
+                            _client = new NetworkClient(dispatch, networkActions, playerInput, sync => _pulledPawnSync.OnNext(sync), serializer, messagePackOptions)
                                 .Start(
                                     new IPEndPoint(IPAddress.Parse("0.0.0.0"), 9050),
                                     Observable.Interval(TimeSpan.FromSeconds(1))
@@ -46,7 +52,7 @@ namespace Banchou.Network {
                             _agent = _client;
                             break;
                         case Mode.Server:
-                            _server = new NetworkServer(observeState, dispatch, playerActions, playerInput)
+                            _server = new NetworkServer(observeState, dispatch, playerActions, playerInput, serializer, messagePackOptions)
                                 .Start(this.LateUpdateAsObservable());
                             _agent = _server;
                             break;

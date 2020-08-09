@@ -15,11 +15,11 @@ MonoBehaviour:
   useUnityContractResolver: 1
   useAllOutsideConverters: 0
   outsideConverters:
-  - enabled: 1
+  - enabled: 0
     converterName: Banchou.Utility.PawnIdConverter, Assembly-CSharp, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
     settings: []
-  - enabled: 1
+  - enabled: 0
     converterName: Banchou.Utility.PlayerIdConverter, Assembly-CSharp, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
     settings: []
@@ -32,7 +32,7 @@ MonoBehaviour:
   - enabled: 0
     converterName: Vec4Conv, ReduxDevTools, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
     settings: []
-  - enabled: 1
+  - enabled: 0
     converterName: Banchou.Utility.IPEndPointConverter, Assembly-CSharp, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
     settings: []
@@ -46,6 +46,18 @@ MonoBehaviour:
     settings: []
   - enabled: 0
     converterName: Vec4Conv, ReduxDevToolsEditor, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    settings: []
+  - enabled: 1
+    converterName: Banchou.Utility.IPEndPointConverter, Banchou, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+    settings: []
+  - enabled: 1
+    converterName: Banchou.Utility.PawnIdConverter, Banchou, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    settings: []
+  - enabled: 1
+    converterName: Banchou.Utility.PlayerIdConverter, Banchou, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     settings: []
   useAllUnityConverters: 1

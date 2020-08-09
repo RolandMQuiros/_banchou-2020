@@ -1,14 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 
 using MessagePack;
-using Newtonsoft.Json;
 using UnityEngine;
 
 using Banchou.Player;
 using Banchou.Utility;
 
 namespace Banchou.Pawn {
-    [JsonConverter(typeof(PawnIdConverter)), MessagePackObject]
+    [TypeConverter(typeof(PawnIdTypeConverter)), MessagePackObject]
     public struct PawnId {
         public static readonly PawnId Empty = new PawnId();
         private static int _idCounter = 1;
@@ -25,10 +26,7 @@ namespace Banchou.Pawn {
         }
 
         #region Equality boilerplate
-        public override bool Equals(object obj) {
-            return GetType() == obj.GetType() && Id.Equals(((PawnId)obj).Id);
-        }
-
+        public override bool Equals(object obj) => GetType() == obj.GetType() && Id.Equals(((PawnId)obj).Id);
         public override int GetHashCode() => base.GetHashCode();
         public override string ToString() => Id.ToString();
         public static bool operator==(PawnId first, PawnId second) => first.Equals(second);

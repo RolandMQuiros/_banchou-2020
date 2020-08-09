@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
+using MessagePack;
 using Newtonsoft.Json;
 using Redux;
 using Redux.Reactive;
@@ -25,6 +26,8 @@ namespace Banchou {
         [SerializeField] private Redux.DevTools.DevToolsSession _devToolsSession = null;
         private IStore<GameState> _store;
 
+        public bool IsInitialized => _store != null;
+
         public event Action StateChanged {
             add { _store.StateChanged += value; }
             remove { _store.StateChanged -= value; }
@@ -42,16 +45,22 @@ namespace Banchou {
             return _store.ObserveState();
         }
 
-        private void OnEnable() {
+        public void Initialize() {
+            if (_store != null) { return; }
+
             var initialState = JsonConvert.DeserializeObject<GameState>(_initialState.text);
+            var jsonSerializer = new JsonSerializer();
+            var messagePackOptions = MessagePackSerializerOptions
+                .Standard
+                .WithCompression(MessagePackCompression.Lz4BlockArray);;
 
             if (_devToolsSession == null) {
                 _store = new Store<GameState>(
-                    Reducer, initialState, Redux.Middlewares.Thunk, NetworkServer.Install<GameState>()
+                    Reducer, initialState, Redux.Middlewares.Thunk, NetworkServer.Install<GameState>(jsonSerializer, messagePackOptions)
                 );
             } else {
                 _store = new Store<GameState>(
-                    Reducer, initialState, Redux.Middlewares.Thunk, NetworkServer.Install<GameState>(), _devToolsSession.Install<GameState>()
+                    Reducer, initialState, Redux.Middlewares.Thunk, NetworkServer.Install<GameState>(jsonSerializer, messagePackOptions), _devToolsSession.Install<GameState>()
                 );
             }
         }

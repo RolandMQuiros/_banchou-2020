@@ -15,10 +15,6 @@ using Banchou.Network.Message;
 
 namespace Banchou.Network {
     public class NetworkClient : IDisposable {
-        private static readonly MessagePackSerializerOptions _messagePackOptions = MessagePackSerializerOptions
-            .Standard
-            .WithCompression(MessagePackCompression.Lz4BlockArray);
-
         private EventBasedNetListener _listener;
         private NetManager _client;
         private NetPeer _peer;
@@ -28,42 +24,48 @@ namespace Banchou.Network {
             Dispatcher dispatch,
             NetworkActions networkActions,
             PlayerInputStreams playerInput,
-            Action<SyncPawn> pullPawnSync
+            Action<SyncPawn> pullPawnSync,
+            JsonSerializer jsonSerializer,
+            MessagePackSerializerOptions messagePackOptions
         ) {
             _listener = new EventBasedNetListener();
             _client = new NetManager(_listener);
-
-            var jsonSerializer = new JsonSerializer();
 
             // Receiving data from server
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
                 // Calculate when the event was sent
                 var when = Time.fixedUnscaledTime - (fromPeer.Ping / 1000f);
-                var envelope = MessagePackSerializer.Deserialize<Envelope>(dataReader.GetRemainingBytes(), _messagePackOptions);
+                var envelope = MessagePackSerializer.Deserialize<Envelope>(dataReader.GetRemainingBytes(), messagePackOptions);
 
                 // Using the type flag, check what we need to deserialize message into
                 switch (envelope.PayloadType) {
-                    case PayloadType.SyncClient:
-                        var syncClient = MessagePackSerializer.Deserialize<SyncClient>(envelope.Payload, _messagePackOptions);
-                        dispatch(networkActions.SyncGameState(syncClient.GameState));
-                    break;
+                    case PayloadType.SyncClient: {
+                        var syncClient = MessagePackSerializer.Deserialize<SyncClient>(envelope.Payload, messagePackOptions);
+                        var bsonStream = new MemoryStream(syncClient.GameStateBytes);
+                        using (var reader = new BsonReader(bsonStream)) {
+                            var gameState = jsonSerializer.Deserialize<GameState>(reader);
+                            Debug.Log($"Received Sync Client State: {JsonConvert.SerializeObject(gameState, Formatting.Indented)}");
+                            dispatch(networkActions.SyncGameState(gameState));
+                        }
+                    } break;
                     case PayloadType.ReduxAction: {
-                        var bsonStream = new MemoryStream();
+                        var bsonStream = new MemoryStream(envelope.Payload);
                         using (var reader = new BsonReader(bsonStream)) {
                             var action = jsonSerializer.Deserialize(reader);
+                            Debug.Log($"Received Redux Action: {JsonConvert.SerializeObject(action, Formatting.Indented)}");
                             dispatch(action);
                         }
                     } break;
                     case PayloadType.SyncPawn:
-                        var pawnSync = MessagePackSerializer.Deserialize<SyncPawn>(envelope.Payload, _messagePackOptions);
+                        var pawnSync = MessagePackSerializer.Deserialize<SyncPawn>(envelope.Payload, messagePackOptions);
                         pullPawnSync(pawnSync);
                     break;
                     case PayloadType.PlayerCommand: {
-                        var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, _messagePackOptions);
+                        var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, messagePackOptions);
                         playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, when);
                     } break;
                     case PayloadType.PlayerMove: {
-                        var playerMove = MessagePackSerializer.Deserialize<PlayerMove>(envelope.Payload, _messagePackOptions);
+                        var playerMove = MessagePackSerializer.Deserialize<PlayerMove>(envelope.Payload, messagePackOptions);
                         playerInput.PushMove(playerMove.PlayerId, playerMove.Direction, when);
                     } break;
                 }
@@ -75,15 +77,19 @@ namespace Banchou.Network {
         public NetworkClient Start<T>(IPEndPoint host, IObservable<T> pollInterval) {
             _client.Start();
             _peer = _client.Connect("localhost", 9050, "BanchouConnectionKey");
-
+            Debug.Log($"Connected to server at {_client.FirstPeer.EndPoint.ToString()}");
             _poll = pollInterval
-                .Subscribe(_ => { _client.PollEvents(); });
+                .Subscribe(_ => {
+                    _client.PollEvents();
+                });
 
             return this;
         }
 
         public void Dispose() {
+            Debug.Log("Client shutting down");
             _client.Stop();
+            Debug.Log("Client disconnected");
             _poll.Dispose();
         }
     }
