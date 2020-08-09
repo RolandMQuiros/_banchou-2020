@@ -6,11 +6,17 @@ using Banchou.Pawn;
 
 namespace Banchou.Network.Message {
     public enum PayloadType : byte {
-        Action,
+        ReduxAction,
         SyncClient,
         PlayerMove,
         PlayerCommand,
         SyncPawn,
+    }
+
+    [MessagePackObject]
+    public struct Envelope {
+        [Key(0)] public PayloadType PayloadType;
+        [Key(1)] public byte[] Payload;
     }
 
     [MessagePackObject]
@@ -36,6 +42,12 @@ namespace Banchou.Network.Message {
         [Key(0)] public PawnId PawnId;
         [Key(1)] public Vector3 Position;
         [Key(2)] public Quaternion Rotation;
+    }
+
+    [MessagePackObject]
+    public struct ReduxAction {
+        [Key(0)] public string ActionType;
+        [Key(1)] public byte[] ActionData;
     }
 
     public delegate void PullPawnSync(SyncPawn syncPawn);

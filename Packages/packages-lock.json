@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "com.unity.cinemachine": {
-      "version": "2.5.0",
+      "version": "2.6.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
@@ -54,21 +54,28 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.quicksearch": {
-      "version": "2.0.0",
+      "version": "2.0.2",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.searcher": {
+      "version": "4.0.9",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
     "com.unity.settings-manager": {
-      "version": "1.0.0",
-      "depth": 1,
+      "version": "1.0.3",
+      "depth": 0,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
     "com.unity.test-framework": {
-      "version": "1.1.14",
+      "version": "1.1.16",
       "depth": 0,
       "source": "registry",
       "dependencies": {

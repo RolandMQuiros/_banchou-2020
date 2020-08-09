@@ -56,7 +56,7 @@ namespace Banchou {
             }
         }
 
-        protected virtual GameState Reducer(in GameState prev, in object action) {
+        public static GameState Reducer(in GameState prev, in object action) {
             if (action is StateAction.Hydrate hydrate) {
                 return hydrate.GameState;
             }

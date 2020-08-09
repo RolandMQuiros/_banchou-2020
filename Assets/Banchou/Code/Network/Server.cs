@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
 
 using LiteNetLib;
 using MessagePack;
@@ -14,6 +14,10 @@ using Banchou.Network.Message;
 
 namespace Banchou.Network {
     public class NetworkServer : IDisposable {
+        private static readonly MessagePackSerializerOptions _serializerOptions = MessagePackSerializerOptions
+            .Standard
+            .WithCompression(MessagePackCompression.Lz4BlockArray);
+
         private EventBasedNetListener _listener;
         private NetManager _server;
         private Dictionary<PlayerId, NetPeer> _peers;
@@ -50,19 +54,17 @@ namespace Banchou.Network {
                 // Calculate when the event was sent
                 var when = Time.fixedUnscaledTime - (fromPeer.Ping / 1000f);
 
-                // Extract payload type
-                var payloadType = (PayloadType)dataReader.GetByte();
+                // Open envelope
+                var envelope = MessagePackSerializer.Deserialize<Envelope>(dataReader.GetRemainingBytes(), _serializerOptions);
 
                 // Deserialize payload
-                var payloadBytes = dataReader.GetRemainingBytes();
-
-                switch (payloadType) {
+                switch (envelope.PayloadType) {
                     case PayloadType.PlayerCommand: {
-                        var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(payloadBytes);
+                        var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload);
                         playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, when);
                     } break;
                     case PayloadType.PlayerMove: {
-                        var playerMove = MessagePackSerializer.Deserialize<PlayerMove>(payloadBytes);
+                        var playerMove = MessagePackSerializer.Deserialize<PlayerMove>(envelope.Payload);
                         playerInput.PushMove(playerMove.PlayerId, playerMove.Direction, when);
                     } break;
                 }
@@ -134,15 +136,17 @@ namespace Banchou.Network {
         #region Redux Middleware
         private static List<NetworkServer> _instances = new List<NetworkServer>();
         public static Middleware<TState> Install<TState>() {
+            ActionConverter actionConverter = null;
             return store => next => action => {
                 MemoryStream memoryStream = null;
+                actionConverter = actionConverter ?? new ActionConverter(_serializerOptions);
+
                 for (int i = 0; i < _instances.Count; i++) {
                     // Send the action to all peers
                     foreach (var peer in _instances[i]._peers.Values) {
-                        // Serialize the action into a BSON bytestring if we haven't already
                         if (memoryStream == null) {
                             memoryStream = new MemoryStream();
-                            MessagePackSerializer.Serialize(memoryStream, action);
+                            actionConverter.SerializeToEnvelope(memoryStream, action);
                         }
                         peer.Send(memoryStream.ToArray(), DeliveryMethod.ReliableUnordered);
                     }

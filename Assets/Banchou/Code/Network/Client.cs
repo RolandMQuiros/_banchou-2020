@@ -51,7 +51,7 @@ namespace Banchou.Network {
                         var syncClient = MessagePackSerializer.Deserialize<SyncClient>(buffer);
                         dispatch(networkActions.SyncGameState(syncClient.GameState));
                     break;
-                    case PayloadType.Action:
+                    case PayloadType.ReduxAction:
                         var action = MessagePackSerializer.Deserialize<object>(buffer, ContractlessStandardResolver.Options);
                         dispatch(action);
                     break;
