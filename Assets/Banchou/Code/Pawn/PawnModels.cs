@@ -36,13 +36,12 @@ namespace Banchou.Pawn {
         #endregion
     }
 
-    [MessagePackObject]
     public class PawnFSMState {
-        [Key(0)] public PawnId PawnId;
-        [Key(1)] public int StateHash;
-        [Key(2)] public bool IsLoop;
-        [Key(3)] public float ClipLength;
-        [Key(4)] public float FixedTimeAtChange;
+        public PawnId PawnId;
+        public int StateHash;
+        public bool IsLoop;
+        public float ClipLength;
+        public float FixedTimeAtChange;
         public PawnFSMState() { }
         public PawnFSMState(in PawnFSMState prev) {
             PawnId = prev.PawnId;
@@ -53,11 +52,10 @@ namespace Banchou.Pawn {
         }
     }
 
-    [MessagePackObject]
     public class PawnSyncState {
-        [Key(0)] public PawnId PawnId;
-        [Key(1)] public Vector3 Position;
-        [Key(2)] public Quaternion Rotation;
+        public PawnId PawnId;
+        public Vector3 Position;
+        public Quaternion Rotation;
         public PawnSyncState() { }
         public PawnSyncState(in PawnSyncState prev) {
             PawnId = prev.PawnId;
@@ -72,18 +70,17 @@ namespace Banchou.Pawn {
         FastForward
     }
 
-    [MessagePackObject]
     public class PawnState {
-        [Key(0)] public PlayerId PlayerId;
-        [Key(1)] public string PrefabKey = string.Empty;
-        [Key(2)] public float TimeScale = 1f;
+        public PlayerId PlayerId;
+        public string PrefabKey = string.Empty;
+        public float TimeScale = 1f;
 
-        [Key(3)] public Vector3 SpawnPosition = Vector3.zero;
-        [Key(4)] public Quaternion SpawnRotation = Quaternion.identity;
+        public Vector3 SpawnPosition = Vector3.zero;
+        public Quaternion SpawnRotation = Quaternion.identity;
 
-        [Key(5)] public PawnRollbackState RollbackState = PawnRollbackState.Complete;
-        [Key(6)] public float RollbackCorrectionTime = 0f;
-        [Key(7)] public PawnFSMState FSMState = new PawnFSMState();
+        public PawnRollbackState RollbackState = PawnRollbackState.Complete;
+        public float RollbackCorrectionTime = 0f;
+        public PawnFSMState FSMState = new PawnFSMState();
 
         public PawnState() { }
         public PawnState(in PawnState prev) {
@@ -98,11 +95,10 @@ namespace Banchou.Pawn {
         }
     }
 
-    [MessagePackObject]
     public class PawnsState {
-        [Key(0)] public Dictionary<PawnId, PawnState> States = new Dictionary<PawnId, PawnState>();
-        [Key(1)] public PawnSyncState LatestSync = new PawnSyncState();
-        [Key(2)] public PawnFSMState LatestFSMChange = new PawnFSMState();
+        public Dictionary<PawnId, PawnState> States = new Dictionary<PawnId, PawnState>();
+        public PawnSyncState LatestSync = new PawnSyncState();
+        public PawnFSMState LatestFSMChange = new PawnFSMState();
 
         public PawnsState() { }
         public PawnsState(in PawnsState prev) {

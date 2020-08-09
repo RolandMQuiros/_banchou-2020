@@ -9,28 +9,24 @@ namespace Banchou.Player {
             PlayerId PlayerId { get; }
         }
 
-        [MessagePackObject]
         public struct AddPlayer {
-            [Key(0)] public PlayerId PlayerId;
-            [Key(1)] public InputSource Source;
-            [Key(2)] public string IP;
-            [Key(3)] public int PeerId;
+            public PlayerId PlayerId;
+            public InputSource Source;
+            public IPEndPoint IP;
+            public int PeerId;
         }
 
-        [MessagePackObject]
         public struct RemovePlayer {
-            [Key(0)] public PlayerId PlayerId;
+            public PlayerId PlayerId;
         }
 
-        [MessagePackObject]
         public struct AttachPlayerToPawn : IPlayerAction {
-            [Key(0)] public PlayerId PlayerId { get; set; }
-            [Key(1)] public PawnId PawnId;
+            public PlayerId PlayerId { get; set; }
+            public PawnId PawnId;
         }
 
-        [MessagePackObject]
         public struct DetachPlayerFromPawn : IPlayerAction {
-            [Key(0)] public PlayerId PlayerId { get; set; }
+            public PlayerId PlayerId { get; set; }
         }
     }
 
@@ -49,7 +45,7 @@ namespace Banchou.Player {
             };
         }
 
-        public StateAction.AddPlayer AddNetworkPlayer(PlayerId playerId, string ip, int peerId) {
+        public StateAction.AddPlayer AddNetworkPlayer(PlayerId playerId, IPEndPoint ip, int peerId) {
             return new StateAction.AddPlayer {
                 PlayerId = playerId,
                 Source = InputSource.Network,

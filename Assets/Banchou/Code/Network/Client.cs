@@ -4,7 +4,6 @@ using System.Net;
 
 using LiteNetLib;
 using MessagePack;
-using MessagePack.Resolvers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 using Redux;

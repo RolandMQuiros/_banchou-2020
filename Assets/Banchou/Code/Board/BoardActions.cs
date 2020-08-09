@@ -1,41 +1,34 @@
-﻿using MessagePack;
-using UnityEngine;
+﻿using UnityEngine;
 
 using Banchou.Player;
 using Banchou.Pawn;
 
 namespace Banchou.Board {
     namespace StateAction {
-        [MessagePackObject]
         public struct AddPawn {
-            [Key(0)] public PawnId PawnId;
-            [Key(1)] public PlayerId PlayerId;
-            [Key(2)] public string PrefabKey;
-            [Key(3)] public Vector3 SpawnPosition;
-            [Key(4)] public Quaternion SpawnRotation;
+            public PawnId PawnId;
+            public PlayerId PlayerId;
+            public string PrefabKey;
+            public Vector3 SpawnPosition;
+            public Quaternion SpawnRotation;
         }
 
-        [MessagePackObject]
         public struct RemovePawn {
-            [Key(0)] public PawnId PawnId;
+            public PawnId PawnId;
         }
 
-        [MessagePackObject]
         public struct AddScene {
-            [Key(0)] public string Scene;
+            public string Scene;
         }
 
-        [MessagePackObject]
         public struct SetScene {
-            [Key(0)] public string Scene;
+            public string Scene;
         }
 
-        [MessagePackObject]
         public struct SceneLoaded {
-            [Key(0)] public string Scene;
+            public string Scene;
         }
 
-        [MessagePackObject]
         public struct InjectionsFinished { }
     }
 

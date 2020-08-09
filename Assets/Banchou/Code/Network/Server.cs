@@ -5,11 +5,8 @@ using System.Linq;
 
 using LiteNetLib;
 using MessagePack;
-using MessagePack.Resolvers;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
-
 using Redux;
 using UniRx;
 using UnityEngine;
@@ -52,7 +49,7 @@ namespace Banchou.Network {
             _listener.PeerConnectedEvent += peer => {
                 var playerId = PlayerId.Create();
                 _peers[playerId] = peer;
-                dispatch(playerActions.AddNetworkPlayer(playerId, peer.EndPoint.Address.ToString(), peer.Id));
+                dispatch(playerActions.AddNetworkPlayer(playerId, peer.EndPoint, peer.Id));
             };
 
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
@@ -167,7 +164,7 @@ namespace Banchou.Network {
                                 _messagePackOptions
                             );
                         }
-                        peer.Send(memoryStream.ToArray(), DeliveryMethod.ReliableUnordered);
+                        peer.Send(memoryStream.ToArray(), DeliveryMethod.ReliableOrdered);
                     }
                 }
                 return next(action);

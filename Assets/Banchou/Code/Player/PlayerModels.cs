@@ -42,18 +42,16 @@ namespace Banchou.Player {
         AI
     }
 
-    [MessagePackObject]
     public class NetworkInfo {
-        [Key(0)] public string IP;
-        [Key(1)] public int PeerId;
+        public IPEndPoint IP;
+        public int PeerId;
     }
 
-    [MessagePackObject]
     public class PlayerState {
-        [Key(0)] public InputSource Source = InputSource.Local;
-        [Key(1)] public string Name = null;
-        [Key(2)] public NetworkInfo NetworkInfo = null;
-        [Key(3)] public PawnId Pawn = PawnId.Empty;
+        public InputSource Source = InputSource.Local;
+        public string Name = null;
+        public NetworkInfo NetworkInfo = null;
+        public PawnId Pawn = PawnId.Empty;
 
         public PlayerState() { }
         public PlayerState(in PlayerState prev) {
@@ -64,9 +62,8 @@ namespace Banchou.Player {
         }
     }
 
-    [MessagePackObject]
     public class PlayersState {
-        [Key(0)] public Dictionary<PlayerId, PlayerState> States = new Dictionary<PlayerId, PlayerState>();
+        public Dictionary<PlayerId, PlayerState> States = new Dictionary<PlayerId, PlayerState>();
 
         public PlayersState() { }
         public PlayersState(in PlayersState prev) {

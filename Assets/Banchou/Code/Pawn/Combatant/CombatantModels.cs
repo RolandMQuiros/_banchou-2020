@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-using MessagePack;
 using UnityEngine;
 
 using Banchou.Pawn;
@@ -19,14 +18,13 @@ namespace Banchou.Combatant {
         Ranged
     }
 
-    [MessagePackObject]
     public class Hit {
-        [Key(0)] public HitMedium Medium;
-        [Key(1)] public PawnId From;
-        [Key(2)] public PawnId To;
-        [Key(3)] public Vector3 Push;
-        [Key(4)] public int Strength;
-        [Key(5)] public float When;
+        public HitMedium Medium;
+        public PawnId From;
+        public PawnId To;
+        public Vector3 Push;
+        public int Strength;
+        public float When;
     }
 
     public static class TeamExt {
@@ -39,14 +37,13 @@ namespace Banchou.Combatant {
         }
     }
 
-    [MessagePackObject]
     public class CombatantState {
-        [Key(0)] public int Health = 0;
+        public int Health = 0;
 
-        [Key(1)] public IEnumerable<PawnId> Targets = Enumerable.Empty<PawnId>();
-        [Key(2)] public PawnId LockOnTarget = PawnId.Empty;
-        [Key(3)] public Hit HitTaken = null;
-        [Key(4)] public Hit HitDealt = null;
+        public IEnumerable<PawnId> Targets = Enumerable.Empty<PawnId>();
+        public PawnId LockOnTarget = PawnId.Empty;
+        public Hit HitTaken = null;
+        public Hit HitDealt = null;
 
         public CombatantState() { }
         public CombatantState(in CombatantState prev) {
@@ -58,9 +55,8 @@ namespace Banchou.Combatant {
         }
     }
 
-    [MessagePackObject]
     public class CombatantsState {
-        [Key(0)] public Dictionary<PawnId, CombatantState> States = new Dictionary<PawnId, CombatantState>();
+        public Dictionary<PawnId, CombatantState> States = new Dictionary<PawnId, CombatantState>();
         public CombatantsState() { }
         public CombatantsState(in CombatantsState prev) {
             States = prev.States;

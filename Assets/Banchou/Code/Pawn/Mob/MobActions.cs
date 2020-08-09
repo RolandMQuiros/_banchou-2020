@@ -1,46 +1,39 @@
-﻿using MessagePack;
-using UnityEngine;
+﻿using UnityEngine;
 
 using Banchou.Pawn;
 
 namespace Banchou.Mob {
      namespace StateAction {
-        [MessagePackObject]
         public struct AddMob {
-            [Key(0)] public PawnId PawnId;
+            public PawnId PawnId;
         }
 
-        [MessagePackObject]
         public struct RemoveMob {
-            [Key(0)] public PawnId PawnId;
+            public PawnId PawnId;
         }
 
         public interface IMobAction {
-            [Key(0)] PawnId PawnId { get; }
+            PawnId PawnId { get; }
         }
 
-        [MessagePackObject]
         public struct MobApproachTarget : IMobAction {
-            [Key(0)] public PawnId PawnId { get; set; }
-            [Key(1)] public PawnId TargetId;
-            [Key(2)] public float StoppingDistance;
+            public PawnId PawnId { get; set; }
+            public PawnId TargetId;
+            public float StoppingDistance;
         }
 
-        [MessagePackObject]
         public struct MobApproachPosition : IMobAction {
-            [Key(0)] public PawnId PawnId { get; set; }
-            [Key(1)] public Vector3 Position;
-            [Key(2)] public float StoppingDistance;
+            public PawnId PawnId { get; set; }
+            public Vector3 Position;
+            public float StoppingDistance;
         }
 
-        [MessagePackObject]
         public struct MobApproachCompleted : IMobAction {
-            [Key(0)] public PawnId PawnId { get; set; }
+            public PawnId PawnId { get; set; }
         }
 
-        [MessagePackObject]
         public struct MobApproachInterrupted : IMobAction {
-            [Key(0)] public PawnId PawnId { get; set; }
+            public PawnId PawnId { get; set; }
         }
     }
 

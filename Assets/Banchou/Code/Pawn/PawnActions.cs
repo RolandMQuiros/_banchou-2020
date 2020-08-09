@@ -1,5 +1,4 @@
-﻿using MessagePack;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Banchou.Pawn {
     namespace StateAction {
@@ -7,38 +6,33 @@ namespace Banchou.Pawn {
             PawnId PawnId { get; }
         }
 
-        [MessagePackObject]
         public struct FSMStateChanged {
-            [Key(0)] public PawnId PawnId;
-            [Key(1)] public int Statehash;
-            [Key(2)] public bool IsLoop;
-            [Key(3)] public float ClipLength;
-            [Key(4)] public float When;
+            public PawnId PawnId;
+            public int Statehash;
+            public bool IsLoop;
+            public float ClipLength;
+            public float When;
         }
 
-        [MessagePackObject]
         public struct RollbackStarted : IPawnAction {
-            [Key(0)] public PawnId PawnId { get; set; }
+            public PawnId PawnId { get; set; }
         }
 
-        [MessagePackObject]
         public struct FastForwarding : IPawnAction {
-            [Key(0)] public PawnId PawnId { get; set; }
-            [Key(1)] public float CorrectionTime;
+            public PawnId PawnId { get; set; }
+            public float CorrectionTime;
         }
 
-        [MessagePackObject]
         public struct RollbackComplete : IPawnAction {
-            [Key(0)] public PawnId PawnId { get; set; }
+            public PawnId PawnId { get; set; }
         }
 
-        [MessagePackObject]
         public struct SyncPawn : IPawnAction {
-            [Key(0)] public PawnId PawnId { get; set; }
-            [Key(1)] public Vector3 Position;
-            [Key(2)] public Quaternion Rotation;
-            [Key(3)] public int StateHash;
-            [Key(4)] public float NormalizedTime;
+            public PawnId PawnId { get; set; }
+            public Vector3 Position;
+            public Quaternion Rotation;
+            public int StateHash;
+            public float NormalizedTime;
         }
     }
 
