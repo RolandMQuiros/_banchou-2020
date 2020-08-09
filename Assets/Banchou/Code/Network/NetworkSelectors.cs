@@ -1,7 +1,13 @@
-﻿namespace Banchou.Network {
+﻿using System.Net;
+
+namespace Banchou.Network {
     public static class NetworkSelectors {
         public static Mode GetNetworkMode(this GameState state) {
             return state.Network.Mode;
+        }
+
+        public static IPEndPoint GetIP(this GameState state) {
+            return state.Network.IP;
         }
 
         public static bool IsLocal(this GameState state) {

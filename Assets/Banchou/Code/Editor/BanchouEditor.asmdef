@@ -1,0 +1,17 @@
+{
+    "name": "BanchouEditor",
+    "references": [
+        "GUID:3b047dbb2bcbe314eb5db5943b9c28db"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

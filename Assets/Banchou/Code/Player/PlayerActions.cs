@@ -1,6 +1,7 @@
 ﻿using System.Net;
+using Redux;
 
-using MessagePack;
+using Banchou.Network;
 using Banchou.Pawn;
 
 namespace Banchou.Player {
@@ -11,7 +12,7 @@ namespace Banchou.Player {
 
         public struct AddPlayer {
             public PlayerId PlayerId;
-            public InputSource Source;
+            public string PrefabKey;
             public IPEndPoint IP;
             public int PeerId;
         }
@@ -31,24 +32,18 @@ namespace Banchou.Player {
     }
 
     public class PlayersActions {
-        public StateAction.AddPlayer AddLocalPlayer(PlayerId playerId) {
-            return new StateAction.AddPlayer {
+        public ActionsCreator<GameState> AddLocalPlayer(PlayerId playerId, string prefabKey) => (dispatch, getState) => {
+            dispatch(new StateAction.AddPlayer {
                 PlayerId = playerId,
-                Source = InputSource.Local
-            };
-        }
+                PrefabKey = prefabKey,
+                IP = getState().GetIP()
+            });
+        };
 
-        public StateAction.AddPlayer AddAIPlayer(PlayerId playerId) {
+        public StateAction.AddPlayer AddPlayer(PlayerId playerId, string prefabKey, IPEndPoint ip, int peerId) {
             return new StateAction.AddPlayer {
                 PlayerId = playerId,
-                Source = InputSource.AI
-            };
-        }
-
-        public StateAction.AddPlayer AddNetworkPlayer(PlayerId playerId, IPEndPoint ip, int peerId) {
-            return new StateAction.AddPlayer {
-                PlayerId = playerId,
-                Source = InputSource.Network,
+                PrefabKey = prefabKey,
                 IP = ip,
                 PeerId = peerId
             };

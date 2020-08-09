@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Redux;
+using UnityEngine;
 
 using Banchou.Player;
 using Banchou.Pawn;
@@ -33,16 +34,20 @@ namespace Banchou.Board {
     }
 
     public class BoardActions {
-        public StateAction.AddPawn AddPawn(
+        public ActionsCreator<GameState> AddPawn(
             string prefabKey,
             Vector3 position = default(Vector3),
             Quaternion rotation = default(Quaternion)
-        ) => new StateAction.AddPawn {
-            PawnId = PawnId.Create(),
-            PlayerId = PlayerId.Empty,
-            PrefabKey = prefabKey,
-            SpawnPosition = position,
-            SpawnRotation = rotation
+        ) => (dispatch, getState) => {
+            dispatch(
+                new StateAction.AddPawn {
+                    PawnId = getState().CreatePawnId(),
+                    PlayerId = PlayerId.Empty,
+                    PrefabKey = prefabKey,
+                    SpawnPosition = position,
+                    SpawnRotation = rotation
+                }
+            );
         };
 
         public StateAction.AddPawn AddPawn(

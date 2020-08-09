@@ -2,23 +2,20 @@
 using System.Collections.Generic;
 using Banchou.Pawn;
 
+using Banchou.Network;
+
 namespace Banchou.Player {
     public static partial class PlayerReducers {
-        public static PlayersState Reduce(in PlayersState prev, in object action) {
+        public static PlayersState Reduce(in PlayersState prev, in NetworkSettingsState network, in object action) {
             if (action is StateAction.AddPlayer add && !prev.States.ContainsKey(add.PlayerId)) {
-                NetworkInfo netInfo = null;
-                if (add.Source == InputSource.Network) {
-                    netInfo = new NetworkInfo {
-                        IP = add.IP,
-                        PeerId = add.PeerId
-                    };
-                }
-
                 return new PlayersState(prev) {
                     States = new Dictionary<PlayerId, PlayerState> {
                         [add.PlayerId] = new PlayerState() {
-                            Source = add.Source,
-                            NetworkInfo = netInfo
+                            PrefabKey = add.PrefabKey,
+                            NetworkInfo = new NetworkInfo {
+                                IP = add.IP,
+                                PeerId = add.PeerId
+                            }
                         }
                     }
                 };
@@ -65,6 +62,7 @@ namespace Banchou.Player {
 
             if (action is Network.StateAction.SyncGameState sync) {
                 var prevPlayers = prev.States;
+                var ip = network.IP;
                 return new PlayersState(prev) {
                     States = sync.GameState.GetPlayers()
                         .Select(pair => {
@@ -76,7 +74,7 @@ namespace Banchou.Player {
                                 return new KeyValuePair<PlayerId, PlayerState>(
                                     syncedPlayerId,
                                     new PlayerState(syncedPlayer) {
-                                        Source = InputSource.Network
+                                        PrefabKey = syncedPlayer.NetworkInfo.IP == ip ? syncedPlayer.PrefabKey : null
                                     }
                                 );
                             }

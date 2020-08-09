@@ -33,7 +33,6 @@ namespace Banchou.Player {
                             .DistinctUntilChanged(),
                         (look, player) => (look, player)
                     )
-                    .Where(t => t.player?.Source == InputSource.Local)
                     .Select(t => t.look)
             );
 
@@ -47,7 +46,6 @@ namespace Banchou.Player {
                             .DistinctUntilChanged(),
                         (move, player) => (move, player)
                     )
-                    .Where(t => t.player?.Source == InputSource.Local)
                     .Select(t => t.move)
             );
         }

@@ -9,12 +9,8 @@ using Banchou.DependencyInjection;
 
 namespace Banchou.Player {
     public class PlayerFactory : MonoBehaviour, IPlayerInstances {
-        [SerializeField] private Transform _playerParent;
-
-        [Header("Prefabs")]
-        [SerializeField] private GameObject _localPlayerPrefab = null;
-        [SerializeField] private GameObject _networkedPlayerPrefab = null;
-        [SerializeField] private GameObject _AIPlayerPrefab = null;
+        [SerializeField] private PlayerCatalog _catalog = null;
+        [SerializeField] private Transform _playerParent = null;
 
         private IObservable<GameState> _observeState;
         private GetState _getState;
@@ -44,40 +40,21 @@ namespace Banchou.Player {
                 .SelectMany(pair => pair.Current.Except(pair.Previous))
                 .Where(addedId => !_instances.ContainsKey(addedId))
                 .Subscribe(addedId => {
-                    var inputSource = _getState().GetPlayerInputSource(addedId);
-                    GameObject instance = null;
-                    switch (inputSource) {
-                        case InputSource.Local:
-                            if (_localPlayerPrefab != null) {
-                                instance = _instantiate(
-                                    _localPlayerPrefab,
-                                    parent: _playerParent,
-                                    additionalBindings: addedId
-                                );
-                            }
-                            break;
-                        case InputSource.AI:
-                            if (_AIPlayerPrefab != null) {
-                                instance = _instantiate(
-                                    _AIPlayerPrefab,
-                                    parent: _playerParent,
-                                    additionalBindings: addedId
-                                );
-                            }
-                            break;
-                        case InputSource.Network:
-                            if (_networkedPlayerPrefab) {
-                                instance = _instantiate(
-                                    _networkedPlayerPrefab,
-                                    parent: _playerParent,
-                                    additionalBindings: addedId
-                                );
-                            }
-                            break;
-                    }
+                    var prefabKey = _getState().GetPlayerPrefabKey(addedId);
+                    if (!string.IsNullOrWhiteSpace(prefabKey)) {
+                        GameObject instance = null;
+                        GameObject prefab;
+                        if (_catalog.TryGetValue(prefabKey, out prefab)) {
+                            instance = _instantiate(
+                                prefab,
+                                parent: _playerParent,
+                                additionalBindings: addedId
+                            );
+                        }
 
-                    if (instance != null) {
-                        _instances[addedId] = instance;
+                        if (instance != null) {
+                            _instances[addedId] = instance;
+                        }
                     }
                 }).AddTo(this);
 

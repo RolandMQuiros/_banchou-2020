@@ -22,16 +22,17 @@ namespace Banchou.Network {
 
         public void Construct(
             IObservable<GameState> observeState,
+            GetState getState,
             Dispatcher dispatch,
             PlayersActions playerActions,
             NetworkActions networkActions,
-            PlayerInputStreams playerInput,
-            JsonSerializer serializer
+            PlayerInputStreams playerInput
         ) {
             NetDebug.Logger = this;
             var messagePackOptions = MessagePackSerializerOptions
                 .Standard
-                .WithCompression(MessagePackCompression.Lz4BlockArray);;
+                .WithCompression(MessagePackCompression.Lz4BlockArray);
+            var serializer = new JsonSerializer();
 
             observeState
                 .Select(state => state.GetNetworkMode())
@@ -52,7 +53,7 @@ namespace Banchou.Network {
                             _agent = _client;
                             break;
                         case Mode.Server:
-                            _server = new NetworkServer(observeState, dispatch, playerActions, playerInput, serializer, messagePackOptions)
+                            _server = new NetworkServer(observeState, getState, dispatch, playerActions, playerInput, serializer, messagePackOptions)
                                 .Start(this.LateUpdateAsObservable());
                             _agent = _server;
                             break;

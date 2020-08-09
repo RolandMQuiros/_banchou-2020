@@ -1,11 +1,8 @@
 ﻿using System;
 
 using Redux;
-using UniRx;
 using UnityEngine;
-
 using Banchou.DependencyInjection;
-using Banchou.Player;
 using Banchou.Network.Message;
 
 namespace Banchou.Network {

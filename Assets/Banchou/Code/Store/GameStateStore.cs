@@ -73,7 +73,7 @@ namespace Banchou {
             return new GameState {
                 Network = NetworkReducers.Reduce(prev.Network, action),
                 Board = BoardReducers.Reduce(prev.Board, action),
-                Players = PlayerReducers.Reduce(prev.Players, action),
+                Players = PlayerReducers.Reduce(prev.Players, prev.Network, action),
                 Pawns = PawnsReducers.Reduce(prev.Pawns, action),
                 PawnSync = PawnSyncReducers.Reduce(prev.PawnSync, action),
                 Mobs = MobsReducers.Reduce(prev.Mobs, action),

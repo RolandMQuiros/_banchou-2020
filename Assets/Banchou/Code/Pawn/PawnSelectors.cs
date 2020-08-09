@@ -1,10 +1,25 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
-using UnityEngine;
 using Banchou.Player;
 
 namespace Banchou.Pawn {
     public static class PawnSelectors {
+        public static PawnId CreatePawnId(this GameState state) {
+            var existingIds = new HashSet<int>(state.Pawns.States.Keys.Select(p => p.Id));
+
+            if (existingIds.Count == 0) {
+                return new PawnId(1);
+            } else {
+                for (int i = 1; i != existingIds.Max(); i++) {
+                    if (!existingIds.Contains(i)) {
+                        return new PawnId(i);
+                    }
+                }
+            }
+
+            return PawnId.Empty;
+        }
+
         public static bool HasPawn(this GameState state, PawnId pawnId) {
             return state.Pawns.States.ContainsKey(pawnId);
         }

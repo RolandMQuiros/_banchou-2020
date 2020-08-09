@@ -13,6 +13,8 @@ using UniRx;
 using Banchou.Player;
 using Banchou.Network.Message;
 
+#pragma warning disable 0618
+
 namespace Banchou.Network {
     public class NetworkClient : IDisposable {
         private EventBasedNetListener _listener;
@@ -44,7 +46,6 @@ namespace Banchou.Network {
                         var bsonStream = new MemoryStream(syncClient.GameStateBytes);
                         using (var reader = new BsonReader(bsonStream)) {
                             var gameState = jsonSerializer.Deserialize<GameState>(reader);
-                            Debug.Log($"Received Sync Client State: {JsonConvert.SerializeObject(gameState, Formatting.Indented)}");
                             dispatch(networkActions.SyncGameState(gameState));
                         }
                     } break;
@@ -52,7 +53,6 @@ namespace Banchou.Network {
                         var bsonStream = new MemoryStream(envelope.Payload);
                         using (var reader = new BsonReader(bsonStream)) {
                             var action = jsonSerializer.Deserialize(reader);
-                            Debug.Log($"Received Redux Action: {JsonConvert.SerializeObject(action, Formatting.Indented)}");
                             dispatch(action);
                         }
                     } break;

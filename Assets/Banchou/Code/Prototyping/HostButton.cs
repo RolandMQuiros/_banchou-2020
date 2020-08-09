@@ -13,6 +13,7 @@ using Banchou.Player;
 namespace Banchou.Prototype {
     public class HostButton : MonoBehaviour {
         private IObservable<GameState> _observeState;
+        private GetState _getState;
         private Dispatcher _dispatch;
         private BoardActions _boardActions;
         private NetworkActions _networkActions;
@@ -20,12 +21,14 @@ namespace Banchou.Prototype {
 
         public void Construct(
             IObservable<GameState> observeState,
+            GetState getState,
             Dispatcher dispatch,
             NetworkActions networkActions,
             BoardActions boardActions,
             PlayersActions playerActions
         ) {
             _observeState = observeState;
+            _getState = getState;
             _dispatch = dispatch;
             _boardActions = boardActions;
             _networkActions = networkActions;
@@ -36,11 +39,11 @@ namespace Banchou.Prototype {
             SceneManager.LoadScene("BanchouBoard");
             _dispatch(_networkActions.SetMode(Mode.Server));
 
-            var playerId = PlayerId.Create();
-            _dispatch(_playerActions.AddLocalPlayer(playerId));
+            var playerId = _getState().CreatePlayerId();
+            _dispatch(_playerActions.AddLocalPlayer(playerId, "Local Player"));
             _dispatch(_boardActions.SetScene("TestingGrounds"));
 
-            var pawnId = PawnId.Create();
+            var pawnId = _getState().CreatePawnId();
             _dispatch(_boardActions.AddPawn(pawnId, "Isaac", new Vector3(0f, 3f, 0f)));
             _dispatch(_boardActions.AddPawn("Dumpster", new Vector3(10f, 3f, 5f)));
 

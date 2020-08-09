@@ -14,6 +14,8 @@ using UnityEngine;
 using Banchou.Player;
 using Banchou.Network.Message;
 
+#pragma warning disable 0618
+
 namespace Banchou.Network {
     public class NetworkServer : IDisposable {
         private MessagePackSerializerOptions _messagePackOptions;
@@ -25,6 +27,7 @@ namespace Banchou.Network {
 
         public NetworkServer(
             IObservable<GameState> observeState,
+            GetState getState,
             Dispatcher dispatch,
             PlayersActions playerActions,
             PlayerInputStreams playerInput,
@@ -47,9 +50,10 @@ namespace Banchou.Network {
             };
 
             _listener.PeerConnectedEvent += peer => {
-                var playerId = PlayerId.Create();
+                // Add the peer as a player before sync'ing the client's state
+                var playerId = getState().CreatePlayerId();
                 _peers[playerId] = peer;
-                dispatch(playerActions.AddNetworkPlayer(playerId, peer.EndPoint, peer.Id));
+                dispatch(playerActions.AddPlayer(playerId, null, peer.EndPoint, peer.Id));
             };
 
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
@@ -74,6 +78,7 @@ namespace Banchou.Network {
                 dataReader.Recycle();
             };
 
+            // Sync new players' states
             _connectReply = observeState
                 .DistinctUntilChanged(state => state.GetPlayers())
                 .Pairwise()
@@ -152,20 +157,20 @@ namespace Banchou.Network {
         private static List<NetworkServer> _instances = new List<NetworkServer>();
         public static Middleware<TState> Install<TState>(JsonSerializer jsonSerializer, MessagePackSerializerOptions messagePackOptions) {
             return store => next => action => {
-                MemoryStream memoryStream = null;
+                byte[] actionBytes = null;
                 for (int i = 0; i < _instances.Count; i++) {
                     // Send the action to all peers
                     foreach (var peer in _instances[i]._peers.Values) {
-                        if (memoryStream == null) {
-                            memoryStream = new MemoryStream();
-
+                        // If the envelope hasn't been built, build it
+                        if (actionBytes == null) {
+                            // Convert action to BSON
                             var actionStream = new MemoryStream();
                             using (var writer = new BsonWriter(actionStream)) {
                                 jsonSerializer.Serialize(writer, action);
                             }
 
-                            MessagePackSerializer.Serialize(
-                                memoryStream,
+                            // Pack into envelope and serialize to bytestream
+                            actionBytes = MessagePackSerializer.Serialize(
                                 new Envelope {
                                     PayloadType = PayloadType.ReduxAction,
                                     Payload = actionStream.ToArray()
@@ -174,7 +179,8 @@ namespace Banchou.Network {
                             );
                         }
 
-                        peer.Send(memoryStream.ToArray(), DeliveryMethod.ReliableOrdered);
+                        // Send bytestream to peer
+                        peer.Send(actionBytes, DeliveryMethod.Sequenced);
                     }
                 }
                 return next(action);

@@ -48,6 +48,7 @@ namespace Banchou.Test {
             _serverStore = new Store<GameState>(GameStateStore.Reducer, new GameState(), NetworkServer.Install<GameState>(serializer, messagePackOptions));
             _server = new NetworkServer(
                 _serverStore.ObserveState(),
+                _serverStore.GetState,
                 _serverStore.Dispatch,
                 new PlayersActions(),
                 new PlayerInputStreams(),

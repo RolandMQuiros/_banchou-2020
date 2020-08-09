@@ -1,15 +1,14 @@
 ﻿using System.IO;
-using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
-using UnityEngine;
-using UnityEngine.TestTools;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 
 using Banchou.Pawn;
 using Banchou.Player;
+
+#pragma warning disable 0618
 
 namespace Banchou.Test {
     public class BsonTests {

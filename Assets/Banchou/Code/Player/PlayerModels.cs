@@ -33,26 +33,26 @@ namespace Banchou.Player {
         #endregion
     }
 
-    public enum InputSource : byte {
-        Local,
-        Network,
-        AI
-    }
-
     public class NetworkInfo {
         public IPEndPoint IP;
         public int PeerId;
+
+        public NetworkInfo() { }
+        public NetworkInfo(in NetworkInfo prev) {
+            IP = prev.IP;
+            PeerId = prev.PeerId;
+        }
     }
 
     public class PlayerState {
-        public InputSource Source = InputSource.Local;
+        public string PrefabKey = string.Empty;
         public string Name = null;
         public NetworkInfo NetworkInfo = null;
         public PawnId Pawn = PawnId.Empty;
 
         public PlayerState() { }
         public PlayerState(in PlayerState prev) {
-            Source = prev.Source;
+            PrefabKey = prev.PrefabKey;
             Name = prev.Name;
             NetworkInfo = prev.NetworkInfo;
             Pawn = prev.Pawn;

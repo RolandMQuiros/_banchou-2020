@@ -133,11 +133,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7232495de5055e5479e464a61eeb2736, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _catalog: {fileID: 11400000, guid: 2fcdc4be5d0f8f143aefc6546917791f, type: 2}
   _playerParent: {fileID: 706472179}
-  _localPlayerPrefab: {fileID: 5364267948310127331, guid: f698f6d655ee93940a2b6f55dd4172ce,
-    type: 3}
-  _networkedPlayerPrefab: {fileID: 0}
-  _AIPlayerPrefab: {fileID: 0}
 --- !u!1 &435952573
 GameObject:
   m_ObjectHideFlags: 0
