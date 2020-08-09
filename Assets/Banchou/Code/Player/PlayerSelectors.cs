@@ -8,7 +8,7 @@ namespace Banchou.Player {
     public static class PlayerSelectors {
         public static PlayerState GetPlayer(this GameState state, PlayerId playerId) {
             PlayerState player;
-            if (state.Players.TryGetValue(playerId, out player)) {
+            if (state.Players.States.TryGetValue(playerId, out player)) {
                 return player;
             }
             return null;
@@ -27,11 +27,11 @@ namespace Banchou.Player {
         }
 
         public static IDictionary<PlayerId, PlayerState> GetPlayers(this GameState state) {
-            return state.Players;
+            return state.Players.States;
         }
 
         public static IEnumerable<PlayerId> GetPlayerIds(this GameState state) {
-            return state.Players.Keys;
+            return state.Players.States.Keys;
         }
     }
 }

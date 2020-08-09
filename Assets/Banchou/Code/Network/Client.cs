@@ -1,9 +1,12 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 
 using LiteNetLib;
 using MessagePack;
 using MessagePack.Resolvers;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
 using Redux;
 using UnityEngine;
 using UniRx;
@@ -13,6 +16,10 @@ using Banchou.Network.Message;
 
 namespace Banchou.Network {
     public class NetworkClient : IDisposable {
+        private static readonly MessagePackSerializerOptions _messagePackOptions = MessagePackSerializerOptions
+            .Standard
+            .WithCompression(MessagePackCompression.Lz4BlockArray);
+
         private EventBasedNetListener _listener;
         private NetManager _client;
         private NetPeer _peer;
@@ -27,44 +34,37 @@ namespace Banchou.Network {
             _listener = new EventBasedNetListener();
             _client = new NetManager(_listener);
 
-            var buffer = new byte[256];
+            var jsonSerializer = new JsonSerializer();
 
             // Receiving data from server
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
                 // Calculate when the event was sent
                 var when = Time.fixedUnscaledTime - (fromPeer.Ping / 1000f);
-
-                // Extract payload type
-                var payloadType = (PayloadType)dataReader.GetByte();
-
-                // Expand the buffer if needed
-                if (dataReader.AvailableBytes > buffer.Length) {
-                    Array.Resize(ref buffer, dataReader.AvailableBytes);
-                }
-
-                // Read the remainder of the message into the buffer
-                dataReader.GetBytes(buffer, dataReader.AvailableBytes);
+                var envelope = MessagePackSerializer.Deserialize<Envelope>(dataReader.GetRemainingBytes(), _messagePackOptions);
 
                 // Using the type flag, check what we need to deserialize message into
-                switch (payloadType) {
+                switch (envelope.PayloadType) {
                     case PayloadType.SyncClient:
-                        var syncClient = MessagePackSerializer.Deserialize<SyncClient>(buffer);
+                        var syncClient = MessagePackSerializer.Deserialize<SyncClient>(envelope.Payload, _messagePackOptions);
                         dispatch(networkActions.SyncGameState(syncClient.GameState));
                     break;
-                    case PayloadType.ReduxAction:
-                        var action = MessagePackSerializer.Deserialize<object>(buffer, ContractlessStandardResolver.Options);
-                        dispatch(action);
-                    break;
+                    case PayloadType.ReduxAction: {
+                        var bsonStream = new MemoryStream();
+                        using (var reader = new BsonReader(bsonStream)) {
+                            var action = jsonSerializer.Deserialize(reader);
+                            dispatch(action);
+                        }
+                    } break;
                     case PayloadType.SyncPawn:
-                        var pawnSync = MessagePackSerializer.Deserialize<SyncPawn>(buffer);
+                        var pawnSync = MessagePackSerializer.Deserialize<SyncPawn>(envelope.Payload, _messagePackOptions);
                         pullPawnSync(pawnSync);
                     break;
                     case PayloadType.PlayerCommand: {
-                        var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(buffer);
+                        var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, _messagePackOptions);
                         playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, when);
                     } break;
                     case PayloadType.PlayerMove: {
-                        var playerMove = MessagePackSerializer.Deserialize<PlayerMove>(buffer);
+                        var playerMove = MessagePackSerializer.Deserialize<PlayerMove>(envelope.Payload, _messagePackOptions);
                         playerInput.PushMove(playerMove.PlayerId, playerMove.Direction, when);
                     } break;
                 }

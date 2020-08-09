@@ -5,7 +5,7 @@ namespace Banchou.Mob {
     public static class MobSelectors {
         public static MobState GetMob(this GameState state, PawnId pawnId) {
             MobState mob;
-            if (state.Mobs.TryGetValue(pawnId, out mob)) {
+            if (state.Mobs.States.TryGetValue(pawnId, out mob)) {
                 return mob;
             }
             return null;

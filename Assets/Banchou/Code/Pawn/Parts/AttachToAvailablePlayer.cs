@@ -24,7 +24,7 @@ namespace Banchou.Pawn.Part {
         }
 
         private void Start() {
-            var playerId = _getState().Players
+            var playerId = _getState().GetPlayers()
                 .Where(p => p.Value.Source == InputSource.Local)
                 .Select(p => p.Key)
                 .First();

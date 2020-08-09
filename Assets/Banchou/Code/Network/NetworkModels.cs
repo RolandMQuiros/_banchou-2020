@@ -13,7 +13,7 @@ namespace Banchou.Network {
         [Key(0)] public Mode Mode = Mode.Local;
 
         [Key(1)] public bool IsConnecting = false;
-        [Key(2)] public IPEndPoint Host;
+        [Key(2)] public string Host;
 
         public NetworkSettingsState() { }
         public NetworkSettingsState(in NetworkSettingsState prev) {

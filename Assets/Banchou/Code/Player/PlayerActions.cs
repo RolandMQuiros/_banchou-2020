@@ -13,7 +13,7 @@ namespace Banchou.Player {
         public struct AddPlayer {
             [Key(0)] public PlayerId PlayerId;
             [Key(1)] public InputSource Source;
-            [Key(2)] public IPEndPoint IP;
+            [Key(2)] public string IP;
             [Key(3)] public int PeerId;
         }
 
@@ -25,7 +25,7 @@ namespace Banchou.Player {
         [MessagePackObject]
         public struct AttachPlayerToPawn : IPlayerAction {
             [Key(0)] public PlayerId PlayerId { get; set; }
-            [Key(0)] public PawnId PawnId;
+            [Key(1)] public PawnId PawnId;
         }
 
         [MessagePackObject]
@@ -49,7 +49,7 @@ namespace Banchou.Player {
             };
         }
 
-        public StateAction.AddPlayer AddNetworkPlayer(PlayerId playerId, IPEndPoint ip, int peerId) {
+        public StateAction.AddPlayer AddNetworkPlayer(PlayerId playerId, string ip, int peerId) {
             return new StateAction.AddPlayer {
                 PlayerId = playerId,
                 Source = InputSource.Network,

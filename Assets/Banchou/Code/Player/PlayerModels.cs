@@ -44,7 +44,7 @@ namespace Banchou.Player {
 
     [MessagePackObject]
     public class NetworkInfo {
-        [Key(0)] public IPEndPoint IP;
+        [Key(0)] public string IP;
         [Key(1)] public int PeerId;
     }
 
@@ -64,9 +64,13 @@ namespace Banchou.Player {
         }
     }
 
-    public class PlayersState : Dictionary<PlayerId, PlayerState> {
+    [MessagePackObject]
+    public class PlayersState {
+        [Key(0)] public Dictionary<PlayerId, PlayerState> States = new Dictionary<PlayerId, PlayerState>();
+
         public PlayersState() { }
-        public PlayersState(in PlayersState prev) : base(prev) { }
-        public PlayersState(in Dictionary<PlayerId, PlayerState> dict) : base(dict) { }
+        public PlayersState(in PlayersState prev) {
+            States = prev.States;
+        }
     }
 }

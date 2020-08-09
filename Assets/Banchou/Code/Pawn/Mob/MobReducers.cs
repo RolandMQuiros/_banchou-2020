@@ -1,26 +1,34 @@
-﻿namespace Banchou.Mob {
+﻿using System.Collections.Generic;
+
+namespace Banchou.Mob {
     public static class MobsReducers {
         public static MobsState Reduce(in MobsState prev, in object action) {
             if (action is StateAction.AddMob add) {
                 MobState prevMob;
-                if (!prev.TryGetValue(add.PawnId, out prevMob)) {
+                if (!prev.States.TryGetValue(add.PawnId, out prevMob)) {
                     return new MobsState(prev) {
-                        [add.PawnId] = new MobState()
+                        States = new Dictionary<Pawn.PawnId, MobState>(prev.States) {
+                            [add.PawnId] = new MobState()
+                        }
                     };
                 }
             }
 
             if (action is StateAction.RemoveMob remove) {
-                var next = new MobsState(prev);
-                next.Remove(remove.PawnId);
+                var next = new MobsState(prev) {
+                    States = new Dictionary<Pawn.PawnId, MobState>(prev.States)
+                };
+                next.States.Remove(remove.PawnId);
                 return next;
             }
 
             if (action is StateAction.IMobAction mobAction) {
                 MobState prevMob;
-                if (prev.TryGetValue(mobAction.PawnId, out prevMob)) {
+                if (prev.States.TryGetValue(mobAction.PawnId, out prevMob)) {
                     return new MobsState(prev) {
-                        [mobAction.PawnId] = ReduceMob(prevMob, mobAction)
+                        States = new Dictionary<Pawn.PawnId, MobState>(prev.States) {
+                            [mobAction.PawnId] = ReduceMob(prevMob, mobAction)
+                        }
                     };
                 }
             }

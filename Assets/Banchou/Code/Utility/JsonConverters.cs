@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Net;
 
+using MessagePack.Formatters;
 using Newtonsoft.Json;
 
 using Banchou.Pawn;
 using Banchou.Player;
+using MessagePack;
 
 namespace Banchou.Utility {
     public class PlayerIdConverter : JsonConverter<PlayerId> {
@@ -60,6 +62,18 @@ namespace Banchou.Utility {
         public override void WriteJson(JsonWriter writer, IPEndPoint value, JsonSerializer serializer)
         {
             writer.WriteValue($"{value.Address.ToString()}:{value.Port}");
+        }
+    }
+
+    public class IPEndPointMessageConverter : IMessagePackFormatter<IPEndPoint>
+    {
+        public IPEndPoint Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options) {
+            return new IPEndPoint(reader.ReadInt64(), reader.ReadInt32());
+        }
+
+        public void Serialize(ref MessagePackWriter writer, IPEndPoint value, MessagePackSerializerOptions options) {
+            writer.Write(value.Address.GetAddressBytes());
+            writer.WriteInt32(value.Port);
         }
     }
 }

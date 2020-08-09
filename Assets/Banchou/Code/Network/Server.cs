@@ -5,6 +5,11 @@ using System.Linq;
 
 using LiteNetLib;
 using MessagePack;
+using MessagePack.Resolvers;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
+
 using Redux;
 using UniRx;
 using UnityEngine;
@@ -14,7 +19,7 @@ using Banchou.Network.Message;
 
 namespace Banchou.Network {
     public class NetworkServer : IDisposable {
-        private static readonly MessagePackSerializerOptions _serializerOptions = MessagePackSerializerOptions
+        private static readonly MessagePackSerializerOptions _messagePackOptions = MessagePackSerializerOptions
             .Standard
             .WithCompression(MessagePackCompression.Lz4BlockArray);
 
@@ -47,7 +52,7 @@ namespace Banchou.Network {
             _listener.PeerConnectedEvent += peer => {
                 var playerId = PlayerId.Create();
                 _peers[playerId] = peer;
-                dispatch(playerActions.AddNetworkPlayer(playerId, peer.EndPoint, peer.Id));
+                dispatch(playerActions.AddNetworkPlayer(playerId, peer.EndPoint.Address.ToString(), peer.Id));
             };
 
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
@@ -55,7 +60,7 @@ namespace Banchou.Network {
                 var when = Time.fixedUnscaledTime - (fromPeer.Ping / 1000f);
 
                 // Open envelope
-                var envelope = MessagePackSerializer.Deserialize<Envelope>(dataReader.GetRemainingBytes(), _serializerOptions);
+                var envelope = MessagePackSerializer.Deserialize<Envelope>(dataReader.GetRemainingBytes(), _messagePackOptions);
 
                 // Deserialize payload
                 switch (envelope.PayloadType) {
@@ -136,17 +141,31 @@ namespace Banchou.Network {
         #region Redux Middleware
         private static List<NetworkServer> _instances = new List<NetworkServer>();
         public static Middleware<TState> Install<TState>() {
-            ActionConverter actionConverter = null;
+            JsonSerializer serializer = null;
+
             return store => next => action => {
                 MemoryStream memoryStream = null;
-                actionConverter = actionConverter ?? new ActionConverter(_serializerOptions);
+                serializer = serializer ?? new JsonSerializer();
 
                 for (int i = 0; i < _instances.Count; i++) {
                     // Send the action to all peers
                     foreach (var peer in _instances[i]._peers.Values) {
                         if (memoryStream == null) {
                             memoryStream = new MemoryStream();
-                            actionConverter.SerializeToEnvelope(memoryStream, action);
+
+                            var actionStream = new MemoryStream();
+                            using (var writer = new BsonWriter(actionStream)) {
+                                serializer.Serialize(writer, action);
+                            }
+
+                            MessagePackSerializer.Serialize(
+                                memoryStream,
+                                new Envelope {
+                                    PayloadType = PayloadType.ReduxAction,
+                                    Payload = actionStream.ToArray()
+                                },
+                                _messagePackOptions
+                            );
                         }
                         peer.Send(memoryStream.ToArray(), DeliveryMethod.ReliableUnordered);
                     }

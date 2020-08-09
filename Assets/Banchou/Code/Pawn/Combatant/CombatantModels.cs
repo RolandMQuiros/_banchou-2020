@@ -59,8 +59,11 @@ namespace Banchou.Combatant {
     }
 
     [MessagePackObject]
-    public class CombatantsState : Dictionary<PawnId, CombatantState> {
+    public class CombatantsState {
+        [Key(0)] public Dictionary<PawnId, CombatantState> States = new Dictionary<PawnId, CombatantState>();
         public CombatantsState() { }
-        public CombatantsState(in CombatantsState prev) : base(prev) { }
+        public CombatantsState(in CombatantsState prev) {
+            States = prev.States;
+        }
     }
 }

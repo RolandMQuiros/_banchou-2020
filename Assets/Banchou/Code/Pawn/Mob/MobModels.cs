@@ -30,9 +30,11 @@ namespace Banchou.Mob {
     }
 
     [MessagePackObject]
-    public class MobsState : Dictionary<PawnId, MobState> {
+    public class MobsState {
+        [Key(0)] public Dictionary<PawnId, MobState> States = new Dictionary<PawnId, MobState>();
         public MobsState() { }
-        public MobsState(in MobsState prev) : base(prev) { }
-        public MobsState(in Dictionary<PawnId, MobState> dict) : base(dict) { }
+        public MobsState(in MobsState prev) {
+            States = prev.States;
+        }
     }
 }
