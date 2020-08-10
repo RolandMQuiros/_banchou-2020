@@ -60,6 +60,10 @@ MonoBehaviour:
     converterName: Banchou.Utility.PlayerIdConverter, Banchou, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     settings: []
+  - enabled: 1
+    converterName: Banchou.Utility.IPAddressConverter, Banchou, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+    settings: []
   useAllUnityConverters: 1
   unityConverters:
   - enabled: 1

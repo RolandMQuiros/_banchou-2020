@@ -2,6 +2,7 @@
 using System.Net;
 
 using MessagePack;
+using MessagePack.Resolvers;
 using LiteNetLib;
 using Newtonsoft.Json;
 using Redux;
@@ -31,8 +32,15 @@ namespace Banchou.Network {
             NetDebug.Logger = this;
             var messagePackOptions = MessagePackSerializerOptions
                 .Standard
-                .WithCompression(MessagePackCompression.Lz4BlockArray);
-            var serializer = new JsonSerializer();
+                .WithCompression(MessagePackCompression.Lz4BlockArray)
+                .WithResolver(CompositeResolver.Create(
+                    BanchouMessagePackResolver.Instance,
+                    StandardResolver.Instance
+                ));
+
+            var settings = JsonConvert.DefaultSettings();
+            settings.TypeNameHandling = TypeNameHandling.Objects;
+            var jsonSerializer = JsonSerializer.Create(settings);
 
             observeState
                 .Select(state => state.GetNetworkMode())
@@ -45,15 +53,15 @@ namespace Banchou.Network {
 
                     switch (mode) {
                         case Mode.Client:
-                            _client = new NetworkClient(dispatch, networkActions, playerInput, sync => _pulledPawnSync.OnNext(sync), serializer, messagePackOptions)
+                            _client = new NetworkClient(dispatch, networkActions, playerInput, sync => _pulledPawnSync.OnNext(sync), jsonSerializer, messagePackOptions)
                                 .Start(
-                                    new IPEndPoint(IPAddress.Parse("0.0.0.0"), 9050),
+                                    new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9050),
                                     Observable.Interval(TimeSpan.FromSeconds(1))
                                 );
                             _agent = _client;
                             break;
                         case Mode.Server:
-                            _server = new NetworkServer(observeState, getState, dispatch, playerActions, playerInput, serializer, messagePackOptions)
+                            _server = new NetworkServer(observeState, getState, dispatch, playerActions, playerInput, jsonSerializer, messagePackOptions)
                                 .Start(this.LateUpdateAsObservable());
                             _agent = _server;
                             break;

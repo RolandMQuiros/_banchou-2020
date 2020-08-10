@@ -1,8 +1,8 @@
 ﻿namespace Banchou.Network {
     public static class NetworkReducers {
-        public static NetworkSettingsState Reduce(NetworkSettingsState prev, object action) {
+        public static NetworkState Reduce(NetworkState prev, object action) {
             if (action is StateAction.SetNetworkMode setMode) {
-                return new NetworkSettingsState {
+                return new NetworkState {
                     Mode = setMode.Mode
                 };
             }

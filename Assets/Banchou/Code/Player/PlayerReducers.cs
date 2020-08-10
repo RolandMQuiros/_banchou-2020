@@ -6,10 +6,10 @@ using Banchou.Network;
 
 namespace Banchou.Player {
     public static partial class PlayerReducers {
-        public static PlayersState Reduce(in PlayersState prev, in NetworkSettingsState network, in object action) {
+        public static PlayersState Reduce(in PlayersState prev, in NetworkState network, in object action) {
             if (action is StateAction.AddPlayer add && !prev.States.ContainsKey(add.PlayerId)) {
                 return new PlayersState(prev) {
-                    States = new Dictionary<PlayerId, PlayerState> {
+                    States = new Dictionary<PlayerId, PlayerState>(prev.States) {
                         [add.PlayerId] = new PlayerState() {
                             PrefabKey = add.PrefabKey,
                             NetworkInfo = new NetworkInfo {

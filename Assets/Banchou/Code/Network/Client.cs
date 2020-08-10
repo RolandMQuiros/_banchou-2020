@@ -76,7 +76,7 @@ namespace Banchou.Network {
 
         public NetworkClient Start<T>(IPEndPoint host, IObservable<T> pollInterval) {
             _client.Start();
-            _peer = _client.Connect("localhost", 9050, "BanchouConnectionKey");
+            _peer = _client.Connect(host, "BanchouConnectionKey");
             Debug.Log($"Connected to server at {_client.FirstPeer.EndPoint.ToString()}");
             _poll = pollInterval
                 .Subscribe(_ => {

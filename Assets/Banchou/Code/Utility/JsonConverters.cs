@@ -117,6 +117,19 @@ namespace Banchou.Utility {
         }
     }
 
+    public class IPAddressConverter : JsonConverter<IPAddress> {
+        public override IPAddress ReadJson(JsonReader reader, Type objectType, IPAddress existingValue, bool hasExistingValue, JsonSerializer serializer) {
+            if (reader.TokenType == JsonToken.String) {
+                return IPAddress.Parse(reader.ReadAsString());
+            }
+            throw new JsonSerializationException($"Could not read IPAddress from {reader.Value.ToString()}");
+        }
+
+        public override void WriteJson(JsonWriter writer, IPAddress value, JsonSerializer serializer) {
+            writer.WriteRawValue(value.ToString());
+        }
+    }
+
     public class IPEndPointMessageConverter : IMessagePackFormatter<IPEndPoint>
     {
         public IPEndPoint Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options) {

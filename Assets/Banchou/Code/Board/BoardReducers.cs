@@ -40,6 +40,10 @@ namespace Banchou.Board {
                 };
             }
 
+            if (action is Network.StateAction.SyncGameState sync) {
+                return sync.GameState.Board;
+            }
+
             return prev;
         }
     }

@@ -2,6 +2,7 @@
 using UnityEngine;
 
 using MessagePack;
+using MessagePack.Resolvers;
 using Newtonsoft.Json;
 using Redux;
 using Redux.Reactive;
@@ -49,10 +50,18 @@ namespace Banchou {
             if (_store != null) { return; }
 
             var initialState = JsonConvert.DeserializeObject<GameState>(_initialState.text);
-            var jsonSerializer = new JsonSerializer();
+
+            var settings = JsonConvert.DefaultSettings();
+            settings.TypeNameHandling = TypeNameHandling.Objects;
+            var jsonSerializer = JsonSerializer.Create(settings);
+
             var messagePackOptions = MessagePackSerializerOptions
                 .Standard
-                .WithCompression(MessagePackCompression.Lz4BlockArray);;
+                .WithCompression(MessagePackCompression.Lz4BlockArray)
+                .WithResolver(CompositeResolver.Create(
+                    BanchouMessagePackResolver.Instance,
+                    StandardResolver.Instance
+                ));
 
             if (_devToolsSession == null) {
                 _store = new Store<GameState>(

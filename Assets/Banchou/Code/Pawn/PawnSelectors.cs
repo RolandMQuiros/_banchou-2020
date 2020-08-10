@@ -10,7 +10,8 @@ namespace Banchou.Pawn {
             if (existingIds.Count == 0) {
                 return new PawnId(1);
             } else {
-                for (int i = 1; i != existingIds.Max(); i++) {
+                var max = existingIds.Max() + 1;
+                for (int i = 1; i <= max; i++) {
                     if (!existingIds.Contains(i)) {
                         return new PawnId(i);
                     }

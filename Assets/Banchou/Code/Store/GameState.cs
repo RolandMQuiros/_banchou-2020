@@ -7,7 +7,7 @@ using Banchou.Player;
 
 namespace Banchou {
     public class GameState {
-        public NetworkSettingsState Network = new NetworkSettingsState();
+        public NetworkState Network = new NetworkState();
         public BoardState Board = new BoardState();
         public PlayersState Players = new PlayersState();
         public PawnsState Pawns = new PawnsState();
