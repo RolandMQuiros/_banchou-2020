@@ -50,6 +50,7 @@ namespace Banchou.Test {
                 _serverStore.ObserveState(),
                 _serverStore.GetState,
                 _serverStore.Dispatch,
+                new NetworkActions(),
                 new PlayersActions(),
                 new PlayerInputStreams(),
                 serializer,

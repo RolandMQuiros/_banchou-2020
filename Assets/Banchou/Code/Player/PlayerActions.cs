@@ -1,7 +1,5 @@
 ﻿using System.Net;
 using Redux;
-
-using Banchou.Network;
 using Banchou.Pawn;
 
 namespace Banchou.Player {
@@ -32,11 +30,17 @@ namespace Banchou.Player {
     }
 
     public class PlayersActions {
-        public ActionsCreator<GameState> AddLocalPlayer(PlayerId playerId, string prefabKey) => (dispatch, getState) => {
-            dispatch(new StateAction.AddPlayer {
+        public StateAction.AddPlayer AddLocalPlayer(PlayerId playerId, string prefabKey) {
+            return new StateAction.AddPlayer {
                 PlayerId = playerId,
                 PrefabKey = prefabKey,
-                IP = getState().GetIP()
+            };
+        }
+
+        public ActionsCreator<GameState> AddLocalPlayer(string prefabKey) => (dispatch, getState) => {
+            dispatch(new StateAction.AddPlayer {
+                PlayerId = getState().CreatePlayerId(),
+                PrefabKey = prefabKey
             });
         };
 
@@ -48,6 +52,15 @@ namespace Banchou.Player {
                 PeerId = peerId
             };
         }
+
+        public ActionsCreator<GameState> AddPlayer(string prefabKey, IPEndPoint ip, int peerId) => (dispatch, getState) => {
+            dispatch(new StateAction.AddPlayer {
+                PlayerId = getState().CreatePlayerId(),
+                PrefabKey = prefabKey,
+                IP = ip,
+                PeerId = peerId
+            });
+        };
 
         public StateAction.RemovePlayer Remove(PlayerId playerId) {
             return new StateAction.RemovePlayer {

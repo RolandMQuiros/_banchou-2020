@@ -18,6 +18,8 @@ using Banchou.Network.Message;
 
 namespace Banchou.Network {
     public class NetworkServer : IDisposable {
+        private Dispatcher _dispatch;
+        private NetworkActions _networkActions;
         private MessagePackSerializerOptions _messagePackOptions;
         private EventBasedNetListener _listener;
         private NetManager _server;
@@ -29,6 +31,7 @@ namespace Banchou.Network {
             IObservable<GameState> observeState,
             GetState getState,
             Dispatcher dispatch,
+            NetworkActions networkActions,
             PlayersActions playerActions,
             PlayerInputStreams playerInput,
             JsonSerializer jsonSerializer,
@@ -38,6 +41,8 @@ namespace Banchou.Network {
             _server = new NetManager(_listener);
             _peers = new Dictionary<PlayerId, NetPeer>();
             _messagePackOptions = messagePackOptions;
+            _dispatch = dispatch;
+            _networkActions = networkActions;
 
             _listener.ConnectionRequestEvent += request => {
                 Debug.Log($"Connection request from {request.RemoteEndPoint.ToString()}");
@@ -53,7 +58,7 @@ namespace Banchou.Network {
                 // Add the peer as a player before sync'ing the client's state
                 var playerId = getState().CreatePlayerId();
                 _peers[playerId] = peer;
-                dispatch(playerActions.AddPlayer(playerId, null, peer.EndPoint, peer.Id));
+                _dispatch(playerActions.AddPlayer(playerId, null, peer.EndPoint, peer.Id));
             };
 
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
@@ -135,11 +140,11 @@ namespace Banchou.Network {
         public NetworkServer Start<T>(IObservable<T> pollInterval) {
             _server.Start(9050);
             Debug.Log($"Server started on port {_server.LocalPort}");
-
             _poll = pollInterval
                 .Subscribe(_ => {
                     _server.PollEvents();
                 });
+            // _dispatch(_networkActions.Started(_server.Peer))
             return this;
         }
 

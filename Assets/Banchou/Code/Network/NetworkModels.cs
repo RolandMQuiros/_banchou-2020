@@ -9,13 +9,14 @@ namespace Banchou.Network {
 
     public class NetworkState {
         public Mode Mode = Mode.Local;
-
+        public int PeerId = 0;
         public bool IsConnecting = false;
         public IPEndPoint IP = new IPEndPoint(127, 9050);
 
         public NetworkState() { }
         public NetworkState(in NetworkState prev) {
             Mode = prev.Mode;
+            PeerId = prev.PeerId;
             IsConnecting = prev.IsConnecting;
             IP = prev.IP;
         }

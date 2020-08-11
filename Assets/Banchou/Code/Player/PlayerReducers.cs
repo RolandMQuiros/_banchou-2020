@@ -13,7 +13,7 @@ namespace Banchou.Player {
                         [add.PlayerId] = new PlayerState() {
                             PrefabKey = add.PrefabKey,
                             NetworkInfo = new NetworkInfo {
-                                IP = add.IP,
+                                IP = add.IP ?? network.IP,
                                 PeerId = add.PeerId
                             }
                         }

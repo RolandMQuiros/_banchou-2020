@@ -53,16 +53,30 @@ namespace Banchou.Network {
 
                     switch (mode) {
                         case Mode.Client:
-                            _client = new NetworkClient(dispatch, networkActions, playerInput, sync => _pulledPawnSync.OnNext(sync), jsonSerializer, messagePackOptions)
-                                .Start(
-                                    new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9050),
-                                    Observable.Interval(TimeSpan.FromSeconds(1))
-                                );
+                            _client = new NetworkClient(
+                                dispatch,
+                                networkActions,
+                                playerInput,
+                                sync => _pulledPawnSync.OnNext(sync),
+                                jsonSerializer,
+                                messagePackOptions
+                            ).Start(
+                                new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9050),
+                                Observable.Interval(TimeSpan.FromSeconds(1))
+                            );
                             _agent = _client;
                             break;
                         case Mode.Server:
-                            _server = new NetworkServer(observeState, getState, dispatch, playerActions, playerInput, jsonSerializer, messagePackOptions)
-                                .Start(this.LateUpdateAsObservable());
+                            _server = new NetworkServer(
+                                observeState,
+                                getState,
+                                dispatch,
+                                networkActions,
+                                playerActions,
+                                playerInput,
+                                jsonSerializer,
+                                messagePackOptions
+                            ).Start(this.LateUpdateAsObservable());
                             _agent = _server;
                             break;
                     }
