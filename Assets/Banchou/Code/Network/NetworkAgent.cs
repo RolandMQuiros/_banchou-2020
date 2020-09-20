@@ -54,6 +54,7 @@ namespace Banchou.Network {
                     switch (mode) {
                         case Mode.Client:
                             _client = new NetworkClient(
+                                networkId: getState().GetNetworkId(),
                                 dispatch,
                                 networkActions,
                                 playerInput,

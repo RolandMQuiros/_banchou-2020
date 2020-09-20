@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 
 namespace Banchou.Network {
     public enum Mode : byte {
@@ -8,6 +9,7 @@ namespace Banchou.Network {
     }
 
     public class NetworkState {
+        public Guid Id = Guid.NewGuid();
         public Mode Mode = Mode.Local;
         public int PeerId = 0;
         public bool IsConnecting = false;

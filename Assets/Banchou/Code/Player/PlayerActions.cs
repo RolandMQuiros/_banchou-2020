@@ -1,4 +1,4 @@
-﻿using System.Net;
+﻿using System;
 using Redux;
 using Banchou.Pawn;
 
@@ -11,8 +11,8 @@ namespace Banchou.Player {
         public struct AddPlayer {
             public PlayerId PlayerId;
             public string PrefabKey;
-            public IPEndPoint IP;
-            public int PeerId;
+            public Guid NetworkId;
+            public string Name;
         }
 
         public struct RemovePlayer {
@@ -30,37 +30,21 @@ namespace Banchou.Player {
     }
 
     public class PlayersActions {
-        public StateAction.AddPlayer AddLocalPlayer(PlayerId playerId, string prefabKey) {
+        public StateAction.AddPlayer AddPlayer(PlayerId playerId, string prefabKey = null, string name = null, Guid networkId = default(Guid)) {
             return new StateAction.AddPlayer {
                 PlayerId = playerId,
                 PrefabKey = prefabKey,
+                Name = name,
+                NetworkId = networkId
             };
         }
 
-        public ActionsCreator<GameState> AddLocalPlayer(string prefabKey) => (dispatch, getState) => {
-            dispatch(new StateAction.AddPlayer {
-                PlayerId = getState().CreatePlayerId(),
-                PrefabKey = prefabKey
-            });
-        };
-
-        public StateAction.AddPlayer AddPlayer(PlayerId playerId, string prefabKey, IPEndPoint ip, int peerId) {
+        public StateAction.AddPlayer AddPlayer(Guid networkId) {
             return new StateAction.AddPlayer {
-                PlayerId = playerId,
-                PrefabKey = prefabKey,
-                IP = ip,
-                PeerId = peerId
+                PlayerId = PlayerId.Create(),
+                NetworkId = networkId
             };
         }
-
-        public ActionsCreator<GameState> AddPlayer(string prefabKey, IPEndPoint ip, int peerId) => (dispatch, getState) => {
-            dispatch(new StateAction.AddPlayer {
-                PlayerId = getState().CreatePlayerId(),
-                PrefabKey = prefabKey,
-                IP = ip,
-                PeerId = peerId
-            });
-        };
 
         public StateAction.RemovePlayer Remove(PlayerId playerId) {
             return new StateAction.RemovePlayer {

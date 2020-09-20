@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 
 using Banchou.Network;
@@ -6,7 +7,7 @@ using Banchou.Pawn;
 
 namespace Banchou.Player {
     public static class PlayerSelectors {
-        public static PlayerId CreatePlayerId(this GameState state) {
+        public static PlayerId NextPlayerId(this GameState state) {
             var existingIds = new HashSet<int>(state.Players.States.Keys.Select(p => p.Id));
 
             if (existingIds.Count == 0) {
@@ -31,6 +32,10 @@ namespace Banchou.Player {
             return null;
         }
 
+        public static string GetPlayerName(this GameState state, PlayerId playerId) {
+            return state.GetPlayer(playerId)?.Name;
+        }
+
         public static PawnId GetPlayerPawn(this GameState state, PlayerId playerId) {
             return state.GetPlayer(playerId)?.Pawn ?? PawnId.Empty;
         }
@@ -39,14 +44,12 @@ namespace Banchou.Player {
             return state.GetPlayer(playerId).PrefabKey;
         }
 
-        public static NetworkInfo GetPlayerNetworkInfo(this GameState state, PlayerId playerId) {
-            return state.GetPlayer(playerId).NetworkInfo;
+        public static Guid GetPlayerNetworkId(this GameState state, PlayerId playerId) {
+            return state.GetPlayer(playerId)?.NetworkId ?? Guid.Empty;
         }
 
         public static bool IsLocalPlayer(this GameState state, PlayerId playerId) {
-            var ip = state.GetIP();
-            var playerNetInfo = state.GetPlayerNetworkInfo(playerId);
-            return playerNetInfo.IP == ip;
+            return state.GetNetworkId() == state.GetPlayerNetworkId(playerId);
         }
 
         public static IDictionary<PlayerId, PlayerState> GetPlayers(this GameState state) {

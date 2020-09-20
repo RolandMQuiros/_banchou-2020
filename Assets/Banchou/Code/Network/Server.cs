@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 
 using LiteNetLib;
 using MessagePack;
@@ -23,7 +24,7 @@ namespace Banchou.Network {
         private MessagePackSerializerOptions _messagePackOptions;
         private EventBasedNetListener _listener;
         private NetManager _server;
-        private Dictionary<PlayerId, NetPeer> _peers;
+        private Dictionary<Guid, NetPeer> _peers;
         private IDisposable _poll;
         private IDisposable _connectReply;
 
@@ -39,26 +40,20 @@ namespace Banchou.Network {
         ) {
             _listener = new EventBasedNetListener();
             _server = new NetManager(_listener);
-            _peers = new Dictionary<PlayerId, NetPeer>();
+            _peers = new Dictionary<Guid, NetPeer>();
             _messagePackOptions = messagePackOptions;
             _dispatch = dispatch;
             _networkActions = networkActions;
 
             _listener.ConnectionRequestEvent += request => {
                 Debug.Log($"Connection request from {request.RemoteEndPoint.ToString()}");
+
                 if (_server.ConnectedPeersCount < 10) {
                     request.AcceptIfKey("BanchouConnectionKey");
                     Debug.Log($"Accepted connection from {request.RemoteEndPoint.ToString()}");
                 } else {
                     request.Reject();
                 }
-            };
-
-            _listener.PeerConnectedEvent += peer => {
-                // Add the peer as a player before sync'ing the client's state
-                var playerId = getState().CreatePlayerId();
-                _peers[playerId] = peer;
-                _dispatch(playerActions.AddPlayer(playerId, null, peer.EndPoint, peer.Id));
             };
 
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
@@ -70,6 +65,20 @@ namespace Banchou.Network {
 
                 // Deserialize payload
                 switch (envelope.PayloadType) {
+                    case PayloadType.ConnectPlayer: {
+                        var connect = MessagePackSerializer.Deserialize<ConnectPlayer>(envelope.Payload);
+
+                        // Add the peer as a player before sync'ing the client's state
+                        var playerId = getState().NextPlayerId();
+                        _peers[connect.ClientNetworkId] = fromPeer;
+                        _dispatch(
+                            playerActions.AddPlayer(
+                                playerId,
+                                name: connect.Name,
+                                networkId: connect.ClientNetworkId
+                            )
+                        );
+                    } break;
                     case PayloadType.PlayerCommand: {
                         var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload);
                         playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, when);
@@ -92,7 +101,8 @@ namespace Banchou.Network {
 
                     foreach (var playerId in newPlayers) {
                         NetPeer peer;
-                        if (_peers.TryGetValue(playerId, out peer)) {
+                        var networkId = delta.Current.GetPlayerNetworkId(playerId);
+                        if (_peers.TryGetValue(networkId, out peer)) {
                             var memoryStream = new MemoryStream((byte)PayloadType.SyncClient);
 
                             var gameStateStream = new MemoryStream();

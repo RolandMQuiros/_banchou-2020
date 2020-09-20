@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 
 using LiteNetLib;
@@ -17,12 +18,16 @@ using Banchou.Network.Message;
 
 namespace Banchou.Network {
     public class NetworkClient : IDisposable {
+        private Guid _networkId;
+        private MessagePackSerializerOptions _messagePackOptions;
         private EventBasedNetListener _listener;
         private NetManager _client;
         private NetPeer _peer;
-        private IDisposable _poll;
+
+        private CompositeDisposable _subscriptions = new CompositeDisposable();
 
         public NetworkClient(
+            Guid networkId,
             Dispatcher dispatch,
             NetworkActions networkActions,
             PlayerInputStreams playerInput,
@@ -30,6 +35,8 @@ namespace Banchou.Network {
             JsonSerializer jsonSerializer,
             MessagePackSerializerOptions messagePackOptions
         ) {
+            _networkId = networkId;
+            _messagePackOptions = messagePackOptions;
             _listener = new EventBasedNetListener();
             _client = new NetManager(_listener);
 
@@ -78,10 +85,13 @@ namespace Banchou.Network {
             _client.Start();
             _peer = _client.Connect(host, "BanchouConnectionKey");
             Debug.Log($"Connected to server at {_client.FirstPeer.EndPoint.ToString()}");
-            _poll = pollInterval
-                .Subscribe(_ => {
-                    _client.PollEvents();
-                });
+
+            _subscriptions.Add(
+                pollInterval
+                    .Subscribe(_ => {
+                        _client.PollEvents();
+                    })
+            );
 
             return this;
         }
@@ -90,7 +100,8 @@ namespace Banchou.Network {
             Debug.Log("Client shutting down");
             _client.Stop();
             Debug.Log("Client disconnected");
-            _poll.Dispose();
+
+            _subscriptions.Dispose();
         }
     }
 }

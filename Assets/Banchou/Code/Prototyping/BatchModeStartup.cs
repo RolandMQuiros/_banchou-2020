@@ -1,7 +1,6 @@
 ﻿using System;
 
 using Redux;
-using UniRx;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -40,11 +39,11 @@ namespace Banchou.Prototype {
                 SceneManager.LoadScene("BanchouBoard");
                 _dispatch(_networkActions.SetMode(Mode.Server));
 
-                var playerId = _getState().CreatePlayerId();
-                _dispatch(_playerActions.AddLocalPlayer(playerId, "Local Player"));
+                var playerId = _getState().NextPlayerId();
+                _dispatch(_playerActions.AddPlayer(playerId, "Local Player"));
                 _dispatch(_boardActions.SetScene("TestingGrounds"));
 
-                var pawnId = _getState().CreatePawnId();
+                var pawnId = _getState().NextPawnId();
                 _dispatch(_boardActions.AddPawn(pawnId, "Isaac", new Vector3(0f, 3f, 0f)));
                 _dispatch(_boardActions.AddPawn("Dumpster", new Vector3(10f, 3f, 5f)));
 

@@ -41,7 +41,7 @@ namespace Banchou.Board {
         ) => (dispatch, getState) => {
             dispatch(
                 new StateAction.AddPawn {
-                    PawnId = getState().CreatePawnId(),
+                    PawnId = getState().NextPawnId(),
                     PlayerId = PlayerId.Empty,
                     PrefabKey = prefabKey,
                     SpawnPosition = position,

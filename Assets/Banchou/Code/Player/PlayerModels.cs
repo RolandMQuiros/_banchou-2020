@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Collections.Generic;
 using System.ComponentModel;
 
@@ -33,28 +34,17 @@ namespace Banchou.Player {
         #endregion
     }
 
-    public class NetworkInfo {
-        public IPEndPoint IP;
-        public int PeerId;
-
-        public NetworkInfo() { }
-        public NetworkInfo(in NetworkInfo prev) {
-            IP = prev.IP;
-            PeerId = prev.PeerId;
-        }
-    }
-
     public class PlayerState {
         public string PrefabKey = string.Empty;
         public string Name = null;
-        public NetworkInfo NetworkInfo = null;
+        public Guid NetworkId = Guid.Empty;
         public PawnId Pawn = PawnId.Empty;
 
         public PlayerState() { }
         public PlayerState(in PlayerState prev) {
             PrefabKey = prev.PrefabKey;
             Name = prev.Name;
-            NetworkInfo = prev.NetworkInfo;
+            NetworkId = prev.NetworkId;
             Pawn = prev.Pawn;
         }
     }

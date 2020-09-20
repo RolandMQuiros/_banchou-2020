@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 using MessagePack;
 using Banchou.Player;
@@ -6,6 +7,7 @@ using Banchou.Pawn;
 
 namespace Banchou.Network.Message {
     public enum PayloadType : byte {
+        ConnectPlayer,
         ReduxAction,
         SyncClient,
         PlayerMove,
@@ -17,6 +19,22 @@ namespace Banchou.Network.Message {
     public struct Envelope {
         [Key(0)] public PayloadType PayloadType;
         [Key(1)] public byte[] Payload;
+
+        public static byte[] CreateMessage(PayloadType payloadType, object payload, MessagePackSerializerOptions options) {
+            return MessagePackSerializer.Serialize(
+                new Envelope {
+                    PayloadType = PayloadType.ConnectPlayer,
+                    Payload = MessagePackSerializer.Serialize(payload, options)
+                },
+                options
+            );
+        }
+    }
+
+    [MessagePackObject]
+    public struct ConnectPlayer {
+        [Key(0)] public Guid ClientNetworkId;
+        [Key(1)] public string Name;
     }
 
     [MessagePackObject]

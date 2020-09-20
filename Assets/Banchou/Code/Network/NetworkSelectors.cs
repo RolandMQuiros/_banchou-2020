@@ -1,9 +1,14 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 
 namespace Banchou.Network {
     public static class NetworkSelectors {
         public static Mode GetNetworkMode(this GameState state) {
             return state.Network.Mode;
+        }
+
+        public static Guid GetNetworkId(this GameState state) {
+            return state.Network.Id;
         }
 
         public static IPEndPoint GetIP(this GameState state) {

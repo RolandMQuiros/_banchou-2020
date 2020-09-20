@@ -4,7 +4,7 @@ using Banchou.Player;
 
 namespace Banchou.Pawn {
     public static class PawnSelectors {
-        public static PawnId CreatePawnId(this GameState state) {
+        public static PawnId NextPawnId(this GameState state) {
             var existingIds = new HashSet<int>(state.Pawns.States.Keys.Select(p => p.Id));
 
             if (existingIds.Count == 0) {

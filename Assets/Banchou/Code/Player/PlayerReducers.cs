@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using Banchou.Pawn;
 
@@ -12,10 +13,7 @@ namespace Banchou.Player {
                     States = new Dictionary<PlayerId, PlayerState>(prev.States) {
                         [add.PlayerId] = new PlayerState() {
                             PrefabKey = add.PrefabKey,
-                            NetworkInfo = new NetworkInfo {
-                                IP = add.IP ?? network.IP,
-                                PeerId = add.PeerId
-                            }
+                            NetworkId = add.NetworkId == Guid.Empty ? network.Id : add.NetworkId
                         }
                     }
                 };
@@ -62,7 +60,7 @@ namespace Banchou.Player {
 
             if (action is Network.StateAction.SyncGameState sync) {
                 var prevPlayers = prev.States;
-                var ip = network.IP;
+                var localNetworkId = network.Id;
                 return new PlayersState(prev) {
                     States = sync.GameState.GetPlayers()
                         .Select(pair => {
@@ -74,7 +72,7 @@ namespace Banchou.Player {
                                 return new KeyValuePair<PlayerId, PlayerState>(
                                     syncedPlayerId,
                                     new PlayerState(syncedPlayer) {
-                                        PrefabKey = syncedPlayer.NetworkInfo.IP == ip ? syncedPlayer.PrefabKey : null
+                                        PrefabKey = syncedPlayer.NetworkId == localNetworkId ? syncedPlayer.PrefabKey : null
                                     }
                                 );
                             }

@@ -44,13 +44,13 @@ namespace Banchou.Pawn {
 
         public void Construct(
             PawnId pawnId,
-            IObservable<GameState> observeState,
+            IObservable<GameState> onStateUpdate,
             Dispatcher dispatch,
             PlayerInputStreams playerInput,
-            IObservable<Network.Message.SyncPawn> observePawnSyncs = null
+            IObservable<Network.Message.SyncPawn> onPawnSync = null
         ) {
             PawnId = pawnId;
-            _observeState = observeState;
+            _observeState = onStateUpdate;
             _pawnActions = new PawnActions(PawnId);
             _playerInput = playerInput;
 
@@ -65,8 +65,8 @@ namespace Banchou.Pawn {
                 _agent.updateRotation = false;
             }
 
-            if (observePawnSyncs != null) {
-                observePawnSyncs
+            if (onPawnSync != null) {
+                onPawnSync
                     .Subscribe(syncPawn => {
                         if (_rigidbody != null) {
                             _rigidbody.position = syncPawn.Position;
