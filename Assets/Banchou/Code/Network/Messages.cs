@@ -38,6 +38,11 @@ namespace Banchou.Network.Message {
     }
 
     [MessagePackObject]
+    public struct ReduxAction {
+        [Key(0)] public byte[] ActionBytes;
+    }
+
+    [MessagePackObject]
     public struct SyncClient {
         [Key(0)] public PlayerId PlayerId;
         [Key(1)] public byte[] GameStateBytes;

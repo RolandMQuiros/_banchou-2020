@@ -105,5 +105,4 @@ namespace Banchou.Pawn {
             LatestFSMChange = prev.LatestFSMChange;
         }
     }
-
 }

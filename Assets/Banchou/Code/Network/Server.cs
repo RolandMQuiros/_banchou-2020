@@ -46,11 +46,11 @@ namespace Banchou.Network {
             _networkActions = networkActions;
 
             _listener.ConnectionRequestEvent += request => {
-                Debug.Log($"Connection request from {request.RemoteEndPoint.ToString()}");
+                Debug.Log($"Connection request from {request.RemoteEndPoint}");
 
                 if (_server.ConnectedPeersCount < 10) {
                     request.AcceptIfKey("BanchouConnectionKey");
-                    Debug.Log($"Accepted connection from {request.RemoteEndPoint.ToString()}");
+                    Debug.Log($"Accepted connection from {request.RemoteEndPoint}");
                 } else {
                     request.Reject();
                 }
@@ -103,29 +103,21 @@ namespace Banchou.Network {
                         NetPeer peer;
                         var networkId = delta.Current.GetPlayerNetworkId(playerId);
                         if (_peers.TryGetValue(networkId, out peer)) {
-                            var memoryStream = new MemoryStream((byte)PayloadType.SyncClient);
-
                             var gameStateStream = new MemoryStream();
                             using (var writer = new BsonWriter(gameStateStream)) {
                                 jsonSerializer.Serialize(writer, delta.Current);
                             }
 
-                            MessagePackSerializer.Serialize(
-                                memoryStream,
-                                new Envelope {
-                                    PayloadType = PayloadType.SyncClient,
-                                    Payload = MessagePackSerializer.Serialize(
-                                        new SyncClient {
-                                            PlayerId = playerId,
-                                            GameStateBytes = gameStateStream.ToArray()
-                                        },
-                                        _messagePackOptions
-                                    )
+                            var syncClientMessage = Envelope.CreateMessage(
+                                PayloadType.SyncClient,
+                                new SyncClient {
+                                    PlayerId = playerId,
+                                    GameStateBytes = gameStateStream.ToArray()
                                 },
                                 _messagePackOptions
                             );
 
-                            peer.Send(memoryStream.ToArray(), DeliveryMethod.ReliableOrdered);
+                            peer.Send(syncClientMessage, DeliveryMethod.ReliableOrdered);
                         }
                     }
                 });
@@ -154,7 +146,7 @@ namespace Banchou.Network {
                 .Subscribe(_ => {
                     _server.PollEvents();
                 });
-            // _dispatch(_networkActions.Started(_server.Peer))
+            //_dispatch(_networkActions.Started(_server.Peer))
             return this;
         }
 
@@ -185,10 +177,10 @@ namespace Banchou.Network {
                             }
 
                             // Pack into envelope and serialize to bytestream
-                            actionBytes = MessagePackSerializer.Serialize(
-                                new Envelope {
-                                    PayloadType = PayloadType.ReduxAction,
-                                    Payload = actionStream.ToArray()
+                            actionBytes = Envelope.CreateMessage(
+                                PayloadType.ReduxAction,
+                                new ReduxAction {
+                                    ActionBytes = actionStream.ToArray()
                                 },
                                 messagePackOptions
                             );

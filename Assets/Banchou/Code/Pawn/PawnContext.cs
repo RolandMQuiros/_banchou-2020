@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 using UnityEngine;
@@ -7,9 +6,8 @@ using UnityEngine.AI;
 using Redux;
 using UniRx;
 
-using Banchou.Board;
 using Banchou.DependencyInjection;
-using Banchou.Mob;
+using Banchou.Network.Message;
 using Banchou.Pawn.Part;
 using Banchou.Player;
 
@@ -45,9 +43,8 @@ namespace Banchou.Pawn {
         public void Construct(
             PawnId pawnId,
             IObservable<GameState> onStateUpdate,
-            Dispatcher dispatch,
             PlayerInputStreams playerInput,
-            IObservable<Network.Message.SyncPawn> onPawnSync = null
+            IObservable<SyncPawn> onPawnSync = null
         ) {
             PawnId = pawnId;
             _observeState = onStateUpdate;

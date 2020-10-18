@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net;
 
 using LiteNetLib;
@@ -57,7 +56,8 @@ namespace Banchou.Network {
                         }
                     } break;
                     case PayloadType.ReduxAction: {
-                        var bsonStream = new MemoryStream(envelope.Payload);
+                        var reduxAction = MessagePackSerializer.Deserialize<ReduxAction>(envelope.Payload, messagePackOptions);
+                        var bsonStream = new MemoryStream(reduxAction.ActionBytes);
                         using (var reader = new BsonReader(bsonStream)) {
                             var action = jsonSerializer.Deserialize(reader);
                             dispatch(action);
@@ -84,7 +84,7 @@ namespace Banchou.Network {
         public NetworkClient Start<T>(IPEndPoint host, IObservable<T> pollInterval) {
             _client.Start();
             _peer = _client.Connect(host, "BanchouConnectionKey");
-            Debug.Log($"Connected to server at {_client.FirstPeer.EndPoint.ToString()}");
+            Debug.Log($"Connected to server at {_client.FirstPeer.EndPoint}");
 
             _subscriptions.Add(
                 pollInterval
@@ -92,6 +92,17 @@ namespace Banchou.Network {
                         _client.PollEvents();
                     })
             );
+
+            var connectMessage = Envelope.CreateMessage(
+                PayloadType.ConnectPlayer,
+                new ConnectPlayer
+                {
+                    ClientNetworkId = _networkId,
+                    Name = _networkId.ToString()
+                },
+                _messagePackOptions
+            );
+            _peer.Send(connectMessage, DeliveryMethod.ReliableOrdered);
 
             return this;
         }
