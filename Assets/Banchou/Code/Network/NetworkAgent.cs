@@ -34,8 +34,8 @@ namespace Banchou.Network {
                 .Standard
                 .WithCompression(MessagePackCompression.Lz4BlockArray)
                 .WithResolver(CompositeResolver.Create(
-                    StandardResolver.Instance,
-                    BanchouMessagePackResolver.Instance
+                    BanchouMessagePackResolver.Instance,
+                    StandardResolver.Instance
                 ));
 
             var settings = JsonConvert.DefaultSettings();
