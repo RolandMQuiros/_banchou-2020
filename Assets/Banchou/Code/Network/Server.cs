@@ -65,19 +65,27 @@ namespace Banchou.Network {
 
                 // Deserialize payload
                 switch (envelope.PayloadType) {
-                    case PayloadType.ConnectPlayer: {
-                        var connect = MessagePackSerializer.Deserialize<ConnectPlayer>(envelope.Payload, _messagePackOptions);
+                    case PayloadType.ConnectClient: {
+                        var connect = MessagePackSerializer.Deserialize<ConnectClient>(envelope.Payload, _messagePackOptions);
 
-                        // Add the peer as a player before sync'ing the client's state
-                        var playerId = getState().NextPlayerId();
+                        // Sync the client's state
                         _peers[connect.ClientNetworkId] = fromPeer;
-                        _dispatch(
-                            playerActions.AddPlayer(
-                                playerId,
-                                name: connect.Name,
-                                networkId: connect.ClientNetworkId
-                            )
+
+                        var gameStateStream = new MemoryStream();
+                        using (var writer = new BsonWriter(gameStateStream)) {
+                            jsonSerializer.Serialize(writer, getState());
+                        }
+
+                        var syncClientMessage = Envelope.CreateMessage(
+                            PayloadType.SyncClient,
+                            new SyncClient {
+                                GameStateBytes = gameStateStream.ToArray()
+                            },
+                            _messagePackOptions
                         );
+
+                        fromPeer.Send(syncClientMessage, DeliveryMethod.ReliableOrdered);
+
                     } break;
                     case PayloadType.PlayerCommand: {
                         var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, _messagePackOptions);
@@ -91,36 +99,6 @@ namespace Banchou.Network {
 
                 dataReader.Recycle();
             };
-
-            // Sync new players' states
-            _connectReply = observeState
-                .DistinctUntilChanged(state => state.GetPlayers())
-                .Pairwise()
-                .Subscribe(delta => {
-                    var newPlayers = delta.Current.GetPlayerIds().Except(delta.Previous.GetPlayerIds());
-
-                    foreach (var playerId in newPlayers) {
-                        NetPeer peer;
-                        var networkId = delta.Current.GetPlayerNetworkId(playerId);
-                        if (_peers.TryGetValue(networkId, out peer)) {
-                            var gameStateStream = new MemoryStream();
-                            using (var writer = new BsonWriter(gameStateStream)) {
-                                jsonSerializer.Serialize(writer, delta.Current);
-                            }
-
-                            var syncClientMessage = Envelope.CreateMessage(
-                                PayloadType.SyncClient,
-                                new SyncClient {
-                                    PlayerId = playerId,
-                                    GameStateBytes = gameStateStream.ToArray()
-                                },
-                                _messagePackOptions
-                            );
-
-                            peer.Send(syncClientMessage, DeliveryMethod.ReliableOrdered);
-                        }
-                    }
-                });
 
             _instances.Add(this);
             Debug.Log("Server constructed");

@@ -20,19 +20,18 @@ namespace MessagePack.Formatters.Banchou.Network.Message
     using System.Buffers;
     using MessagePack;
 
-    public sealed class ConnectPlayerFormatter : global::MessagePack.Formatters.IMessagePackFormatter<global::Banchou.Network.Message.ConnectPlayer>
+    public sealed class ConnectClientFormatter : global::MessagePack.Formatters.IMessagePackFormatter<global::Banchou.Network.Message.ConnectClient>
     {
 
 
-        public void Serialize(ref MessagePackWriter writer, global::Banchou.Network.Message.ConnectPlayer value, global::MessagePack.MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, global::Banchou.Network.Message.ConnectClient value, global::MessagePack.MessagePackSerializerOptions options)
         {
             IFormatterResolver formatterResolver = options.Resolver;
-            writer.WriteArrayHeader(2);
+            writer.WriteArrayHeader(1);
             formatterResolver.GetFormatterWithVerify<global::System.Guid>().Serialize(ref writer, value.ClientNetworkId, options);
-            formatterResolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.Name, options);
         }
 
-        public global::Banchou.Network.Message.ConnectPlayer Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
+        public global::Banchou.Network.Message.ConnectClient Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -43,7 +42,6 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             IFormatterResolver formatterResolver = options.Resolver;
             var length = reader.ReadArrayHeader();
             var __ClientNetworkId__ = default(global::System.Guid);
-            var __Name__ = default(string);
 
             for (int i = 0; i < length; i++)
             {
@@ -54,18 +52,14 @@ namespace MessagePack.Formatters.Banchou.Network.Message
                     case 0:
                         __ClientNetworkId__ = formatterResolver.GetFormatterWithVerify<global::System.Guid>().Deserialize(ref reader, options);
                         break;
-                    case 1:
-                        __Name__ = formatterResolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
-                        break;
                     default:
                         reader.Skip();
                         break;
                 }
             }
 
-            var ____result = new global::Banchou.Network.Message.ConnectPlayer();
+            var ____result = new global::Banchou.Network.Message.ConnectClient();
             ____result.ClientNetworkId = __ClientNetworkId__;
-            ____result.Name = __Name__;
             reader.Depth--;
             return ____result;
         }

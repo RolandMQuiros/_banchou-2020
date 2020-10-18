@@ -27,8 +27,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
         public void Serialize(ref MessagePackWriter writer, global::Banchou.Network.Message.SyncClient value, global::MessagePack.MessagePackSerializerOptions options)
         {
             IFormatterResolver formatterResolver = options.Resolver;
-            writer.WriteArrayHeader(2);
-            formatterResolver.GetFormatterWithVerify<global::Banchou.Player.PlayerId>().Serialize(ref writer, value.PlayerId, options);
+            writer.WriteArrayHeader(1);
             formatterResolver.GetFormatterWithVerify<byte[]>().Serialize(ref writer, value.GameStateBytes, options);
         }
 
@@ -42,7 +41,6 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             options.Security.DepthStep(ref reader);
             IFormatterResolver formatterResolver = options.Resolver;
             var length = reader.ReadArrayHeader();
-            var __PlayerId__ = default(global::Banchou.Player.PlayerId);
             var __GameStateBytes__ = default(byte[]);
 
             for (int i = 0; i < length; i++)
@@ -52,9 +50,6 @@ namespace MessagePack.Formatters.Banchou.Network.Message
                 switch (key)
                 {
                     case 0:
-                        __PlayerId__ = formatterResolver.GetFormatterWithVerify<global::Banchou.Player.PlayerId>().Deserialize(ref reader, options);
-                        break;
-                    case 1:
                         __GameStateBytes__ = formatterResolver.GetFormatterWithVerify<byte[]>().Deserialize(ref reader, options);
                         break;
                     default:
@@ -64,7 +59,6 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             }
 
             var ____result = new global::Banchou.Network.Message.SyncClient();
-            ____result.PlayerId = __PlayerId__;
             ____result.GameStateBytes = __GameStateBytes__;
             reader.Depth--;
             return ____result;

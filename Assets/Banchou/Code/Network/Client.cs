@@ -94,12 +94,8 @@ namespace Banchou.Network {
             );
 
             var connectMessage = Envelope.CreateMessage(
-                PayloadType.ConnectPlayer,
-                new ConnectPlayer
-                {
-                    ClientNetworkId = _networkId,
-                    Name = _networkId.ToString()
-                },
+                PayloadType.ConnectClient,
+                new ConnectClient { ClientNetworkId = _networkId },
                 _messagePackOptions
             );
             _peer.Send(connectMessage, DeliveryMethod.ReliableOrdered);

@@ -53,7 +53,7 @@ namespace MessagePack.Resolvers
             {
                 { typeof(global::Banchou.Network.Message.PayloadType), 0 },
                 { typeof(global::Banchou.Player.InputCommand), 1 },
-                { typeof(global::Banchou.Network.Message.ConnectPlayer), 2 },
+                { typeof(global::Banchou.Network.Message.ConnectClient), 2 },
                 { typeof(global::Banchou.Network.Message.Envelope), 3 },
                 { typeof(global::Banchou.Network.Message.PlayerCommand), 4 },
                 { typeof(global::Banchou.Network.Message.PlayerMove), 5 },
@@ -77,7 +77,7 @@ namespace MessagePack.Resolvers
             {
                 case 0: return new MessagePack.Formatters.Banchou.Network.Message.PayloadTypeFormatter();
                 case 1: return new MessagePack.Formatters.Banchou.Player.InputCommandFormatter();
-                case 2: return new MessagePack.Formatters.Banchou.Network.Message.ConnectPlayerFormatter();
+                case 2: return new MessagePack.Formatters.Banchou.Network.Message.ConnectClientFormatter();
                 case 3: return new MessagePack.Formatters.Banchou.Network.Message.EnvelopeFormatter();
                 case 4: return new MessagePack.Formatters.Banchou.Network.Message.PlayerCommandFormatter();
                 case 5: return new MessagePack.Formatters.Banchou.Network.Message.PlayerMoveFormatter();
