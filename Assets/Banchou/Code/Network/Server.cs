@@ -66,7 +66,7 @@ namespace Banchou.Network {
                 // Deserialize payload
                 switch (envelope.PayloadType) {
                     case PayloadType.ConnectPlayer: {
-                        var connect = MessagePackSerializer.Deserialize<ConnectPlayer>(envelope.Payload);
+                        var connect = MessagePackSerializer.Deserialize<ConnectPlayer>(envelope.Payload, _messagePackOptions);
 
                         // Add the peer as a player before sync'ing the client's state
                         var playerId = getState().NextPlayerId();
@@ -80,11 +80,11 @@ namespace Banchou.Network {
                         );
                     } break;
                     case PayloadType.PlayerCommand: {
-                        var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload);
+                        var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, _messagePackOptions);
                         playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, when);
                     } break;
                     case PayloadType.PlayerMove: {
-                        var playerMove = MessagePackSerializer.Deserialize<PlayerMove>(envelope.Payload);
+                        var playerMove = MessagePackSerializer.Deserialize<PlayerMove>(envelope.Payload, _messagePackOptions);
                         playerInput.PushMove(playerMove.PlayerId, playerMove.Direction, when);
                     } break;
                 }

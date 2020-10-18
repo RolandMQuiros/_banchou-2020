@@ -35,6 +35,8 @@ namespace Banchou.Network {
                 .WithCompression(MessagePackCompression.Lz4BlockArray)
                 .WithResolver(CompositeResolver.Create(
                     BanchouMessagePackResolver.Instance,
+                    MessagePack.Unity.UnityResolver.Instance,
+
                     StandardResolver.Instance
                 ));
 
