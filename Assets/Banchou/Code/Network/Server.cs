@@ -56,6 +56,32 @@ namespace Banchou.Network {
                 }
             };
 
+            _listener.PeerConnectedEvent += peer => {
+                Debug.Log($"Setting up client connection from {peer.EndPoint}");
+
+                // Generate a new network ID
+                var newNetworkId = Guid.NewGuid();
+                _peers[newNetworkId] = peer;
+
+                // Sync the client's state
+                var gameStateStream = new MemoryStream();
+                using (var writer = new BsonWriter(gameStateStream)) {
+                    jsonSerializer.Serialize(writer, getState());
+                }
+
+                var syncClientMessage = Envelope.CreateMessage(
+                    PayloadType.SyncClient,
+                    new SyncClient {
+                        ClientNetworkId = newNetworkId,
+                        GameStateBytes = gameStateStream.ToArray(),
+                        When = DateTime.UtcNow
+                    },
+                    _messagePackOptions
+                );
+
+                peer.Send(syncClientMessage, DeliveryMethod.ReliableOrdered);
+            };
+
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
                 // Calculate when the event was sent
                 var when = Time.fixedUnscaledTime - (fromPeer.Ping / 1000f);
@@ -67,10 +93,9 @@ namespace Banchou.Network {
                 switch (envelope.PayloadType) {
                     case PayloadType.ConnectClient: {
                         var connect = MessagePackSerializer.Deserialize<ConnectClient>(envelope.Payload, _messagePackOptions);
-
-                        // Sync the client's state
                         _peers[connect.ClientNetworkId] = fromPeer;
 
+                        // Sync the client's state
                         var gameStateStream = new MemoryStream();
                         using (var writer = new BsonWriter(gameStateStream)) {
                             jsonSerializer.Serialize(writer, getState());
@@ -85,7 +110,6 @@ namespace Banchou.Network {
                         );
 
                         fromPeer.Send(syncClientMessage, DeliveryMethod.ReliableOrdered);
-
                     } break;
                     case PayloadType.PlayerCommand: {
                         var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, _messagePackOptions);

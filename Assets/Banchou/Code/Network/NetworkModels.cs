@@ -9,7 +9,7 @@ namespace Banchou.Network {
     }
 
     public class NetworkState {
-        public Guid Id = Guid.NewGuid();
+        public Guid Id = Guid.Empty;
         public Mode Mode = Mode.Local;
         public int PeerId = 0;
         public bool IsConnecting = false;
@@ -17,6 +17,7 @@ namespace Banchou.Network {
 
         public NetworkState() { }
         public NetworkState(in NetworkState prev) {
+            Id = prev.Id;
             Mode = prev.Mode;
             PeerId = prev.PeerId;
             IsConnecting = prev.IsConnecting;

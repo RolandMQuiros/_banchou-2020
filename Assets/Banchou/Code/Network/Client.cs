@@ -52,6 +52,7 @@ namespace Banchou.Network {
                         var bsonStream = new MemoryStream(syncClient.GameStateBytes);
                         using (var reader = new BsonReader(bsonStream)) {
                             var gameState = jsonSerializer.Deserialize<GameState>(reader);
+                            dispatch(networkActions.ConnectedToServer(syncClient.ClientNetworkId, syncClient.When));
                             dispatch(networkActions.SyncGameState(gameState));
                         }
                     } break;
@@ -92,13 +93,6 @@ namespace Banchou.Network {
                         _client.PollEvents();
                     })
             );
-
-            var connectMessage = Envelope.CreateMessage(
-                PayloadType.ConnectClient,
-                new ConnectClient { ClientNetworkId = _networkId },
-                _messagePackOptions
-            );
-            _peer.Send(connectMessage, DeliveryMethod.ReliableOrdered);
 
             return this;
         }
