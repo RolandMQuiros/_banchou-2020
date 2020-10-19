@@ -75,7 +75,6 @@ namespace Banchou.Network {
                                 getState,
                                 dispatch,
                                 networkActions,
-                                playerActions,
                                 playerInput,
                                 jsonSerializer,
                                 messagePackOptions
