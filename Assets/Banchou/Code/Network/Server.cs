@@ -26,14 +26,12 @@ namespace Banchou.Network {
         private NetManager _server;
         private Dictionary<Guid, NetPeer> _peers;
         private IDisposable _poll;
-        private IDisposable _connectReply;
 
         public NetworkServer(
             IObservable<GameState> observeState,
             GetState getState,
             Dispatcher dispatch,
             NetworkActions networkActions,
-            PlayersActions playerActions,
             PlayerInputStreams playerInput,
             JsonSerializer jsonSerializer,
             MessagePackSerializerOptions messagePackOptions
@@ -94,6 +92,8 @@ namespace Banchou.Network {
                     case PayloadType.ConnectClient: {
                         var connect = MessagePackSerializer.Deserialize<ConnectClient>(envelope.Payload, _messagePackOptions);
                         _peers[connect.ClientNetworkId] = fromPeer;
+
+                        Debug.Log($"Syncing client at {fromPeer.EndPoint}");
 
                         // Sync the client's state
                         var gameStateStream = new MemoryStream();
@@ -158,7 +158,6 @@ namespace Banchou.Network {
             Debug.Log("Server stopped");
 
             _poll.Dispose();
-            _connectReply.Dispose();
             _instances.Remove(this);
         }
 
