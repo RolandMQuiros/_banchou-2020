@@ -129,17 +129,14 @@ namespace Banchou.Network {
         }
 
         public void SyncPawn(SyncPawn syncPawn) {
-            var memoryStream = new MemoryStream();
-            memoryStream.WriteByte((byte)PayloadType.SyncPawn);
-
-            MessagePackSerializer.Serialize(
-                memoryStream,
+            var syncPawnMessage = Envelope.CreateMessage(
+                PayloadType.SyncPawn,
                 syncPawn,
                 _messagePackOptions
             );
 
             foreach (var peer in _peers.Values) {
-                peer.Send(memoryStream.ToArray(), DeliveryMethod.Sequenced);
+                peer.Send(syncPawnMessage, DeliveryMethod.Sequenced);
             }
         }
 
