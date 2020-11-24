@@ -60,15 +60,12 @@ namespace Banchou.Network {
                                 dispatch,
                                 networkActions,
                                 playerInput,
-                                sync => {
-                                    _pulledPawnSync.OnNext(sync);
-                                    Debug.Log("Pulled PawnSync");
-                                },
+                                sync => _pulledPawnSync.OnNext(sync),
                                 jsonSerializer,
                                 messagePackOptions
                             ).Start(
                                 new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9050),
-                                Observable.Interval(TimeSpan.FromSeconds(1))
+                                Observable.EveryFixedUpdate()
                             );
                             _agent = _client;
                             break;
@@ -94,7 +91,6 @@ namespace Banchou.Network {
 
         public void PushPawnSync(SyncPawn syncPawn) {
             _server?.SyncPawn(syncPawn);
-            Debug.Log("Pushed PawnSync");
         }
 
         public void WriteNet(NetLogLevel level, string str, params object[] args) {

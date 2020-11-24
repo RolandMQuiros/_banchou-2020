@@ -3,8 +3,8 @@ using System.Linq;
 
 using UnityEngine;
 using UnityEngine.AI;
-using Redux;
 using UniRx;
+using UniRx.Triggers;
 
 using Banchou.DependencyInjection;
 using Banchou.Network.Message;
@@ -63,12 +63,22 @@ namespace Banchou.Pawn {
             }
 
             if (onPawnSync != null) {
-                onPawnSync
+                this.FixedUpdateAsObservable()
+                    .WithLatestFrom(onPawnSync, (_, syncPawn) => syncPawn)
+                    .Where(syncPawn => syncPawn.PawnId == PawnId)
                     .Subscribe(syncPawn => {
                         if (_rigidbody != null) {
-                            _rigidbody.position = syncPawn.Position;
+                            _rigidbody.transform.position = Vector3.MoveTowards(
+                                _rigidbody.transform.position,
+                                syncPawn.Position,
+                                100f * Time.fixedDeltaTime
+                            );
                         } else {
-                            transform.position = syncPawn.Position;
+                            transform.position = Vector3.MoveTowards(
+                                transform.position,
+                                syncPawn.Position,
+                                100f * Time.fixedDeltaTime
+                            );
                         }
 
                         if (_orientation != null) {
