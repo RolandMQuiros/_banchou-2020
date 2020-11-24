@@ -45,7 +45,7 @@ namespace Banchou.Network.Message {
     public struct SyncClient {
         [Key(0)] public Guid ClientNetworkId;
         [Key(1)] public byte[] GameStateBytes;
-        [Key(3)] public DateTime When;
+        [Key(2)] public DateTime When;
     }
 
     [MessagePackObject]
