@@ -153,6 +153,10 @@ namespace MessagePack.Unity.Editor
                     var log = await ProcessHelper.InvokeProcessStartAsync("dotnet", "mpc " + commnadLineArguments);
                     UnityEngine.Debug.Log(log);
                 }
+                catch(Exception error)
+                {
+                    UnityEngine.Debug.LogError(error);
+                }
                 finally
                 {
                     invokingMpc = false;

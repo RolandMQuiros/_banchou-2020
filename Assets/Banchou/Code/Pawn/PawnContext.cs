@@ -72,9 +72,9 @@ namespace Banchou.Pawn {
                         }
 
                         if (_orientation != null) {
-                            _orientation.transform.rotation = syncPawn.Rotation;
+                            _orientation.transform.rotation = Quaternion.LookRotation(syncPawn.Forward);
                         } else {
-                            transform.rotation = syncPawn.Rotation;
+                            transform.rotation = Quaternion.LookRotation(syncPawn.Forward);
                         }
                     })
                     .AddTo(this);

@@ -30,7 +30,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             writer.WriteArrayHeader(3);
             formatterResolver.GetFormatterWithVerify<global::Banchou.Pawn.PawnId>().Serialize(ref writer, value.PawnId, options);
             formatterResolver.GetFormatterWithVerify<global::UnityEngine.Vector3>().Serialize(ref writer, value.Position, options);
-            formatterResolver.GetFormatterWithVerify<global::UnityEngine.Quaternion>().Serialize(ref writer, value.Rotation, options);
+            formatterResolver.GetFormatterWithVerify<global::UnityEngine.Vector3>().Serialize(ref writer, value.Forward, options);
         }
 
         public global::Banchou.Network.Message.SyncPawn Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
@@ -45,7 +45,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             var length = reader.ReadArrayHeader();
             var __PawnId__ = default(global::Banchou.Pawn.PawnId);
             var __Position__ = default(global::UnityEngine.Vector3);
-            var __Rotation__ = default(global::UnityEngine.Quaternion);
+            var __Forward__ = default(global::UnityEngine.Vector3);
 
             for (int i = 0; i < length; i++)
             {
@@ -60,7 +60,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
                         __Position__ = formatterResolver.GetFormatterWithVerify<global::UnityEngine.Vector3>().Deserialize(ref reader, options);
                         break;
                     case 2:
-                        __Rotation__ = formatterResolver.GetFormatterWithVerify<global::UnityEngine.Quaternion>().Deserialize(ref reader, options);
+                        __Forward__ = formatterResolver.GetFormatterWithVerify<global::UnityEngine.Vector3>().Deserialize(ref reader, options);
                         break;
                     default:
                         reader.Skip();
@@ -71,7 +71,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             var ____result = new global::Banchou.Network.Message.SyncPawn();
             ____result.PawnId = __PawnId__;
             ____result.Position = __Position__;
-            ____result.Rotation = __Rotation__;
+            ____result.Forward = __Forward__;
             reader.Depth--;
             return ____result;
         }

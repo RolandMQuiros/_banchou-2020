@@ -64,7 +64,7 @@ namespace Banchou.Network.Message {
     public struct SyncPawn {
         [Key(0)] public PawnId PawnId;
         [Key(1)] public Vector3 Position;
-        [Key(2)] public Quaternion Rotation;
+        [Key(2)] public Vector3 Forward;
     }
 
     public delegate void PullPawnSync(SyncPawn syncPawn);
