@@ -11,10 +11,9 @@ namespace Banchou.Pawn.Part {
         public void Construct(
             PawnId pawnId,
             IObservable<GameState> onStateUpdate,
-            PushPawnSync pushPawnSync,
-            IPawnInstances pawnInstances
+            PushPawnSync pushPawnSync
         ) {
-            var pawn = pawnInstances.Get(pawnId);
+            var pawn = GetComponent<IPawnInstance>();
 
             onStateUpdate
                 .Select(state => state.Network.Id)
