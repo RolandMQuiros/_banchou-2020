@@ -64,27 +64,29 @@ namespace Banchou.Pawn {
 
             if (onPawnSync != null) {
                 this.FixedUpdateAsObservable()
-                    .WithLatestFrom(onPawnSync, (_, syncPawn) => syncPawn)
-                    .Where(syncPawn => syncPawn.PawnId == PawnId)
+                    .WithLatestFrom(
+                        onPawnSync.Where(syncPawn => syncPawn.PawnId == PawnId),
+                        (_, syncPawn) => syncPawn
+                    )
                     .Subscribe(syncPawn => {
-                        if (_rigidbody != null) {
-                            _rigidbody.transform.position = Vector3.MoveTowards(
-                                _rigidbody.transform.position,
-                                syncPawn.Position,
-                                100f * Time.fixedDeltaTime
-                            );
-                        } else {
-                            transform.position = Vector3.MoveTowards(
-                                transform.position,
-                                syncPawn.Position,
-                                100f * Time.fixedDeltaTime
-                            );
-                        }
+                        transform.position = Vector3.MoveTowards(
+                            transform.position,
+                            syncPawn.Position,
+                            Mathf.Pow(10f, Mathf.Floor(Mathf.Log10((transform.position - syncPawn.Position).magnitude)))
+                        );
 
                         if (_orientation != null) {
-                            _orientation.transform.rotation = Quaternion.LookRotation(syncPawn.Forward);
+                            _orientation.transform.rotation = Quaternion.RotateTowards(
+                                _orientation.transform.rotation,
+                                Quaternion.LookRotation(syncPawn.Forward),
+                                360f * Time.fixedDeltaTime
+                            );
                         } else {
-                            transform.rotation = Quaternion.LookRotation(syncPawn.Forward);
+                            transform.rotation = Quaternion.RotateTowards(
+                                transform.rotation,
+                                Quaternion.LookRotation(syncPawn.Forward),
+                                360f * Time.fixedDeltaTime
+                            );
                         }
                     })
                     .AddTo(this);

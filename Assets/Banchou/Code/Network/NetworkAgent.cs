@@ -7,7 +7,6 @@ using LiteNetLib;
 using Newtonsoft.Json;
 using Redux;
 using UniRx;
-using UniRx.Triggers;
 using UnityEngine;
 
 using Banchou.Network.Message;
@@ -78,7 +77,7 @@ namespace Banchou.Network {
                                 playerInput,
                                 jsonSerializer,
                                 messagePackOptions
-                            ).Start(this.LateUpdateAsObservable());
+                            ).Start(Observable.EveryFixedUpdate());
                             _agent = _server;
                             break;
                     }

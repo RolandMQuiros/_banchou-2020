@@ -29,7 +29,8 @@ namespace Banchou.Pawn.Part {
                             Forward = pawn.Forward
                         }
                     );
-                });
+                })
+                .AddTo(this);
         }
     }
 
