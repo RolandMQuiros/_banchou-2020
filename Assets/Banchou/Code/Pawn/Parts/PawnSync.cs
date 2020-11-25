@@ -11,7 +11,8 @@ namespace Banchou.Pawn.Part {
         public void Construct(
             PawnId pawnId,
             IObservable<GameState> onStateUpdate,
-            PushPawnSync pushPawnSync
+            PushPawnSync pushPawnSync,
+            Animator animator = null
         ) {
             var pawn = GetComponent<IPawnInstance>();
 
@@ -22,11 +23,15 @@ namespace Banchou.Pawn.Part {
                 .SelectMany(_ => this.UpdateAsObservable())
                 .SampleFrame(_frequency, FrameCountType.Update)
                 .Subscribe(_ => {
+                    var stateInfo = animator?.GetCurrentAnimatorStateInfo(0);
+
                     pushPawnSync(
                         new SyncPawn {
                             PawnId = pawnId,
                             Position = pawn.Position,
-                            Forward = pawn.Forward
+                            Forward = pawn.Forward,
+                            StateHash = stateInfo?.fullPathHash ?? 0,
+                            StateNormalizedTime = stateInfo?.normalizedTime ?? 0
                         }
                     );
                 })

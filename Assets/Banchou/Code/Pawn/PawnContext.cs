@@ -69,24 +69,36 @@ namespace Banchou.Pawn {
                         (_, syncPawn) => syncPawn
                     )
                     .Subscribe(syncPawn => {
-                        transform.position = Vector3.MoveTowards(
+                        var newPosition = Vector3.MoveTowards(
                             transform.position,
                             syncPawn.Position,
                             Mathf.Pow(10f, Mathf.Floor(Mathf.Log10((transform.position - syncPawn.Position).magnitude)))
                         );
 
+                        var delta = newPosition - transform.position;
+                        if (delta.magnitude > 1f) {
+                            Debug.Log($"Jumped from {transform.position} to {newPosition}");
+                        }
+
+                        transform.position = newPosition;
+
+                        var targetRotation = Quaternion.LookRotation(syncPawn.Forward);
                         if (_orientation != null) {
                             _orientation.transform.rotation = Quaternion.RotateTowards(
                                 _orientation.transform.rotation,
-                                Quaternion.LookRotation(syncPawn.Forward),
-                                360f * Time.fixedDeltaTime
+                                targetRotation,
+                                Mathf.Pow(10f, Mathf.Floor(Mathf.Log10(Quaternion.Angle(_orientation.transform.rotation, targetRotation))))
                             );
                         } else {
                             transform.rotation = Quaternion.RotateTowards(
                                 transform.rotation,
                                 Quaternion.LookRotation(syncPawn.Forward),
-                                360f * Time.fixedDeltaTime
+                                Mathf.Pow(10f, Mathf.Floor(Mathf.Log10(Quaternion.Angle(transform.rotation, targetRotation))))
                             );
+                        }
+
+                        if (_animator != null && syncPawn.StateHash != 0) {
+                            _animator.Play(syncPawn.StateHash, 0, syncPawn.StateNormalizedTime);
                         }
                     })
                     .AddTo(this);

@@ -27,10 +27,9 @@ namespace MessagePack.Formatters.Banchou.Network.Message
         public void Serialize(ref MessagePackWriter writer, global::Banchou.Network.Message.SyncClient value, global::MessagePack.MessagePackSerializerOptions options)
         {
             IFormatterResolver formatterResolver = options.Resolver;
-            writer.WriteArrayHeader(4);
+            writer.WriteArrayHeader(3);
             formatterResolver.GetFormatterWithVerify<global::System.Guid>().Serialize(ref writer, value.ClientNetworkId, options);
             formatterResolver.GetFormatterWithVerify<byte[]>().Serialize(ref writer, value.GameStateBytes, options);
-            writer.WriteNil();
             formatterResolver.GetFormatterWithVerify<global::System.DateTime>().Serialize(ref writer, value.When, options);
         }
 
@@ -60,7 +59,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
                     case 1:
                         __GameStateBytes__ = formatterResolver.GetFormatterWithVerify<byte[]>().Deserialize(ref reader, options);
                         break;
-                    case 3:
+                    case 2:
                         __When__ = formatterResolver.GetFormatterWithVerify<global::System.DateTime>().Deserialize(ref reader, options);
                         break;
                     default:

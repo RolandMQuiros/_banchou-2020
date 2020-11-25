@@ -27,10 +27,12 @@ namespace MessagePack.Formatters.Banchou.Network.Message
         public void Serialize(ref MessagePackWriter writer, global::Banchou.Network.Message.SyncPawn value, global::MessagePack.MessagePackSerializerOptions options)
         {
             IFormatterResolver formatterResolver = options.Resolver;
-            writer.WriteArrayHeader(3);
+            writer.WriteArrayHeader(5);
             formatterResolver.GetFormatterWithVerify<global::Banchou.Pawn.PawnId>().Serialize(ref writer, value.PawnId, options);
             formatterResolver.GetFormatterWithVerify<global::UnityEngine.Vector3>().Serialize(ref writer, value.Position, options);
             formatterResolver.GetFormatterWithVerify<global::UnityEngine.Vector3>().Serialize(ref writer, value.Forward, options);
+            writer.Write(value.StateHash);
+            writer.Write(value.StateNormalizedTime);
         }
 
         public global::Banchou.Network.Message.SyncPawn Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
@@ -46,6 +48,8 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             var __PawnId__ = default(global::Banchou.Pawn.PawnId);
             var __Position__ = default(global::UnityEngine.Vector3);
             var __Forward__ = default(global::UnityEngine.Vector3);
+            var __StateHash__ = default(int);
+            var __StateNormalizedTime__ = default(float);
 
             for (int i = 0; i < length; i++)
             {
@@ -62,6 +66,12 @@ namespace MessagePack.Formatters.Banchou.Network.Message
                     case 2:
                         __Forward__ = formatterResolver.GetFormatterWithVerify<global::UnityEngine.Vector3>().Deserialize(ref reader, options);
                         break;
+                    case 3:
+                        __StateHash__ = reader.ReadInt32();
+                        break;
+                    case 4:
+                        __StateNormalizedTime__ = reader.ReadSingle();
+                        break;
                     default:
                         reader.Skip();
                         break;
@@ -72,6 +82,8 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             ____result.PawnId = __PawnId__;
             ____result.Position = __Position__;
             ____result.Forward = __Forward__;
+            ____result.StateHash = __StateHash__;
+            ____result.StateNormalizedTime = __StateNormalizedTime__;
             reader.Depth--;
             return ____result;
         }
