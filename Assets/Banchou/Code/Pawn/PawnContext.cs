@@ -96,10 +96,6 @@ namespace Banchou.Pawn {
                                 Mathf.Pow(10f, Mathf.Floor(Mathf.Log10(Quaternion.Angle(transform.rotation, targetRotation))))
                             );
                         }
-
-                        if (_animator != null && syncPawn.StateHash != 0) {
-                            _animator.Play(syncPawn.StateHash, 0, syncPawn.StateNormalizedTime);
-                        }
                     })
                     .AddTo(this);
             }
