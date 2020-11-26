@@ -111,6 +111,17 @@ namespace Banchou.Network {
 
                         fromPeer.Send(syncClientMessage, DeliveryMethod.ReliableOrdered);
                     } break;
+                    case PayloadType.ServerTimeRequest: {
+                        var request = MessagePackSerializer.Deserialize<ServerTimeRequest>(envelope.Payload, _messagePackOptions);
+                        var response = Envelope.CreateMessage(
+                            PayloadType.ServerTimeResponse,
+                            new ServerTimeResponse {
+                                LocalTime = request.LocalTime,
+                                ServerTime = when
+                            },
+                            _messagePackOptions
+                        );
+                    } break;
                     case PayloadType.PlayerCommand: {
                         var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, _messagePackOptions);
                         playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, when);
@@ -138,6 +149,10 @@ namespace Banchou.Network {
             foreach (var peer in _peers.Values) {
                 peer.Send(syncPawnMessage, DeliveryMethod.Sequenced);
             }
+        }
+
+        public float GetTime() {
+            return Time.fixedUnscaledTime;
         }
 
         public NetworkServer Start<T>(IObservable<T> pollInterval) {

@@ -7,6 +7,7 @@ using UniRx;
 using UnityEngine;
 
 using Banchou.Player;
+using Banchou.Network;
 
 namespace Banchou.Pawn.Part {
     public class Rollback : MonoBehaviour {
@@ -17,6 +18,7 @@ namespace Banchou.Pawn.Part {
             PawnActions pawnActions,
             PlayerInputStreams playerInput,
             Subject<InputCommand> commandSubject,
+            GetServerTime getServerTime,
             Animator animator = null
         ) {
             if (animator != null) {
@@ -28,7 +30,7 @@ namespace Banchou.Pawn.Part {
                     .Where(s => s.StateHash != 0)
                     .DistinctUntilChanged()
                     .Subscribe(fsmState => {
-                        while (history.First?.Value.FixedTimeAtChange < Time.fixedUnscaledTime - 0.5f) {
+                        while (history.First?.Value.FixedTimeAtChange < getServerTime() - 0.5f) {
                             history.RemoveFirst();
                         }
                         // Always have at least one state change on the list
@@ -45,13 +47,13 @@ namespace Banchou.Pawn.Part {
                             .Select(unit => (
                                 Command: unit.Command,
                                 When: unit.When,
-                                Diff: Time.fixedUnscaledTime - unit.When
+                                Diff: getServerTime() - unit.When
                             ))
                     )
                     .CatchIgnoreLog()
                     .Subscribe(unit => {
                         if (unit.Diff > 0f && unit.Diff < 1f) {
-                            var now = Time.fixedUnscaledTime;
+                            var now = getServerTime();
                             var deltaTime = Time.fixedUnscaledDeltaTime;
 
                             var targetState = history.Aggregate((target, step) => {

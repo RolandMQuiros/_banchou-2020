@@ -58,10 +58,6 @@ namespace Banchou.Player {
             return this;
         }
 
-        public PlayerInputStreams PushMove(PlayerId playerId, Vector3 move) {
-            return PushMove(playerId, move, Time.fixedUnscaledTime);
-        }
-
         public PlayerInputStreams PushLook(PlayerId playerId, Vector3 look, float when) {
             _lookSubject.OnNext(new LookUnit {
                 PlayerId = playerId,
@@ -71,10 +67,6 @@ namespace Banchou.Player {
             return this;
         }
 
-        public PlayerInputStreams PushLook(PlayerId playerId, Vector3 look) {
-            return PushLook(playerId, look, Time.fixedUnscaledTime);
-        }
-
         public PlayerInputStreams PushCommand(PlayerId playerId, InputCommand command, float when) {
             _commandSubject.OnNext(new CommandUnit {
                 PlayerId = playerId,
@@ -82,10 +74,6 @@ namespace Banchou.Player {
                 When = when
             });
             return this;
-        }
-
-        public PlayerInputStreams PushCommand(PlayerId playerId, InputCommand command) {
-            return PushCommand(playerId, command, Time.fixedUnscaledTime);
         }
     }
 }

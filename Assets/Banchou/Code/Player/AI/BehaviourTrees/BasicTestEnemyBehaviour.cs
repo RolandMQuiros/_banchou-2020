@@ -10,6 +10,7 @@ using FluentBehaviourTree;
 using Banchou.Pawn;
 using Banchou.Combatant;
 using Banchou.Mob;
+using Banchou.Network;
 using Banchou.Player;
 
 namespace Banchou.AI {
@@ -21,7 +22,8 @@ namespace Banchou.AI {
             MobActions mobActions,
             CombatantActions combatantActions,
             IPawnInstances pawnInstances,
-            PlayerInputStreams playerInput
+            PlayerInputStreams playerInput,
+            GetServerTime getServerTime
         ) {
             var trees = new List<IBehaviourTreeNode<GameState>>();
 
@@ -43,7 +45,7 @@ namespace Banchou.AI {
                                 if (state.GetCombatantLockOnTarget(pawnId) != PawnId.Empty) {
                                     return BehaviourTreeStatus.Success;
                                 } else {
-                                    playerInput.PushCommand(playerId, InputCommand.LockOn, Time.fixedUnscaledTime);
+                                    playerInput.PushCommand(playerId, InputCommand.LockOn, getServerTime());
                                     return BehaviourTreeStatus.Running;
                                 }
                             })
@@ -64,7 +66,7 @@ namespace Banchou.AI {
                             })
                             .Do("Poke", state => {
                                 if (!poked) {
-                                    playerInput.PushCommand(playerId, InputCommand.LightAttack);
+                                    playerInput.PushCommand(playerId, InputCommand.LightAttack, getServerTime());
                                     poked = true;
                                     return BehaviourTreeStatus.Running;
                                 }
@@ -91,7 +93,7 @@ namespace Banchou.AI {
                             })
                             .Do("Disengage", state => {
                                 if (state.GetCombatantLockOnTarget(pawn.PawnId) != PawnId.Empty) {
-                                    playerInput.PushCommand(playerId, InputCommand.LockOff, Time.fixedUnscaledTime);
+                                    playerInput.PushCommand(playerId, InputCommand.LockOff, getServerTime());
                                     return BehaviourTreeStatus.Running;
                                 }
                                 poked = false;

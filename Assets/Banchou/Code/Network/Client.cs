@@ -23,6 +23,9 @@ namespace Banchou.Network {
         private NetManager _client;
         private NetPeer _peer;
 
+        private float _lastServerTime;
+        private float _lastLocalTime = float.MinValue;
+
         private CompositeDisposable _subscriptions = new CompositeDisposable();
 
         public NetworkClient(
@@ -47,6 +50,15 @@ namespace Banchou.Network {
 
                 // Using the type flag, check what we need to deserialize message into
                 switch (envelope.PayloadType) {
+                    case PayloadType.ServerTimeResponse: {
+                        var response = MessagePackSerializer.Deserialize<ServerTimeResponse>(envelope.Payload, messagePackOptions);
+                        // Requests are sent using unreliable delivery, so we should only care about the responses to the latest request
+                        if (response.LocalTime > _lastLocalTime) {
+                            // Ping compensation happens on the server, and we only need a frame of reference
+                            _lastLocalTime = response.LocalTime;
+                            _lastServerTime = response.ServerTime;
+                        }
+                    } break;
                     case PayloadType.SyncClient: {
                         var syncClient = MessagePackSerializer.Deserialize<SyncClient>(envelope.Payload, messagePackOptions);
                         var bsonStream = new MemoryStream(syncClient.GameStateBytes);
@@ -82,19 +94,49 @@ namespace Banchou.Network {
             };
         }
 
-        public NetworkClient Start<T>(IPEndPoint host, IObservable<T> pollInterval) {
+        /// <summary>
+        /// Connects the client to the specified host server
+        /// </summary>
+        /// <param name="host">The <see cref="IPEndPoint"/> of the host server</param>
+        /// <param name="pollInterval">How often to poll for network events. Should be comparable to framerate.</param>
+        /// <param name="timeInterval">How often to poll for server time</param>
+        /// <typeparam name="T">The interval unit types. Unused internally.</typeparam>
+        /// <returns>This <see cref="NetworkClient"/></returns>
+        public NetworkClient Start<T>(
+            IPEndPoint host,
+            IObservable<T> pollInterval,
+            IObservable<T> timeInterval
+        ) {
             _client.Start();
             _peer = _client.Connect(host, "BanchouConnectionKey");
             Debug.Log($"Connected to server at {_client.FirstPeer.EndPoint}");
 
             _subscriptions.Add(
-                pollInterval
-                    .Subscribe(_ => {
-                        _client.PollEvents();
-                    })
+                pollInterval.Subscribe(_ => { _client.PollEvents(); })
+            );
+
+            _subscriptions.Add(
+                timeInterval.Subscribe(_ => {
+                    var request = Envelope.CreateMessage(
+                        PayloadType.ServerTimeRequest,
+                        new ServerTimeRequest {
+                            LocalTime = Time.fixedUnscaledTime
+                        },
+                        _messagePackOptions
+                    );
+                    _peer.Send(request, DeliveryMethod.Unreliable);
+                })
             );
 
             return this;
+        }
+
+        /// <summary>
+        /// Estimates the server time based on the last received timestamp
+        /// </summary>
+        /// <returns>The estimated server time</returns>
+        public float GetTime() {
+            return _lastServerTime + (Time.fixedUnscaledTime - _lastLocalTime);
         }
 
         public void Dispose() {

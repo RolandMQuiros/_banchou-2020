@@ -49,7 +49,7 @@ namespace MessagePack.Resolvers
 
         static BanchouMessagePackResolverGetFormatterHelper()
         {
-            lookup = new global::System.Collections.Generic.Dictionary<Type, int>(11)
+            lookup = new global::System.Collections.Generic.Dictionary<Type, int>(13)
             {
                 { typeof(global::Banchou.Network.Message.PayloadType), 0 },
                 { typeof(global::Banchou.Player.InputCommand), 1 },
@@ -58,10 +58,12 @@ namespace MessagePack.Resolvers
                 { typeof(global::Banchou.Network.Message.PlayerCommand), 4 },
                 { typeof(global::Banchou.Network.Message.PlayerMove), 5 },
                 { typeof(global::Banchou.Network.Message.ReduxAction), 6 },
-                { typeof(global::Banchou.Network.Message.SyncClient), 7 },
-                { typeof(global::Banchou.Network.Message.SyncPawn), 8 },
-                { typeof(global::Banchou.Pawn.PawnId), 9 },
-                { typeof(global::Banchou.Player.PlayerId), 10 },
+                { typeof(global::Banchou.Network.Message.ServerTimeRequest), 7 },
+                { typeof(global::Banchou.Network.Message.ServerTimeResponse), 8 },
+                { typeof(global::Banchou.Network.Message.SyncClient), 9 },
+                { typeof(global::Banchou.Network.Message.SyncPawn), 10 },
+                { typeof(global::Banchou.Pawn.PawnId), 11 },
+                { typeof(global::Banchou.Player.PlayerId), 12 },
             };
         }
 
@@ -82,10 +84,12 @@ namespace MessagePack.Resolvers
                 case 4: return new MessagePack.Formatters.Banchou.Network.Message.PlayerCommandFormatter();
                 case 5: return new MessagePack.Formatters.Banchou.Network.Message.PlayerMoveFormatter();
                 case 6: return new MessagePack.Formatters.Banchou.Network.Message.ReduxActionFormatter();
-                case 7: return new MessagePack.Formatters.Banchou.Network.Message.SyncClientFormatter();
-                case 8: return new MessagePack.Formatters.Banchou.Network.Message.SyncPawnFormatter();
-                case 9: return new MessagePack.Formatters.Banchou.Pawn.PawnIdFormatter();
-                case 10: return new MessagePack.Formatters.Banchou.Player.PlayerIdFormatter();
+                case 7: return new MessagePack.Formatters.Banchou.Network.Message.ServerTimeRequestFormatter();
+                case 8: return new MessagePack.Formatters.Banchou.Network.Message.ServerTimeResponseFormatter();
+                case 9: return new MessagePack.Formatters.Banchou.Network.Message.SyncClientFormatter();
+                case 10: return new MessagePack.Formatters.Banchou.Network.Message.SyncPawnFormatter();
+                case 11: return new MessagePack.Formatters.Banchou.Pawn.PawnIdFormatter();
+                case 12: return new MessagePack.Formatters.Banchou.Player.PlayerIdFormatter();
                 default: return null;
             }
         }

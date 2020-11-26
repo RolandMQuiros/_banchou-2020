@@ -15,8 +15,7 @@ namespace Banchou.Prototype {
         private IObservable<GameState> _observeState;
         private Dispatcher _dispatch;
         private BoardActions _boardActions = new BoardActions();
-        private NetworkActions _networkActions = new NetworkActions();
-        // private PlayerActions _playerActions = new PlayerActions();
+        private NetworkActions _networkActions;
 
         public void Construct(
             IObservable<GameState> observeState,
@@ -29,7 +28,6 @@ namespace Banchou.Prototype {
             _dispatch = dispatch;
             _boardActions = boardActions;
             _networkActions = networkActions;
-            // _playerActions = playerActions;
         }
 
         public void Connect() {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Redux;
 
 using UnityEngine;
 using UnityEngine.AI;
@@ -7,6 +8,7 @@ using UniRx;
 using UniRx.Triggers;
 
 using Banchou.DependencyInjection;
+using Banchou.Network;
 using Banchou.Network.Message;
 using Banchou.Pawn.Part;
 using Banchou.Player;
@@ -33,6 +35,8 @@ namespace Banchou.Pawn {
         public Vector3 Position { get => _rigidbody?.position ?? transform.position; }
         public Vector3 Forward { get => _orientation?.transform.forward ?? transform.forward; }
 
+        private Dispatcher _dispatch;
+        private GetState _getState;
         private PawnActions _pawnActions;
         private IObservable<GameState> _observeState;
         private PlayerInputStreams _playerInput;
@@ -42,11 +46,15 @@ namespace Banchou.Pawn {
 
         public void Construct(
             PawnId pawnId,
+            Dispatcher dispatch,
+            GetState getState,
             IObservable<GameState> onStateUpdate,
             PlayerInputStreams playerInput,
             IObservable<SyncPawn> onPawnSync = null
         ) {
             PawnId = pawnId;
+            _dispatch = dispatch;
+            _getState = getState;
             _observeState = onStateUpdate;
             _pawnActions = new PawnActions(PawnId);
             _playerInput = playerInput;
@@ -113,6 +121,14 @@ namespace Banchou.Pawn {
             container.Bind<Part.IMotor>(_motor);
             container.Bind<PawnActions>(_pawnActions);
             container.Bind<GetDeltaTime>(() => _deltaTime);
+
+            // Short-circuit dispatcher for client facade pawns
+            container.Bind<Redux.Dispatcher>(action => {
+                if (_getState().IsServer()) {
+                    return _dispatch(action);
+                }
+                return action;
+            });
 
             container.Bind<ObservePlayerLook>(
                 () => _observeState

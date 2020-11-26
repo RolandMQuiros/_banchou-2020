@@ -63,8 +63,9 @@ namespace Banchou.Network {
                                 jsonSerializer,
                                 messagePackOptions
                             ).Start(
-                                new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9050),
-                                Observable.EveryFixedUpdate()
+                                host: new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9050),
+                                pollInterval: Observable.EveryFixedUpdate(),
+                                timeInterval: Observable.Interval(TimeSpan.FromSeconds(5))
                             );
                             _agent = _client;
                             break;
@@ -90,6 +91,10 @@ namespace Banchou.Network {
 
         public void PushPawnSync(SyncPawn syncPawn) {
             _server?.SyncPawn(syncPawn);
+        }
+
+        public float GetTime() {
+            return _client?.GetTime() ?? _server?.GetTime() ?? Time.fixedUnscaledTime;
         }
 
         public void WriteNet(NetLogLevel level, string str, params object[] args) {

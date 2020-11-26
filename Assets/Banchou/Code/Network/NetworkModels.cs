@@ -24,4 +24,6 @@ namespace Banchou.Network {
             IP = prev.IP;
         }
     }
+
+    public delegate float GetServerTime();
 }

@@ -26,6 +26,8 @@ namespace Banchou.Test {
         private Store<GameState> _clientStore;
         private NetworkClient _client;
         private Subject<Unit> _pollClient;
+        private Subject<Unit> _timeInterval;
+        private GetServerTime _getServerTime;
 
         [SetUp]
         public void Setup() {
@@ -46,11 +48,13 @@ namespace Banchou.Test {
                 .WithCompression(MessagePackCompression.Lz4BlockArray);
 
             _serverStore = new Store<GameState>(GameStateStore.Reducer, new GameState(), NetworkServer.Install<GameState>(serializer, messagePackOptions));
+            _getServerTime = () => _client?.GetTime() ?? _server?.GetTime() ?? Time.fixedUnscaledTime;
+
             _server = new NetworkServer(
                 _serverStore.ObserveState(),
                 _serverStore.GetState,
                 _serverStore.Dispatch,
-                new NetworkActions(),
+                new NetworkActions(_getServerTime),
                 new PlayerInputStreams(),
                 serializer,
                 messagePackOptions
@@ -60,7 +64,7 @@ namespace Banchou.Test {
             _client = new NetworkClient(
                 System.Guid.Empty,
                 _clientStore.Dispatch,
-                new NetworkActions(),
+                new NetworkActions(_getServerTime),
                 new PlayerInputStreams(),
                 p => { },
                 serializer,
@@ -72,7 +76,8 @@ namespace Banchou.Test {
             _pollServer.OnNext(new Unit());
 
             _pollClient = new Subject<Unit>();
-            _client.Start(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 9050), _pollClient);
+            _timeInterval = new Subject<Unit>();
+            _client.Start(new IPEndPoint(IPAddress.Parse("0.0.0.0"), 9050), _pollClient, _timeInterval);
             _pollClient.OnNext(new Unit());
         }
 

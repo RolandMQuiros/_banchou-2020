@@ -13,6 +13,8 @@ namespace Banchou.Network.Message {
         PlayerMove,
         PlayerCommand,
         SyncPawn,
+        ServerTimeRequest,
+        ServerTimeResponse
     }
 
     [MessagePackObject]
@@ -65,6 +67,18 @@ namespace Banchou.Network.Message {
         [Key(0)] public PawnId PawnId;
         [Key(1)] public Vector3 Position;
         [Key(2)] public Vector3 Forward;
+    }
+
+    // https://gamedev.stackexchange.com/questions/93477/how-to-keep-server-client-clocks-in-sync-for-precision-networked-games-like-quak
+    [MessagePackObject]
+    public struct ServerTimeRequest {
+        [Key(0)] public float LocalTime;
+    }
+
+    [MessagePackObject]
+    public struct ServerTimeResponse {
+        [Key(0)] public float LocalTime;
+        [Key(1)] public float ServerTime;
     }
 
     public delegate void PullPawnSync(SyncPawn syncPawn);
