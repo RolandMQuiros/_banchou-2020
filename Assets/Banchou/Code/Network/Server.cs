@@ -121,6 +121,7 @@ namespace Banchou.Network {
                             },
                             _messagePackOptions
                         );
+                        fromPeer.Send(response, DeliveryMethod.Unreliable);
                     } break;
                     case PayloadType.PlayerCommand: {
                         var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, _messagePackOptions);
