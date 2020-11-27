@@ -27,9 +27,10 @@ namespace MessagePack.Formatters.Banchou.Network.Message
         public void Serialize(ref MessagePackWriter writer, global::Banchou.Network.Message.PlayerMove value, global::MessagePack.MessagePackSerializerOptions options)
         {
             IFormatterResolver formatterResolver = options.Resolver;
-            writer.WriteArrayHeader(2);
+            writer.WriteArrayHeader(3);
             formatterResolver.GetFormatterWithVerify<global::Banchou.Player.PlayerId>().Serialize(ref writer, value.PlayerId, options);
             formatterResolver.GetFormatterWithVerify<global::UnityEngine.Vector3>().Serialize(ref writer, value.Direction, options);
+            writer.Write(value.When);
         }
 
         public global::Banchou.Network.Message.PlayerMove Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
@@ -44,6 +45,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             var length = reader.ReadArrayHeader();
             var __PlayerId__ = default(global::Banchou.Player.PlayerId);
             var __Direction__ = default(global::UnityEngine.Vector3);
+            var __When__ = default(float);
 
             for (int i = 0; i < length; i++)
             {
@@ -57,6 +59,9 @@ namespace MessagePack.Formatters.Banchou.Network.Message
                     case 1:
                         __Direction__ = formatterResolver.GetFormatterWithVerify<global::UnityEngine.Vector3>().Deserialize(ref reader, options);
                         break;
+                    case 2:
+                        __When__ = reader.ReadSingle();
+                        break;
                     default:
                         reader.Skip();
                         break;
@@ -66,6 +71,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             var ____result = new global::Banchou.Network.Message.PlayerMove();
             ____result.PlayerId = __PlayerId__;
             ____result.Direction = __Direction__;
+            ____result.When = __When__;
             reader.Depth--;
             return ____result;
         }

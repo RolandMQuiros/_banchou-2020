@@ -3,7 +3,6 @@ using UnityEngine;
 using UniRx;
 
 using Banchou.Player;
-using Banchou.Mob;
 
 namespace Banchou.Pawn.FSM {
     public class InputMovement : FSMBehaviour {

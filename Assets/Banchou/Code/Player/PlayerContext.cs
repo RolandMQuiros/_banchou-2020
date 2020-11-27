@@ -27,26 +27,12 @@ namespace Banchou.Player {
                 () => _playerInputStreams
                     .ObserveLook(PlayerId)
                     .Select(lookUnit => lookUnit.Look)
-                    .WithLatestFrom(
-                        _observeState
-                            .Select(state => state.GetPlayer(PlayerId))
-                            .DistinctUntilChanged(),
-                        (look, player) => (look, player)
-                    )
-                    .Select(t => t.look)
             );
 
             container.Bind<ObservePlayerMove>(
                 () => _playerInputStreams
                     .ObserveMove(PlayerId)
                     .Select(moveUnit => moveUnit.Move)
-                    .WithLatestFrom(
-                        _observeState
-                            .Select(state => state.GetPlayer(PlayerId))
-                            .DistinctUntilChanged(),
-                        (move, player) => (move, player)
-                    )
-                    .Select(t => t.move)
             );
         }
     }
