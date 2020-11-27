@@ -42,6 +42,10 @@ namespace Banchou.Network {
             _listener = new EventBasedNetListener();
             _client = new NetManager(_listener);
 
+            _client.SimulateLatency = true;
+            _client.SimulationMinLatency = 100;
+            _client.SimulationMaxLatency = 300;
+
             // Receiving data from server
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
                 // Calculate when the event was sent
@@ -80,13 +84,13 @@ namespace Banchou.Network {
                         var pawnSync = MessagePackSerializer.Deserialize<SyncPawn>(envelope.Payload, messagePackOptions);
                         pullPawnSync(pawnSync);
                     break;
-                    case PayloadType.PlayerCommand: {
-                        var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, messagePackOptions);
-                        playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, when);
-                    } break;
                     case PayloadType.PlayerMove: {
                         var playerMove = MessagePackSerializer.Deserialize<PlayerMove>(envelope.Payload, messagePackOptions);
-                        playerInput.PushMove(playerMove.PlayerId, playerMove.Direction, when);
+                        playerInput.PushMove(playerMove.PlayerId, playerMove.Direction, playerMove.When);
+                    } break;
+                    case PayloadType.PlayerCommand: {
+                        var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, messagePackOptions);
+                        playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, playerCommand.When);
                     } break;
                 }
 
@@ -112,20 +116,24 @@ namespace Banchou.Network {
             Debug.Log($"Connected to server at {_client.FirstPeer.EndPoint}");
 
             _subscriptions.Add(
-                pollInterval.Subscribe(_ => { _client.PollEvents(); })
+                pollInterval
+                    .CatchIgnoreLog()
+                    .Subscribe(_ => { _client.PollEvents(); })
             );
 
             _subscriptions.Add(
-                timeInterval.Subscribe(_ => {
-                    var request = Envelope.CreateMessage(
-                        PayloadType.ServerTimeRequest,
-                        new ServerTimeRequest {
-                            LocalTime = Time.fixedUnscaledTime
-                        },
-                        _messagePackOptions
-                    );
-                    _peer.Send(request, DeliveryMethod.Unreliable);
-                })
+                timeInterval
+                    .CatchIgnoreLog()
+                    .Subscribe(_ => {
+                        var request = Envelope.CreateMessage(
+                            PayloadType.ServerTimeRequest,
+                            new ServerTimeRequest {
+                                LocalTime = Time.fixedUnscaledTime
+                            },
+                            _messagePackOptions
+                        );
+                        _peer.Send(request, DeliveryMethod.Unreliable);
+                    })
             );
 
             return this;

@@ -34,16 +34,19 @@ namespace Banchou.Player {
         private Subject<MoveUnit> _moveSubject = new Subject<MoveUnit>();
         private Subject<CommandUnit> _commandSubject = new Subject<CommandUnit>();
 
+        public IObservable<MoveUnit> ObserveMove() => _moveSubject;
         public IObservable<MoveUnit> ObserveMove(PlayerId playerId) {
             return _moveSubject
                 .Where(unit => unit.PlayerId == playerId);
         }
 
+        public IObservable<LookUnit> ObserveLook() => _lookSubject;
         public IObservable<LookUnit> ObserveLook(PlayerId playerId) {
             return _lookSubject
                 .Where(unit => unit.PlayerId == playerId);
         }
 
+        public IObservable<CommandUnit> ObserveCommand() => _commandSubject;
         public IObservable<CommandUnit> ObserveCommand(PlayerId playerId) {
             return _commandSubject
                 .Where(unit => unit.PlayerId == playerId && unit.Command != InputCommand.None);

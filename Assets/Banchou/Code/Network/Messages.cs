@@ -54,12 +54,14 @@ namespace Banchou.Network.Message {
     public struct PlayerMove {
         [Key(0)] public PlayerId PlayerId;
         [Key(1)] public Vector3 Direction;
+        [Key(2)] public float When;
     }
 
     [MessagePackObject]
     public struct PlayerCommand {
         [Key(0)] public PlayerId PlayerId;
         [Key(1)] public InputCommand Command;
+        [Key(2)] public float When;
     }
 
     [MessagePackObject]

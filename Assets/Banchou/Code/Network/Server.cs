@@ -25,7 +25,7 @@ namespace Banchou.Network {
         private EventBasedNetListener _listener;
         private NetManager _server;
         private Dictionary<Guid, NetPeer> _peers;
-        private IDisposable _poll;
+        private CompositeDisposable _subscriptions = new CompositeDisposable();
 
         public NetworkServer(
             IObservable<GameState> observeState,
@@ -125,16 +125,61 @@ namespace Banchou.Network {
                     } break;
                     case PayloadType.PlayerCommand: {
                         var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, _messagePackOptions);
-                        playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, when);
+                        playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, playerCommand.When);
                     } break;
                     case PayloadType.PlayerMove: {
                         var playerMove = MessagePackSerializer.Deserialize<PlayerMove>(envelope.Payload, _messagePackOptions);
-                        playerInput.PushMove(playerMove.PlayerId, playerMove.Direction, when);
+                        playerInput.PushMove(playerMove.PlayerId, playerMove.Direction, playerMove.When);
                     } break;
                 }
 
                 dataReader.Recycle();
             };
+
+            // Send input to all peers, provided they're not the source
+            _subscriptions.Add(
+                playerInput.ObserveMove()
+                    .CatchIgnoreLog()
+                    .Subscribe(move => {
+                        foreach (var peer in _peers) {
+                            var playerNetworkId = getState().GetPlayerNetworkId(move.PlayerId);
+                            if (peer.Key != playerNetworkId) {
+                                var message = Envelope.CreateMessage(
+                                    PayloadType.PlayerMove,
+                                    new PlayerMove {
+                                        PlayerId = move.PlayerId,
+                                        Direction = move.Move,
+                                        When = move.When
+                                    },
+                                    _messagePackOptions
+                                );
+                                peer.Value.Send(message, DeliveryMethod.Unreliable);
+                            }
+                        }
+                    })
+            );
+
+            _subscriptions.Add(
+                playerInput.ObserveCommand()
+                    .CatchIgnoreLog()
+                    .Subscribe(command => {
+                        foreach (var peer in _peers) {
+                            var playerNetworkId = getState().GetPlayerNetworkId(command.PlayerId);
+                            if (peer.Key != playerNetworkId) {
+                                var message = Envelope.CreateMessage(
+                                    PayloadType.PlayerCommand,
+                                    new PlayerCommand {
+                                        PlayerId = command.PlayerId,
+                                        Command = command.Command,
+                                        When = command.When
+                                    },
+                                    _messagePackOptions
+                                );
+                                peer.Value.Send(message, DeliveryMethod.Unreliable);
+                            }
+                        }
+                    })
+            );
 
             _instances.Add(this);
             Debug.Log("Server constructed");
@@ -159,11 +204,11 @@ namespace Banchou.Network {
         public NetworkServer Start<T>(IObservable<T> pollInterval) {
             _server.Start(9050);
             Debug.Log($"Server started on port {_server.LocalPort}");
-            _poll = pollInterval
-                .Subscribe(_ => {
-                    _server.PollEvents();
-                });
-            //_dispatch(_networkActions.Started(_server.Peer))
+            _subscriptions.Add(
+                pollInterval
+                    .CatchIgnoreLog()
+                    .Subscribe(_ => { _server.PollEvents(); })
+            );
             return this;
         }
 
@@ -172,7 +217,7 @@ namespace Banchou.Network {
             _server.Stop();
             Debug.Log("Server stopped");
 
-            _poll.Dispose();
+            _subscriptions.Dispose();
             _instances.Remove(this);
         }
 

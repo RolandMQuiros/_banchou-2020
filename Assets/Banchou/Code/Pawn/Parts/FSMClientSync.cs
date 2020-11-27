@@ -27,6 +27,7 @@ namespace Banchou.Pawn.Part {
         public void Construct(
             PawnId pawnId,
             IObservable<GameState> onStateUpdate,
+            GetServerTime getServerTime,
             Animator animator = null
         ) {
             if (animator != null) {
@@ -37,7 +38,9 @@ namespace Banchou.Pawn.Part {
                     .Where(fsmChange => fsmChange.PawnId == pawnId)
                     .CatchIgnoreLog()
                     .Subscribe(fsmChange => {
-                        animator.Play(fsmChange.StateHash, 0, 0f);
+                        var timeSinceChange = getServerTime() - fsmChange.FixedTimeAtChange;
+                        var normalizedTime =  timeSinceChange / fsmChange.ClipLength;
+                        animator.Play(fsmChange.StateHash, 0, normalizedTime);
                     })
                     .AddTo(this);
             }
