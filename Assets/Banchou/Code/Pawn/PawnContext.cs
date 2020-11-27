@@ -76,6 +76,8 @@ namespace Banchou.Pawn {
                         onPawnSync.Where(syncPawn => syncPawn.PawnId == PawnId),
                         (_, syncPawn) => syncPawn
                     )
+                    .Where(syncPawn => transform.position != syncPawn.Position)
+                    .CatchIgnoreLog()
                     .Subscribe(syncPawn => {
                         var newPosition = Vector3.MoveTowards(
                             transform.position,
@@ -89,7 +91,16 @@ namespace Banchou.Pawn {
                         }
 
                         transform.position = newPosition;
+                    })
+                    .AddTo(this);
 
+                this.FixedUpdateAsObservable()
+                    .WithLatestFrom(
+                        onPawnSync.Where(syncPawn => syncPawn.PawnId == PawnId),
+                        (_, syncPawn) => syncPawn
+                    )
+                    .CatchIgnoreLog()
+                    .Subscribe(syncPawn => {
                         var targetRotation = Quaternion.LookRotation(syncPawn.Forward);
                         if (_orientation != null) {
                             _orientation.transform.rotation = Quaternion.RotateTowards(
