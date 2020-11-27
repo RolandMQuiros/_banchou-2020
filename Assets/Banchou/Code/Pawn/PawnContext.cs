@@ -71,49 +71,15 @@ namespace Banchou.Pawn {
             }
 
             if (onPawnSync != null) {
-                this.FixedUpdateAsObservable()
-                    .WithLatestFrom(
-                        onPawnSync.Where(syncPawn => syncPawn.PawnId == PawnId),
-                        (_, syncPawn) => syncPawn
-                    )
-                    .Where(syncPawn => transform.position != syncPawn.Position)
+                onPawnSync
+                    .Where(syncPawn => syncPawn.PawnId == PawnId)
                     .CatchIgnoreLog()
                     .Subscribe(syncPawn => {
-                        var newPosition = Vector3.MoveTowards(
-                            transform.position,
-                            syncPawn.Position,
-                            Mathf.Pow(10f, Mathf.Floor(Mathf.Log10((transform.position - syncPawn.Position).magnitude)))
-                        );
-
-                        var delta = newPosition - transform.position;
-                        if (delta.magnitude > 1f) {
-                            Debug.Log($"Jumped from {transform.position} to {newPosition}");
-                        }
-
-                        transform.position = newPosition;
-                    })
-                    .AddTo(this);
-
-                this.FixedUpdateAsObservable()
-                    .WithLatestFrom(
-                        onPawnSync.Where(syncPawn => syncPawn.PawnId == PawnId),
-                        (_, syncPawn) => syncPawn
-                    )
-                    .CatchIgnoreLog()
-                    .Subscribe(syncPawn => {
-                        var targetRotation = Quaternion.LookRotation(syncPawn.Forward);
+                        transform.position = syncPawn.Position;
                         if (_orientation != null) {
-                            _orientation.transform.rotation = Quaternion.RotateTowards(
-                                _orientation.transform.rotation,
-                                targetRotation,
-                                Mathf.Pow(10f, Mathf.Floor(Mathf.Log10(Quaternion.Angle(_orientation.transform.rotation, targetRotation))))
-                            );
+                            _orientation.transform.rotation = Quaternion.LookRotation(syncPawn.Forward);
                         } else {
-                            transform.rotation = Quaternion.RotateTowards(
-                                transform.rotation,
-                                Quaternion.LookRotation(syncPawn.Forward),
-                                Mathf.Pow(10f, Mathf.Floor(Mathf.Log10(Quaternion.Angle(transform.rotation, targetRotation))))
-                            );
+                            transform.rotation = Quaternion.LookRotation(syncPawn.Forward);
                         }
                     })
                     .AddTo(this);
