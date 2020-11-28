@@ -12,7 +12,7 @@ namespace Banchou.Prototype {
             GetServerTime getServerTime
         ) {
             var label = GetComponent<TextMeshProUGUI>();
-            Observable.Interval(TimeSpan.FromSeconds(1))
+            Observable.Interval(TimeSpan.FromMilliseconds(100))
                 .CatchIgnoreLog()
                 .Subscribe(_ => {
                     label.text = $"Server time: {getServerTime()}\nLocal time: {Time.fixedUnscaledTime}";

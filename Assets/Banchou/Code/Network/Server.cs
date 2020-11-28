@@ -139,27 +139,44 @@ namespace Banchou.Network {
             // Send input to all peers, provided they're not the source
             _subscriptions.Add(
                 playerInput.ObserveMove()
+                    .DistinctUntilChanged()
+                    .Pairwise()
                     .CatchIgnoreLog()
-                    .Subscribe(move => {
+                    .Subscribe(pair => {
                         foreach (var peer in _peers) {
-                            var playerNetworkId = getState().GetPlayerNetworkId(move.PlayerId);
+                            var playerNetworkId = getState().GetPlayerNetworkId(pair.Current.PlayerId);
                             if (peer.Key != playerNetworkId) {
-                                var message = Envelope.CreateMessage(
+                                var currentMessage = Envelope.CreateMessage(
                                     PayloadType.PlayerMove,
                                     new PlayerMove {
-                                        PlayerId = move.PlayerId,
-                                        Direction = move.Move,
-                                        When = move.When
+                                        PlayerId = pair.Current.PlayerId,
+                                        Direction = pair.Current.Move,
+                                        When = pair.Current.When
                                     },
                                     _messagePackOptions
                                 );
-                                peer.Value.Send(message, DeliveryMethod.ReliableUnordered);
 
-                                if (move.Move != Vector3.zero) {
+                                var starting = pair.Current.Move != Vector3.zero && pair.Previous.Move == Vector3.zero;
+                                var stopping = pair.Previous.Move != Vector3.zero && pair.Current.Move == Vector3.zero;
+
+                                if (starting || stopping) {
+                                    var prevMessage = Envelope.CreateMessage(
+                                        PayloadType.PlayerMove,
+                                        new PlayerMove {
+                                            PlayerId = pair.Previous.PlayerId,
+                                            Direction = pair.Previous.Move,
+                                            When = pair.Previous.When
+                                        },
+                                        _messagePackOptions
+                                    );
+
                                     // Reliably send stops so pawns don't just run away
-                                    peer.Value.Send(message, DeliveryMethod.ReliableUnordered);
+                                    peer.Value.Send(prevMessage, DeliveryMethod.ReliableOrdered);
+                                    peer.Value.Send(currentMessage, DeliveryMethod.ReliableOrdered);
+                                    if (starting) { Debug.Log("Started"); }
+                                    if (stopping) { Debug.Log("Stopped"); }
                                 } else {
-                                    peer.Value.Send(message, DeliveryMethod.Unreliable);
+                                    peer.Value.Send(currentMessage, DeliveryMethod.Unreliable);
                                 }
                             }
                         }
@@ -182,7 +199,7 @@ namespace Banchou.Network {
                                     },
                                     _messagePackOptions
                                 );
-                                peer.Value.Send(message, DeliveryMethod.ReliableUnordered);
+                                peer.Value.Send(message, DeliveryMethod.ReliableOrdered);
                             }
                         }
                     })
