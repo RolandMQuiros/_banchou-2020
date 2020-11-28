@@ -107,11 +107,12 @@ namespace Banchou.Pawn.Part {
                             State = PawnRollbackState.RollingBack;
 
                             // Revert to state when desync happened
+                            var rewindTime = now - targetState.FixedTimeAtChange;
+                            var normalizedTimeRewind = rewindTime / targetState.ClipLength;
                             animator.Play(
                                 stateNameHash: targetState.StateHash,
                                 layer: 0,
-                                normalizedTime: (now - targetState.FixedTimeAtChange - deltaTime)
-                                    / targetState.ClipLength
+                                normalizedTime: normalizedTimeRewind
                             );
 
                             // Tells the RecordStateHistory FSMBehaviours to start recording again
@@ -126,6 +127,11 @@ namespace Banchou.Pawn.Part {
                                 moveSubject.OnNext(unit.Move);
                             } else {
                                 commandSubject.OnNext(unit.Command);
+                                Debug.Log($"Command {unit.Command} Rollback:\n" +
+                                    $"When: {unit.When}\n" +
+                                    $"Rewind Time: {rewindTime}\n" +
+                                    $"Normalized Time: {normalizedTimeRewind}"
+                                );
                             }
 
                             // Resimulate to present
@@ -145,6 +151,12 @@ namespace Banchou.Pawn.Part {
                                 moveSubject.OnNext(unit.Move);
                             } else {
                                 commandSubject.OnNext(unit.Command);
+
+                                var stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+                                Debug.Log($"Command {unit.Command}:\n" +
+                                    $"When: {unit.When}\n" +
+                                    $"Normalized Time: {stateInfo.normalizedTime}"
+                                );
                             }
                         }
                     })
