@@ -30,24 +30,24 @@ namespace Banchou {
             IsStateActive = true;
             ObserveStateEnter.OnNext(new FSMUnit {
                 StateInfo = stateInfo,
-                DeltaTime = stateInfo.normalizedTime,
                 LayerIndex = layerIndex,
                 Playable = playable
             });
+            _previousTime = 0f;
         }
 
         public override void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex, AnimatorControllerPlayable playable) {
             IsStateActive = false;
             ObserveStateExit.OnNext(new FSMUnit {
                 StateInfo = stateInfo,
-                DeltaTime = stateInfo.normalizedTime,
                 LayerIndex = layerIndex,
                 Playable = playable
             });
+            _previousTime = 0f;
         }
 
         public override void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex, AnimatorControllerPlayable playable) {
-            var deltaTime = stateInfo.normalizedTime - _previousTime;
+            var deltaTime = (stateInfo.normalizedTime - _previousTime) * stateInfo.length;
             ObserveStateUpdate.OnNext(new FSMUnit {
                 StateInfo = stateInfo,
                 DeltaTime = deltaTime,

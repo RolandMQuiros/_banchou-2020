@@ -95,8 +95,8 @@ namespace Banchou.Pawn.Part {
                 var history = new LinkedList<PawnFSMState>();
                 observeState
                     .Select(state => state.GetLatestFSMChange())
-                    .Where(change => change.PawnId == pawnId)
-                    .Where(s => s.StateHash != 0)
+                    .DistinctUntilChanged()
+                    .Where(change => change.PawnId == pawnId && change.StateHash != 0)
                     .DistinctUntilChanged(s => s.StateHash)
                     .Subscribe(fsmState => {
                         // Always have at least one state change on the list
@@ -111,7 +111,7 @@ namespace Banchou.Pawn.Part {
                 movesAndCommands
                     .CatchIgnoreLog()
                     .Subscribe(unit => {
-                        if (unit.Diff > _rollbackThreshold && unit.Command != InputCommand.None) {
+                        if (unit.Diff > _rollbackThreshold && State == PawnRollbackState.Complete) {
                             var now = getServerTime();
                             var deltaTime = Mathf.Min(unit.Diff, Time.fixedUnscaledDeltaTime);
 
@@ -123,7 +123,8 @@ namespace Banchou.Pawn.Part {
                             });
 
                             // Tell the RecordStateHistory FSMBehaviours to stop recording
-                            dispatch(pawnActions.RollbackStarted());
+                            dispatch(pawnActions.RollbackStarted()); // For the server
+                            State = PawnRollbackState.RollingBack; // For the client
 
                             // Revert to state when desync happened
                             var timeSinceStateStart = now - targetState.FixedTimeAtChange;
@@ -135,7 +136,8 @@ namespace Banchou.Pawn.Part {
                             );
 
                             // Tells the RecordStateHistory FSMBehaviours to start recording again
-                            dispatch(pawnActions.FastForwarding(unit.Diff));
+                            dispatch(pawnActions.FastForwarding(unit.Diff)); // Server
+                            State = PawnRollbackState.FastForward; // Client
                             FastForwardStartTime = now - unit.Diff;
 
                             // Kick off the fast-forward. Need to run this before pushing the commands so the _animator.Play can take
@@ -144,6 +146,14 @@ namespace Banchou.Pawn.Part {
                             // Pump input into streams
                             if (unit.Command == InputCommand.None) {
                                 moveSubject.OnNext(unit.Move);
+                                Debug.Log($"Move {unit.Move} Rollback:\n" +
+                                    $"Server time at packet send: {unit.When}\n" +
+                                    $"\tServer time since packet sent: {getServerTime() - unit.When}\n" +
+                                    $"Server time at previous state start: {targetState.FixedTimeAtChange}\n" +
+                                    $"\tServer time since previous state start: {timeSinceStateStart}\n" +
+                                    $"Target Normalized Time: {targetNormalizedTime}\n" +
+                                    $"Server Time: {getServerTime()}"
+                                );
                             } else {
                                 commandSubject.OnNext(unit.Command);
                                 Debug.Log($"Command {unit.Command} Rollback:\n" +
@@ -167,6 +177,7 @@ namespace Banchou.Pawn.Part {
                             }
 
                             dispatch(pawnActions.RollbackComplete());
+                            State = PawnRollbackState.Complete;
                         } else {
                             if (unit.Command == InputCommand.None) {
                                 moveSubject.OnNext(unit.Move);
