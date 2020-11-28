@@ -26,7 +26,7 @@ namespace Banchou.Pawn.Part {
                     this.FixedUpdateAsObservable()
                         .SampleFrame(_frequency, FrameCountType.Update)
                         // Sync when movement direction changes
-                        .Merge(onPlayerMove().DistinctUntilChanged().Select(_ => new Unit()))
+                        .Merge(onPlayerMove().DistinctUntilChanged().Select(__ => new Unit()))
                 )
                 .Subscribe(_ => {
                     pushPawnSync(
