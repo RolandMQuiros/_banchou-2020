@@ -97,14 +97,13 @@ namespace Banchou.Pawn.Part {
                     .Select(state => state.GetLatestFSMChange())
                     .Where(change => change.PawnId == pawnId)
                     .Where(s => s.StateHash != 0)
+                    .DistinctUntilChanged(s => s.StateHash)
                     .Subscribe(fsmState => {
+                        // Always have at least one state change on the list
                         while (history.Count > 1 && history.First.Value.FixedTimeAtChange < getServerTime() - _historyWindow) {
                             history.RemoveFirst();
                         }
-                        // Always have at least one state change on the list
-                        if (_history.Count == 0 || _history.Last.Value.StateHash != fsmState.StateHash) {
-                            history.AddLast(fsmState);
-                        }
+                        history.AddLast(fsmState);
                     })
                     .AddTo(this);
 
@@ -112,7 +111,7 @@ namespace Banchou.Pawn.Part {
                 movesAndCommands
                     .CatchIgnoreLog()
                     .Subscribe(unit => {
-                        if (unit.Diff > _rollbackThreshold) {
+                        if (unit.Diff > _rollbackThreshold && unit.Command != InputCommand.None) {
                             var now = getServerTime();
                             var deltaTime = Mathf.Min(unit.Diff, Time.fixedUnscaledDeltaTime);
 
@@ -127,12 +126,12 @@ namespace Banchou.Pawn.Part {
                             dispatch(pawnActions.RollbackStarted());
 
                             // Revert to state when desync happened
-                            var rewindTime = now - targetState.FixedTimeAtChange;
-                            var normalizedTimeRewind = rewindTime / targetState.ClipLength;
+                            var timeSinceStateStart = now - targetState.FixedTimeAtChange;
+                            var targetNormalizedTime = timeSinceStateStart / targetState.ClipLength;
                             animator.Play(
                                 stateNameHash: targetState.StateHash,
                                 layer: 0,
-                                normalizedTime: normalizedTimeRewind
+                                normalizedTime: targetNormalizedTime
                             );
 
                             // Tells the RecordStateHistory FSMBehaviours to start recording again
@@ -148,9 +147,11 @@ namespace Banchou.Pawn.Part {
                             } else {
                                 commandSubject.OnNext(unit.Command);
                                 Debug.Log($"Command {unit.Command} Rollback:\n" +
-                                    $"When: {unit.When}\n" +
-                                    $"Rewind Time: {rewindTime}\n" +
-                                    $"Normalized Time: {normalizedTimeRewind}\n" +
+                                    $"Server time at packet send: {unit.When}\n" +
+                                    $"\tServer time since packet sent: {getServerTime() - unit.When}\n" +
+                                    $"Server time at previous state start: {targetState.FixedTimeAtChange}\n" +
+                                    $"\tServer time since previous state start: {timeSinceStateStart}\n" +
+                                    $"Target Normalized Time: {targetNormalizedTime}\n" +
                                     $"Server Time: {getServerTime()}"
                                 );
                             }

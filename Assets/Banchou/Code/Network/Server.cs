@@ -82,7 +82,7 @@ namespace Banchou.Network {
 
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
                 // Calculate when the event was sent
-                var when = Time.fixedUnscaledTime - (fromPeer.Ping / 1000f);
+                var when = Time.fixedUnscaledTime - (fromPeer.Ping / 2000f);
 
                 // Open envelope
                 var envelope = MessagePackSerializer.Deserialize<Envelope>(dataReader.GetRemainingBytes(), _messagePackOptions);
