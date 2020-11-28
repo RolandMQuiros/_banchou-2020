@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using Redux;
 using UniRx;
 using UnityEngine;
 
@@ -58,6 +59,8 @@ namespace Banchou.Pawn.Part {
         public void Construct(
             PawnId pawnId,
             IObservable<GameState> observeState,
+            Dispatcher dispatch,
+            PawnActions pawnActions,
             PlayerInputStreams playerInput,
             Subject<InputCommand> commandSubject,
             Subject<Vector3> moveSubject,
@@ -88,6 +91,23 @@ namespace Banchou.Pawn.Part {
                             )
                     );
 
+                // Aggregate FSM changes into a list
+                var history = new LinkedList<PawnFSMState>();
+                observeState
+                    .Select(state => state.GetLatestFSMChange())
+                    .Where(change => change.PawnId == pawnId)
+                    .Where(s => s.StateHash != 0)
+                    .Subscribe(fsmState => {
+                        while (history.Count > 1 && history.First.Value.FixedTimeAtChange < getServerTime() - _historyWindow) {
+                            history.RemoveFirst();
+                        }
+                        // Always have at least one state change on the list
+                        if (_history.Count == 0 || _history.Last.Value.StateHash != fsmState.StateHash) {
+                            history.AddLast(fsmState);
+                        }
+                    })
+                    .AddTo(this);
+
                 // Handle rollbacks
                 movesAndCommands
                     .CatchIgnoreLog()
@@ -96,7 +116,7 @@ namespace Banchou.Pawn.Part {
                             var now = getServerTime();
                             var deltaTime = Mathf.Min(unit.Diff, Time.fixedUnscaledDeltaTime);
 
-                            var targetState = _history.Aggregate((target, step) => {
+                            var targetState = history.Aggregate((target, step) => {
                                 if (unit.When > step.FixedTimeAtChange) {
                                     return step;
                                 }
@@ -104,7 +124,7 @@ namespace Banchou.Pawn.Part {
                             });
 
                             // Tell the RecordStateHistory FSMBehaviours to stop recording
-                            State = PawnRollbackState.RollingBack;
+                            dispatch(pawnActions.RollbackStarted());
 
                             // Revert to state when desync happened
                             var rewindTime = now - targetState.FixedTimeAtChange;
@@ -116,7 +136,7 @@ namespace Banchou.Pawn.Part {
                             );
 
                             // Tells the RecordStateHistory FSMBehaviours to start recording again
-                            State = PawnRollbackState.FastForward;
+                            dispatch(pawnActions.FastForwarding(unit.Diff));
                             FastForwardStartTime = now - unit.Diff;
 
                             // Kick off the fast-forward. Need to run this before pushing the commands so the _animator.Play can take
@@ -145,8 +165,7 @@ namespace Banchou.Pawn.Part {
                                 frames++;
                             }
 
-                            Debug.Log($"Resimulated {frames} frames, over {unit.Diff} seconds\nCommand: {unit.Command}\nMove: {unit.Move}\nWhen:{unit.When}\nNow:{_getServerTime()}");
-                            State = PawnRollbackState.Complete;
+                            dispatch(pawnActions.RollbackComplete());
                         } else {
                             if (unit.Command == InputCommand.None) {
                                 moveSubject.OnNext(unit.Move);
