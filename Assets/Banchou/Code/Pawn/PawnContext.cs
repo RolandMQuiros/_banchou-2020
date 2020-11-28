@@ -5,7 +5,7 @@ using Redux;
 using UnityEngine;
 using UnityEngine.AI;
 using UniRx;
-using UniRx.Triggers;
+using UniRx.Diagnostics;
 
 using Banchou.DependencyInjection;
 using Banchou.Network;
@@ -118,7 +118,13 @@ namespace Banchou.Pawn {
                 () => _observeState
                     .Select(state => state.GetPawnPlayerId(PawnId))
                     .DistinctUntilChanged()
-                    .SelectMany(playerId => _playerInput.ObserveMove(playerId).Select(unit => unit.Move))
+                    .SelectMany(playerId => _playerInput
+                        .ObserveMove(playerId)
+                        // .Do(move => Debug.Log($"{move.Move} -- {move.When}"))
+                        // Make sure we only handle latest, in case they come in out-of-order over the network
+                        // .Scan((prev, move) => move.When > prev.When ? move : prev)
+                        .Select(unit => unit.Move)
+                    )
             );
 
             container.Bind<ObservePlayerCommand>(() => _commandSubject);

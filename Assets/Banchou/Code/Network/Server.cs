@@ -153,7 +153,7 @@ namespace Banchou.Network {
                                     },
                                     _messagePackOptions
                                 );
-                                peer.Value.Send(message, DeliveryMethod.Unreliable);
+                                peer.Value.Send(message, DeliveryMethod.ReliableUnordered);
                             }
                         }
                     })
@@ -175,7 +175,7 @@ namespace Banchou.Network {
                                     },
                                     _messagePackOptions
                                 );
-                                peer.Value.Send(message, DeliveryMethod.Unreliable);
+                                peer.Value.Send(message, DeliveryMethod.ReliableUnordered);
                             }
                         }
                     })
@@ -248,7 +248,7 @@ namespace Banchou.Network {
                         }
 
                         // Send bytestream to peer
-                        peer.Send(actionBytes, DeliveryMethod.Sequenced);
+                        peer.Send(actionBytes, DeliveryMethod.ReliableUnordered);
                     }
                 }
                 return next(action);
