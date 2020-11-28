@@ -120,9 +120,8 @@ namespace Banchou.Pawn {
                     .DistinctUntilChanged()
                     .SelectMany(playerId => _playerInput
                         .ObserveMove(playerId)
-                        // .Do(move => Debug.Log($"{move.Move} -- {move.When}"))
                         // Make sure we only handle latest, in case they come in out-of-order over the network
-                        // .Scan((prev, move) => move.When > prev.When ? move : prev)
+                        .Scan((prev, move) => move.When > prev.When ? move : prev)
                         .Select(unit => unit.Move)
                     )
             );

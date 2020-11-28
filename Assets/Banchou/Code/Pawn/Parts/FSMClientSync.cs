@@ -31,7 +31,8 @@ namespace Banchou.Pawn.Part {
             Animator animator = null
         ) {
             if (animator != null) {
-                onStateUpdate
+                this.EnabledAsObservable()
+                    .SelectMany(onStateUpdate)
                     .Where(state => state.IsClient())
                     .Select(state => state.GetLatestFSMChange())
                     .DistinctUntilChanged()
@@ -45,5 +46,7 @@ namespace Banchou.Pawn.Part {
                     .AddTo(this);
             }
         }
+
+        private void Start() { }
     }
 }

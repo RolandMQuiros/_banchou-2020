@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using UnityEngine;
 using UniRx;
+using UniRx.Triggers;
 
 namespace Banchou {
     public static class UtilityExtensions {
@@ -28,6 +29,12 @@ namespace Banchou {
 
         public static IObservable<T> CatchIgnoreLog<T>(this IObservable<T> stream) {
             return stream.CatchIgnore((Exception error) => { Debug.LogException(error); });
+        }
+
+        public static IObservable<Unit> EnabledAsObservable(this MonoBehaviour component) {
+            return component.OnEnableAsObservable()
+                .Merge(component.OnDisableAsObservable())
+                .Where(_ => component.isActiveAndEnabled);
         }
 
         public static byte[] ToByteArray<T>(this T obj) where T : struct {

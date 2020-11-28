@@ -154,6 +154,13 @@ namespace Banchou.Network {
                                     _messagePackOptions
                                 );
                                 peer.Value.Send(message, DeliveryMethod.ReliableUnordered);
+
+                                if (move.Move != Vector3.zero) {
+                                    // Reliably send stops so pawns don't just run away
+                                    peer.Value.Send(message, DeliveryMethod.ReliableUnordered);
+                                } else {
+                                    peer.Value.Send(message, DeliveryMethod.Unreliable);
+                                }
                             }
                         }
                     })

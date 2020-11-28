@@ -44,6 +44,7 @@ namespace Banchou.Pawn.Part {
                     .DistinctUntilChanged()
                     .SelectMany(
                         playerId => playerInput.ObserveCommand(playerId)
+                            .Scan((prev, unit) => unit.When > prev.When ? unit : prev)
                             .Select(unit => (
                                 Command: unit.Command,
                                 When: unit.When,
