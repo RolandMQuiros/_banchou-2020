@@ -34,6 +34,7 @@ namespace Banchou.Pawn {
         #endregion
     }
 
+    [Serializable]
     public class PawnFSMState {
         public PawnId PawnId;
         public int StateHash;

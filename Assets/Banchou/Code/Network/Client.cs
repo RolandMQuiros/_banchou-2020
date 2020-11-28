@@ -23,8 +23,8 @@ namespace Banchou.Network {
         private NetManager _client;
         private NetPeer _peer;
 
-        private float _lastServerTime;
-        private float _lastLocalTime = float.MinValue;
+        private float _lastServerTime = 0f;
+        private float _lastLocalTime = 0f;
 
         private CompositeDisposable _subscriptions = new CompositeDisposable();
 

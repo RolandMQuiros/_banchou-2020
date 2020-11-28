@@ -5,7 +5,6 @@ using Redux;
 using UnityEngine;
 using UnityEngine.AI;
 using UniRx;
-using UniRx.Diagnostics;
 
 using Banchou.DependencyInjection;
 using Banchou.Network;
@@ -24,6 +23,7 @@ namespace Banchou.Pawn {
         [SerializeField] private Rigidbody _rigidbody = null;
         [SerializeField] private Part.Orientation _orientation = null;
         [SerializeField] private NavMeshAgent _agent = null;
+        [SerializeField] private Part.Rollback _rollback = null;
         private IMotor _motor = null;
 
         public PawnId PawnId { get; private set; }
@@ -42,6 +42,8 @@ namespace Banchou.Pawn {
         private PlayerInputStreams _playerInput;
 
         private Subject<InputCommand> _commandSubject = new Subject<InputCommand>();
+        private Subject<Vector3> _moveSubject = new Subject<Vector3>();
+
         private float _deltaTime = 0f;
 
         public void Construct(
@@ -64,6 +66,7 @@ namespace Banchou.Pawn {
             _orientation = _orientation == null ? GetComponentInChildren<Part.Orientation>(true) : _orientation;
             _agent = _agent == null ? GetComponentInChildren<NavMeshAgent>(true) : _agent;
             _motor = _motor == null ? GetComponentInChildren<Part.IMotor>(true) : _motor;
+            _rollback = _rollback == null ? GetComponentInChildren<Part.Rollback>(true) : _rollback;
 
             if (_agent != null) {
                 _agent.updatePosition = false;
@@ -81,6 +84,7 @@ namespace Banchou.Pawn {
                         } else {
                             transform.rotation = Quaternion.LookRotation(syncPawn.Forward);
                         }
+                        Debug.Log($"Synced {syncPawn.PawnId} to {syncPawn.Position}");
                     })
                     .AddTo(this);
             }
@@ -96,6 +100,7 @@ namespace Banchou.Pawn {
             container.Bind<Part.Orientation>(_orientation);
             container.Bind<NavMeshAgent>(_agent);
             container.Bind<Part.IMotor>(_motor);
+            container.Bind<Part.Rollback>(_rollback);
             container.Bind<PawnActions>(_pawnActions);
             container.Bind<GetDeltaTime>(() => _deltaTime);
 
@@ -114,17 +119,8 @@ namespace Banchou.Pawn {
                     .SelectMany(playerId => _playerInput.ObserveLook(playerId).Select(unit => unit.Look))
             );
 
-            container.Bind<ObservePlayerMove>(
-                () => _observeState
-                    .Select(state => state.GetPawnPlayerId(PawnId))
-                    .DistinctUntilChanged()
-                    .SelectMany(playerId => _playerInput
-                        .ObserveMove(playerId)
-                        // Make sure we only handle latest, in case they come in out-of-order over the network
-                        .Scan((prev, move) => move.When > prev.When ? move : prev)
-                        .Select(unit => unit.Move)
-                    )
-            );
+            container.Bind<ObservePlayerMove>(() => _moveSubject);
+            container.Bind<Subject<Vector3>>(_moveSubject, t => t == typeof(Part.Rollback));
 
             container.Bind<ObservePlayerCommand>(() => _commandSubject);
             container.Bind<Subject<InputCommand>>(_commandSubject, t => t == typeof(Part.Rollback));
