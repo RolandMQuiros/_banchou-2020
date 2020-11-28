@@ -130,7 +130,8 @@ namespace Banchou.Pawn.Part {
                                 Debug.Log($"Command {unit.Command} Rollback:\n" +
                                     $"When: {unit.When}\n" +
                                     $"Rewind Time: {rewindTime}\n" +
-                                    $"Normalized Time: {normalizedTimeRewind}"
+                                    $"Normalized Time: {normalizedTimeRewind}\n" +
+                                    $"Server Time: {getServerTime()}"
                                 );
                             }
 
@@ -154,6 +155,7 @@ namespace Banchou.Pawn.Part {
 
                                 var stateInfo = animator.GetCurrentAnimatorStateInfo(0);
                                 Debug.Log($"Command {unit.Command}:\n" +
+                                    $"Server Time: {getServerTime()}\n" +
                                     $"When: {unit.When}\n" +
                                     $"Normalized Time: {stateInfo.normalizedTime}"
                                 );
