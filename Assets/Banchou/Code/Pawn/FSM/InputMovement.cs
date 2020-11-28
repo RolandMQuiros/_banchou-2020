@@ -36,12 +36,13 @@ namespace Banchou.Pawn.FSM {
             var rightSpeed = 0f;
 
             ObserveStateUpdate
-                .WithLatestFrom(observePlayerMove(), (_, move) => move)
+                .WithLatestFrom(observePlayerMove(), (fsmUnit, move) => (fsmUnit.DeltaTime, move))
                 .CatchIgnoreLog()
                 .Subscribe(
-                    direction => {
+                    args => {
+                        var (deltaTime, direction) = args;
                         var velocity = _movementSpeed * direction;
-                        motor.Move(velocity * Time.fixedDeltaTime);
+                        motor.Move(velocity * deltaTime);
 
                         // Write to output variables
                         if (!string.IsNullOrWhiteSpace(_movementSpeedOut)) {
