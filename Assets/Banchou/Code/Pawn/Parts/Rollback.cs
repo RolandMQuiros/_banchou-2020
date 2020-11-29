@@ -13,6 +13,7 @@ namespace Banchou.Pawn.Part {
     public class Rollback : MonoBehaviour {
         [SerializeField] private float _historyWindow = 3f;
         [SerializeField] private float _rollbackThreshold = 0.05f;
+        [SerializeField] private float _stateTimeThreshold = 0.005f;
 
         private PawnId _pawnId;
         private GetServerTime _getServerTime;
@@ -107,12 +108,13 @@ namespace Banchou.Pawn.Part {
                     })
                     .AddTo(this);
 
+                var lastTargetNormalizedTime = 0f;
                 // Handle rollbacks
                 movesAndCommands
                     .CatchIgnoreLog()
                     .Subscribe(unit => {
-                        if (unit.Diff > _rollbackThreshold && State == PawnRollbackState.Complete) {
-                            var now = getServerTime();
+                        // currently don't handle movement rollback, since we don't keep a transform history yet
+                        if (unit.Diff > _rollbackThreshold && State == PawnRollbackState.Complete && unit.Command != InputCommand.None) {
                             var deltaTime = Mathf.Min(unit.Diff, Time.fixedUnscaledDeltaTime);
 
                             var targetState = history.Aggregate((target, step) => {
@@ -122,13 +124,19 @@ namespace Banchou.Pawn.Part {
                                 return target;
                             });
 
+                            // Revert to state when desync happened
+                            var timeSinceStateStart = getServerTime() - targetState.FixedTimeAtChange;
+                            var targetNormalizedTime = timeSinceStateStart % targetState.ClipLength;
+
+                            // If a previous command has rewound to a similar time, within some threshold, don't bother rolling back??????
+                            if (Mathf.Abs(targetNormalizedTime - lastTargetNormalizedTime) < _stateTimeThreshold) {
+                                return;
+                            }
+
                             // Tell the RecordStateHistory FSMBehaviours to stop recording
                             dispatch(pawnActions.RollbackStarted()); // For the server
                             State = PawnRollbackState.RollingBack; // For the client
 
-                            // Revert to state when desync happened
-                            var timeSinceStateStart = now - targetState.FixedTimeAtChange;
-                            var targetNormalizedTime = timeSinceStateStart / targetState.ClipLength;
                             animator.Play(
                                 stateNameHash: targetState.StateHash,
                                 layer: 0,
@@ -138,7 +146,7 @@ namespace Banchou.Pawn.Part {
                             // Tells the RecordStateHistory FSMBehaviours to start recording again
                             dispatch(pawnActions.FastForwarding(unit.Diff)); // Server
                             State = PawnRollbackState.FastForward; // Client
-                            FastForwardStartTime = now - unit.Diff;
+                            FastForwardStartTime = getServerTime() - unit.Diff;
 
                             // Kick off the fast-forward. Need to run this before pushing the commands so the _animator.Play can take
                             animator.Update(deltaTime);
@@ -167,13 +175,10 @@ namespace Banchou.Pawn.Part {
                             }
 
                             // Resimulate to present
-                            var resimulationTime = 0f;
-                            int frames = 0;
+                            var resimulationTime = deltaTime; // Skip the first update
                             while (resimulationTime < unit.Diff) {
                                 animator.Update(Mathf.Min(deltaTime, unit.Diff - resimulationTime));
                                 resimulationTime = Mathf.Min(resimulationTime + deltaTime, unit.Diff);
-                                FastForwardStartTime = FastForwardCurrentTime + resimulationTime;
-                                frames++;
                             }
 
                             dispatch(pawnActions.RollbackComplete());
