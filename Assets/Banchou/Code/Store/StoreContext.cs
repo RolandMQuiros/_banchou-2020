@@ -7,7 +7,7 @@ using Banchou.DependencyInjection;
 namespace Banchou {
     public class StoreContext : MonoBehaviour, IContext {
         [SerializeField] private GameStateStore _store = null;
-
+        public GameStateStore Store => _store;
         public void Construct() {
             if (!_store.IsInitialized) {
                 _store.Initialize();

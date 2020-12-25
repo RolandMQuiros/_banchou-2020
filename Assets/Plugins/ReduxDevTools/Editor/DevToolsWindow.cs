@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 using System;
+using System.Text.RegularExpressions;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -32,69 +33,71 @@ using UnityEditor.IMGUI.Controls;
 using UnityEditorInternal;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using JsonDiffPatchDotNet;
 
 namespace Redux.DevTools {
     public class DevToolsWindow : EditorWindow {
-        private DevToolsSession _session = null;
-        private ReorderableList _historyList = null;
-        private TreeViewState _viewState = null;
-        private JSONTreeView _treeView = null;
-        private JsonSerializer _serializer;
-        private List<Type> _actionTypes = null;
+        [SerializeField] private DevToolsSession _session;
         private HashSet<Type> _actionsDisplayFilter = new HashSet<Type>();
-
-        private Vector2 _historyScroll = Vector2.zero;
-        private Vector2 _viewScroll = Vector2.zero;
-        private Rect _fullRect = Rect.zero;
-        private Rect _historyRect = Rect.zero;
-        private int _viewMode = 0;
-
+        private List<Type> _actionTypes = new List<Type>();
 
         [MenuItem("Tools/Redux Dev Tools")]
         public static void ShowWindow() {
-            EditorWindow.GetWindow<DevToolsWindow>(
+            EditorWindow.CreateWindow<DevToolsWindow>(
                 title: "Redux DevTools"
             );
         }
 
-        private void OnEnable() {
-            _actionTypes = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(assembly => assembly.GetTypes())
-                .Where(type => !string.IsNullOrWhiteSpace(type.Namespace) && type.Namespace.EndsWith("StateAction"))
-                .ToList();
+        #region GUI
+        private ReorderableList _historyList = null;
+        private TreeViewState _viewState = null;
+        private JSONTreeView _treeView = null;
+        private JsonSerializer _serializer;
 
+        private void OnEnable() {
             // Create a custom serializer for Unity classes that don't handle it well by default
             _serializer = JsonSerializer.Create(JsonConvert.DefaultSettings());
+            _serializer.Converters.Add(new StringEnumConverter());
             _serializer.TypeNameHandling = TypeNameHandling.All;
 
-            var path = AssetDatabase.FindAssets("t:DevToolsSession")
-                .Select(guid => AssetDatabase.GUIDToAssetPath(guid))
-                .FirstOrDefault();
-
-            if (path == null) {
-                path = "Assets/ReduxDevToolsSession.asset";
-                AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<DevToolsSession>(), path);
+            if (_session == null) {
+                var searchForSession = AssetDatabase.FindAssets("t:DevToolsSession");
+                var guid = searchForSession.FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(guid)) {
+                    var path = AssetDatabase.GUIDToAssetPath(guid);
+                    _session = AssetDatabase.LoadAssetAtPath<DevToolsSession>(path);
+                } else {
+                    Debug.LogWarning("No Redux DevToolsSession asset found");
+                }
             }
 
-            AttachToSession(AssetDatabase.LoadAssetAtPath<DevToolsSession>(path));
+            if (_session != null) {
+                AttachToSession(_session);
+            }
         }
 
         private void AttachToSession(DevToolsSession session) {
+            var history = session.History;
+
             session.OnAdd += step => {
-                if (_historyList.index == session.History.Count - 2) {
-                    _historyList.index = session.History.Count - 1;
+                if (_historyList.index == history.Count - 2) {
+                    _historyList.index = history.Count - 1;
                     _historyScroll.y = _historyList.GetHeight();
                     RefreshView(_historyList.index);
                 }
             };
 
             session.OnClear += () => { _treeView.Reload(); };
-            session.OnCollapse += (_, index) => { RefreshView(index); };
+
+            _actionTypes = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(assembly => assembly.GetTypes())
+                .Where(type => !string.IsNullOrWhiteSpace(type.Namespace) && type.Namespace.EndsWith("StateAction"))
+                .ToList();
 
             _historyList = new ReorderableList(
-                session.History,
+                history,
                 typeof(DevToolsSession.Step),
                 draggable: false,
                 displayHeader: false,
@@ -103,7 +106,7 @@ namespace Redux.DevTools {
             );
 
             _historyList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) => {
-                var step = session.History[index];
+                var step = history[index];
 
                 // Display the name of the action type
                 var nameRect = new Rect(rect) {
@@ -122,7 +125,6 @@ namespace Redux.DevTools {
             _historyList.onSelectCallback = list => { RefreshView(list.index); };
 
             _historyList.onChangedCallback = list => {
-                Debug.Log("Changed?");
                 var listHeight = list.GetHeight();
                 if (_historyScroll.y >= listHeight) {
                     _historyScroll.y = listHeight;
@@ -134,6 +136,7 @@ namespace Redux.DevTools {
             _treeView.Reload();
 
             _session = session;
+            titleContent = new GUIContent($"Redux DevTools [{_session.name}]");
         }
 
         private void DrawActionsMenu(HashSet<Type> target, Action<Type> onAdd = null, Action<Type> onRemove = null) {
@@ -158,8 +161,10 @@ namespace Redux.DevTools {
         }
 
         private void RefreshView(int index) {
-            if (index < 0 || _session.History.Count < index) { return; }
-            var step = _session.History[index];
+            var history = _session.History;
+
+            if (index < 0 || history.Count < index) { return; }
+            var step = history[index];
 
             switch (_viewMode) {
                 case 0: { // View Action
@@ -180,7 +185,7 @@ namespace Redux.DevTools {
                 } break;
                 case 2: { // View State diff
                     if (index > 0) {
-                        var prev = _session.History[index - 1];
+                        var prev = history[index - 1];
                         prev.StateCache = prev.StateCache ?? JToken.FromObject(prev.State, _serializer);
                         step.StateCache = step.StateCache ?? JToken.FromObject(step.State, _serializer);
                         step.DiffCache = step.DiffCache ?? new JsonDiffPatch().Diff(step.StateCache, prev.StateCache);
@@ -192,47 +197,48 @@ namespace Redux.DevTools {
                 } break;
             }
 
+            _stackTrace = Regex.Replace(step.StackTrace, ":([0-9]+)\\s*$", ":<color=#00ffc8>$1</color>\n", RegexOptions.Multiline);
             _treeView.Reload();
             _treeView.SetExpanded(0, true);
         }
 
+        private Vector2 _historyScroll = Vector2.zero;
+        private Vector2 _viewScroll = Vector2.zero;
+        private Vector2 _stackTraceScroll = Vector2.zero;
+        private Rect _mainRect = Rect.zero;
+        private Rect _historyRect = Rect.zero;
+        private Rect _footerRect = Rect.zero;
+        private int _viewMode = 0;
+        private string _stackTrace = null;
+
         private void OnGUI() {
-            void ApplyFilter() {
-                _historyList.list = _session.History
-                    .Where(step => !_actionsDisplayFilter.Contains(step.ActionType))
-                    .ToList();
+            var session = (DevToolsSession)EditorGUILayout.ObjectField(_session, typeof(DevToolsSession), false);
+
+            if (session != null && session != _session) {
+                AttachToSession(session);
             }
 
             if (_session == null) {
-                GUILayout.Label("A DevToolsSession asset was not found, or could not be created in this project");
                 return;
             }
 
             _session.IsRecording = EditorGUILayout.Toggle(label: "Recording", value: _session.IsRecording);
+            var history = _session.History;
 
-            var fullRect = EditorGUILayout.BeginHorizontal();
-            _fullRect = fullRect == Rect.zero ? _fullRect : fullRect;
+            var mainRect = EditorGUILayout.BeginHorizontal();
+            _mainRect = mainRect == Rect.zero ? _mainRect : mainRect;
 
-                EditorGUILayout.BeginVertical(GUILayout.Width(_fullRect.width * 0.25f));
+                EditorGUILayout.BeginVertical(GUILayout.Width(_mainRect.width * 0.25f));
 
                     // Draw history + clear button header
                     EditorGUILayout.BeginHorizontal();
-                        EditorGUILayout.LabelField("History", new GUIStyle { fontStyle = FontStyle.Bold });
+                        EditorGUILayout.LabelField("History");
                         if (GUILayout.Button("Clear")) {
-                            _session.Clear();
+                            history.Clear();
                             _treeView.Source = null;
                             _treeView.Reload();
                         }
                     EditorGUILayout.EndHorizontal();
-
-                    // Draw Action History filter
-                    if (GUILayout.Button("Filter")) {
-                        DrawActionsMenu(
-                            _actionsDisplayFilter,
-                            onAdd: _ => ApplyFilter(),
-                            onRemove: _ => ApplyFilter()
-                        );
-                    }
 
                     // Draw Action history scrollview
                     _historyScroll = EditorGUILayout.BeginScrollView(
@@ -261,8 +267,31 @@ namespace Redux.DevTools {
                         alwaysShowVertical: false
                     );
                         var viewRect = EditorGUILayout.GetControlRect(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+
                         _treeView.OnGUI(viewRect);
                     EditorGUILayout.EndScrollView();
+
+                    if (_stackTrace != null) {
+                        var footerRect = EditorGUILayout.BeginVertical();
+                            EditorGUILayout.LabelField("Dispatch Stack Trace", new GUIStyle(GUI.skin.label) { fontStyle = FontStyle.Bold });
+                            _footerRect = footerRect == Rect.zero ? _footerRect : footerRect;
+                                _stackTraceScroll = EditorGUILayout.BeginScrollView(
+                                    scrollPosition: _stackTraceScroll,
+                                    alwaysShowHorizontal: false,
+                                    alwaysShowVertical: true,
+                                    GUILayout.Height(_mainRect.height * 0.35f)
+                                );
+                                    EditorGUILayout.TextArea(
+                                        _stackTrace,
+                                        new GUIStyle(GUI.skin.label) {
+                                            wordWrap = true,
+                                            richText = true
+                                        },
+                                        GUILayout.ExpandHeight(true)
+                                    );
+                                EditorGUILayout.EndScrollView();
+                        EditorGUILayout.EndVertical();
+                    }
                 EditorGUILayout.EndVertical();
             EditorGUILayout.EndHorizontal();
         }
@@ -270,5 +299,6 @@ namespace Redux.DevTools {
         private void OnInspectorUpdate() {
             Repaint();
         }
+        #endregion
     }
 }

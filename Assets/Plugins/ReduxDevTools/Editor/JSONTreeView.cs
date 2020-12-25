@@ -26,6 +26,7 @@ using System.Linq;
 using System.Collections.Generic;
 
 using UnityEngine;
+using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
 using Newtonsoft.Json.Linq;
@@ -61,7 +62,7 @@ namespace Redux.DevTools {
                         );
                     }
 
-                    foreach (var child in token.Children()) {
+                    foreach (var child in token.Children().OrderByDescending(c => c.Path)) {
                         stack.Push((Token: child, Depth: depth));
                     }
                 }
@@ -89,7 +90,7 @@ namespace Redux.DevTools {
 
             var value = TokenValueString(item.Token);
             if (!string.IsNullOrWhiteSpace(value)) {
-                GUI.Label(rect, args.selected ? $"<b>{value}</b>" : value, _rowStyle);
+                EditorGUI.SelectableLabel(rect, args.selected ? $"<b>{value}</b>" : value, _rowStyle);
             }
 
             string TokenValueString(JToken token) {
@@ -124,18 +125,17 @@ namespace Redux.DevTools {
                     case JTokenType.Guid:
                     case JTokenType.Uri:
                     case JTokenType.String:
-                        return $"<color=#ff006f>\"{token.ToString()}\"</color>";
+                        return $"<color=#fcba03>\"{token.ToString()}\"</color>";
                     case JTokenType.Date:
-                        return $"<color=#4287f5>\"{token.ToString()}\"</color>";
                     case JTokenType.TimeSpan:
-                        return $"<color=#42f54e>\"{token.ToString()}\"</color>";
+                        return $"<color=#429bf5>\"{token.ToString()}\"</color>";
                     case JTokenType.Boolean:
                         return $"<color=#e1ff00>{token}</color>";
                     case JTokenType.Null:
                     case JTokenType.None:
                         return $"<color=#0076de>null</color>";
                     default:
-                        return $"<color=#67caf5>\"{token.ToString()}\"</color>";
+                        return $"<color=#d4cfff>\"{token.ToString()}\"</color>";
                 }
                 return null;
             }

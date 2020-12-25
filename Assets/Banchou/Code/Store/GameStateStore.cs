@@ -49,7 +49,7 @@ namespace Banchou {
         public void Initialize() {
             if (_store != null) { return; }
 
-            var initialState = JsonConvert.DeserializeObject<GameState>(_initialState.text);
+            var initialState = _initialState != null ? JsonConvert.DeserializeObject<GameState>(_initialState.text) : new GameState();
 
             var settings = JsonConvert.DefaultSettings();
             settings.TypeNameHandling = TypeNameHandling.Objects;

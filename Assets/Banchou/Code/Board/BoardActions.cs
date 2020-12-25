@@ -18,6 +18,8 @@ namespace Banchou.Board {
             public PawnId PawnId;
         }
 
+        public struct ClearPawns { }
+
         public struct AddScene {
             public string Scene;
         }
@@ -80,6 +82,8 @@ namespace Banchou.Board {
         public StateAction.RemovePawn RemovePawn(PawnId pawnId) => new StateAction.RemovePawn {
             PawnId = pawnId
         };
+
+        public StateAction.ClearPawns ClearPawns() => new StateAction.ClearPawns();
 
         public StateAction.AddScene AddScene(string sceneName) => new StateAction.AddScene {
             Scene = sceneName

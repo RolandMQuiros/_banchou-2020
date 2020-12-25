@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebfd297ac1529054a940e243e5de4b82, type: 3}
+  m_Name: NetworkTestPawnCatalog
+  m_EditorClassIdentifier: 
+  _prefabCatalog:
+  - Key: NetworkedPawn
+    Prefab: {fileID: 2486418402485586660, guid: a6a3da339c1fda5409c39c6e5fbd880c,
+      type: 3}

@@ -35,7 +35,6 @@ namespace Banchou.Network {
                 .WithResolver(CompositeResolver.Create(
                     BanchouMessagePackResolver.Instance,
                     MessagePack.Unity.UnityResolver.Instance,
-
                     StandardResolver.Instance
                 ));
 
@@ -55,7 +54,6 @@ namespace Banchou.Network {
                     switch (mode) {
                         case Mode.Client:
                             _client = new NetworkClient(
-                                networkId: getState().GetNetworkId(),
                                 dispatch,
                                 networkActions,
                                 playerInput,
@@ -71,6 +69,7 @@ namespace Banchou.Network {
                             break;
                         case Mode.Server:
                             _server = new NetworkServer(
+                                getState().GetNetworkId(),
                                 observeState,
                                 getState,
                                 dispatch,

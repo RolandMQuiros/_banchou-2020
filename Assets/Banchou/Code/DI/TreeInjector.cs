@@ -1,11 +1,8 @@
 ﻿using System.Linq;
-using Redux;
 using UnityEngine;
 
-using Banchou.Board;
-
 namespace Banchou.DependencyInjection {
-    public class SceneInjector : MonoBehaviour {
+    public class TreeInjector : MonoBehaviour {
         private void Awake() {
             var all = gameObject.scene.GetRootGameObjects()
                 .Select(obj => obj.transform);

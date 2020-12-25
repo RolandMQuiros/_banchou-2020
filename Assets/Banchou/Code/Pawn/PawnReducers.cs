@@ -28,6 +28,13 @@ namespace Banchou.Pawn {
                 return next;
             }
 
+            if (action is Board.StateAction.ClearPawns clear) {
+                var next = new PawnsState(prev) {
+                    States = new Dictionary<PawnId, PawnState>()
+                };
+                return next;
+            }
+
             if (action is Player.StateAction.RemovePlayer removePlayer) {
                 var affected = prev.States.Values.Where(pawn => pawn.PlayerId == removePlayer.PlayerId);
                 if (affected.Any()) {

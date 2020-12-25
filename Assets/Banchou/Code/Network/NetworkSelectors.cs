@@ -11,6 +11,10 @@ namespace Banchou.Network {
             return state.Network.Id;
         }
 
+        public static bool IsConnectedToServer(this GameState state) {
+            return state.Network.Id != Guid.Empty;
+        }
+
         public static IPEndPoint GetIP(this GameState state) {
             return state.Network.IP;
         }

@@ -51,6 +51,7 @@ namespace Banchou.Test {
             _getServerTime = () => _client?.GetTime() ?? _server?.GetTime() ?? Time.fixedUnscaledTime;
 
             _server = new NetworkServer(
+                _serverStore.GetState().GetNetworkId(),
                 _serverStore.ObserveState(),
                 _serverStore.GetState,
                 _serverStore.Dispatch,
@@ -62,7 +63,6 @@ namespace Banchou.Test {
 
             _clientStore = new Store<GameState>(GameStateStore.Reducer, new GameState());
             _client = new NetworkClient(
-                System.Guid.Empty,
                 _clientStore.Dispatch,
                 new NetworkActions(_getServerTime),
                 new PlayerInputStreams(),

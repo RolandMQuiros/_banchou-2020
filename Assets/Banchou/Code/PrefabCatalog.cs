@@ -12,7 +12,7 @@ namespace Banchou {
             public GameObject Prefab = null;
         }
         [SerializeField] private PrefabPair[] _prefabCatalog = null;
-        private Dictionary<string, GameObject> _runtimeCatalog;
+        private Dictionary<string, GameObject> _runtimeCatalog = null;
 
         private void OnEnable() {
             _runtimeCatalog = _prefabCatalog.ToDictionary(p => p.Key, p => p.Prefab);

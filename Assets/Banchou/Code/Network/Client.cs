@@ -17,7 +17,6 @@ using Banchou.Network.Message;
 
 namespace Banchou.Network {
     public class NetworkClient : IDisposable {
-        private Guid _networkId;
         private MessagePackSerializerOptions _messagePackOptions;
         private EventBasedNetListener _listener;
         private NetManager _client;
@@ -29,7 +28,6 @@ namespace Banchou.Network {
         private CompositeDisposable _subscriptions = new CompositeDisposable();
 
         public NetworkClient(
-            Guid networkId,
             Dispatcher dispatch,
             NetworkActions networkActions,
             PlayerInputStreams playerInput,
@@ -37,13 +35,12 @@ namespace Banchou.Network {
             JsonSerializer jsonSerializer,
             MessagePackSerializerOptions messagePackOptions
         ) {
-            _networkId = networkId;
             _messagePackOptions = messagePackOptions;
             _listener = new EventBasedNetListener();
             _client = new NetManager(_listener);
 
             _client.SimulateLatency = true;
-            _client.SimulationMinLatency = 100;
+            _client.SimulationMinLatency = 150;
             _client.SimulationMaxLatency = 300;
 
             // Receiving data from server
@@ -62,6 +59,7 @@ namespace Banchou.Network {
                             _lastLocalTime = response.LocalTime;
                             _lastServerTime = response.ServerTime;
                         }
+                        Debug.Log($"[Time Ping] {fromPeer.Ping}");
                     } break;
                     case PayloadType.SyncClient: {
                         var syncClient = MessagePackSerializer.Deserialize<SyncClient>(envelope.Payload, messagePackOptions);
@@ -91,6 +89,7 @@ namespace Banchou.Network {
                     case PayloadType.PlayerCommand: {
                         var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, messagePackOptions);
                         playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, playerCommand.When);
+                        Debug.Log($"[Command Ping] {fromPeer.Ping}");
                     } break;
                 }
 
@@ -123,6 +122,7 @@ namespace Banchou.Network {
 
             _subscriptions.Add(
                 timeInterval
+                    .StartWith(default(T))
                     .CatchIgnoreLog()
                     .Subscribe(_ => {
                         var request = Envelope.CreateMessage(

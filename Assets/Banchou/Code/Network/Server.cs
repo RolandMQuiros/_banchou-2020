@@ -19,6 +19,7 @@ using Banchou.Network.Message;
 
 namespace Banchou.Network {
     public class NetworkServer : IDisposable {
+        private Guid _networkId;
         private Dispatcher _dispatch;
         private NetworkActions _networkActions;
         private MessagePackSerializerOptions _messagePackOptions;
@@ -28,6 +29,7 @@ namespace Banchou.Network {
         private CompositeDisposable _subscriptions = new CompositeDisposable();
 
         public NetworkServer(
+            Guid networkId,
             IObservable<GameState> observeState,
             GetState getState,
             Dispatcher dispatch,
@@ -36,6 +38,7 @@ namespace Banchou.Network {
             JsonSerializer jsonSerializer,
             MessagePackSerializerOptions messagePackOptions
         ) {
+            _networkId = networkId;
             _listener = new EventBasedNetListener();
             _server = new NetManager(_listener);
             _peers = new Dictionary<Guid, NetPeer>();
@@ -82,7 +85,7 @@ namespace Banchou.Network {
 
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
                 // Calculate when the event was sent
-                var when = Time.fixedUnscaledTime - (fromPeer.Ping / 2000f);
+                var when = Time.fixedUnscaledTime;// - fromPeer.Ping / 2000f;
 
                 // Open envelope
                 var envelope = MessagePackSerializer.Deserialize<Envelope>(dataReader.GetRemainingBytes(), _messagePackOptions);
@@ -112,6 +115,7 @@ namespace Banchou.Network {
                         fromPeer.Send(syncClientMessage, DeliveryMethod.ReliableOrdered);
                     } break;
                     case PayloadType.ServerTimeRequest: {
+                        Debug.Log($"Server Time Response, Ping: {fromPeer.Ping}");
                         var request = MessagePackSerializer.Deserialize<ServerTimeRequest>(envelope.Payload, _messagePackOptions);
                         var response = Envelope.CreateMessage(
                             PayloadType.ServerTimeResponse,
@@ -205,7 +209,7 @@ namespace Banchou.Network {
                     })
             );
 
-            _instances.Add(this);
+            _instances[networkId] = this;
             Debug.Log("Server constructed");
         }
 
@@ -242,17 +246,18 @@ namespace Banchou.Network {
             Debug.Log("Server stopped");
 
             _subscriptions.Dispose();
-            _instances.Remove(this);
+            _instances.Remove(_networkId);
         }
 
         #region Redux Middleware
-        private static List<NetworkServer> _instances = new List<NetworkServer>();
+        private static Dictionary<Guid, NetworkServer> _instances = new Dictionary<Guid, NetworkServer>();
         public static Middleware<TState> Install<TState>(JsonSerializer jsonSerializer, MessagePackSerializerOptions messagePackOptions) {
             return store => next => action => {
-                byte[] actionBytes = null;
-                for (int i = 0; i < _instances.Count; i++) {
+                NetworkServer server;
+                if (store.GetState() is GameState state && state.IsServer() && _instances.TryGetValue(state.GetNetworkId(), out server)) {
+                    byte[] actionBytes = null;
                     // Send the action to all peers
-                    foreach (var peer in _instances[i]._peers.Values) {
+                    foreach (var peer in server._peers.Values) {
                         // If the envelope hasn't been built, build it
                         if (actionBytes == null) {
                             // Convert action to BSON

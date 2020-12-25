@@ -39,6 +39,7 @@ namespace Banchou.Player {
             observePlayersChanges
                 .SelectMany(pair => pair.Current.Except(pair.Previous))
                 .Where(addedId => !_instances.ContainsKey(addedId))
+                .CatchIgnoreLog()
                 .Subscribe(addedId => {
                     var prefabKey = _getState().GetPlayerPrefabKey(addedId);
                     if (!string.IsNullOrWhiteSpace(prefabKey)) {
@@ -61,6 +62,7 @@ namespace Banchou.Player {
             // Remove Players based on state
             observePlayersChanges
                 .SelectMany(pair => pair.Previous.Except(pair.Current))
+                .CatchIgnoreLog()
                 .Subscribe(removedId => {
                     GameObject instance;
                     if (_instances.TryGetValue(removedId, out instance)) {
