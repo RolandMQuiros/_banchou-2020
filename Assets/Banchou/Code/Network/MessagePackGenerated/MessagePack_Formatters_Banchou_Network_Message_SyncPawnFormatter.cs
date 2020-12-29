@@ -27,10 +27,11 @@ namespace MessagePack.Formatters.Banchou.Network.Message
         public void Serialize(ref MessagePackWriter writer, global::Banchou.Network.Message.SyncPawn value, global::MessagePack.MessagePackSerializerOptions options)
         {
             IFormatterResolver formatterResolver = options.Resolver;
-            writer.WriteArrayHeader(3);
+            writer.WriteArrayHeader(4);
             formatterResolver.GetFormatterWithVerify<global::Banchou.Pawn.PawnId>().Serialize(ref writer, value.PawnId, options);
             formatterResolver.GetFormatterWithVerify<global::UnityEngine.Vector3>().Serialize(ref writer, value.Position, options);
             formatterResolver.GetFormatterWithVerify<global::UnityEngine.Vector3>().Serialize(ref writer, value.Forward, options);
+            writer.Write(value.When);
         }
 
         public global::Banchou.Network.Message.SyncPawn Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
@@ -46,6 +47,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             var __PawnId__ = default(global::Banchou.Pawn.PawnId);
             var __Position__ = default(global::UnityEngine.Vector3);
             var __Forward__ = default(global::UnityEngine.Vector3);
+            var __When__ = default(float);
 
             for (int i = 0; i < length; i++)
             {
@@ -62,6 +64,9 @@ namespace MessagePack.Formatters.Banchou.Network.Message
                     case 2:
                         __Forward__ = formatterResolver.GetFormatterWithVerify<global::UnityEngine.Vector3>().Deserialize(ref reader, options);
                         break;
+                    case 3:
+                        __When__ = reader.ReadSingle();
+                        break;
                     default:
                         reader.Skip();
                         break;
@@ -72,6 +77,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             ____result.PawnId = __PawnId__;
             ____result.Position = __Position__;
             ____result.Forward = __Forward__;
+            ____result.When = __When__;
             reader.Depth--;
             return ____result;
         }

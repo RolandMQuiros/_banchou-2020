@@ -26,14 +26,20 @@ namespace Banchou.Pawn {
         [SerializeField] private Part.Rollback _rollback = null;
         private IMotor _motor = null;
 
+        #region IPawnInstance
         public PawnId PawnId { get; private set; }
-        public Rigidbody Body { get => _rigidbody; }
-        public Transform Orientation { get => _orientation.transform; }
-        public NavMeshAgent Agent { get => _agent; }
-        public IMotor Motor { get => _motor; }
-
-        public Vector3 Position { get => _rigidbody?.position ?? transform.position; }
-        public Vector3 Forward { get => _orientation?.transform.forward ?? transform.forward; }
+        public Vector3 Position { get => _rigidbody?.position ?? transform.position; set => transform.position = value; }
+        public Vector3 Forward {
+            get => _orientation?.transform.forward ?? transform.forward;
+            set {
+                if (_orientation != null) {
+                    _orientation.transform.rotation = Quaternion.LookRotation(value);
+                } else {
+                    transform.rotation = Quaternion.LookRotation(value);
+                }
+            }
+        }
+        #endregion
 
         private Dispatcher _dispatch;
         private GetState _getState;
@@ -51,8 +57,7 @@ namespace Banchou.Pawn {
             Dispatcher dispatch,
             GetState getState,
             IObservable<GameState> onStateUpdate,
-            PlayerInputStreams playerInput,
-            IObservable<SyncPawn> onPawnSync = null
+            PlayerInputStreams playerInput
         ) {
             PawnId = pawnId;
             _dispatch = dispatch;
@@ -71,21 +76,6 @@ namespace Banchou.Pawn {
             if (_agent != null) {
                 _agent.updatePosition = false;
                 _agent.updateRotation = false;
-            }
-
-            if (onPawnSync != null) {
-                onPawnSync
-                    .Where(syncPawn => syncPawn.PawnId == PawnId)
-                    .CatchIgnoreLog()
-                    .Subscribe(syncPawn => {
-                        transform.position = syncPawn.Position;
-                        if (_orientation != null) {
-                            _orientation.transform.rotation = Quaternion.LookRotation(syncPawn.Forward);
-                        } else {
-                            transform.rotation = Quaternion.LookRotation(syncPawn.Forward);
-                        }
-                    })
-                    .AddTo(this);
             }
 
             _pawnId = PawnId.ToString();

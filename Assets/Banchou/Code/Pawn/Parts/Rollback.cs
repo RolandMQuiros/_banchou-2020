@@ -8,6 +8,7 @@ using UnityEngine;
 
 using Banchou.Player;
 using Banchou.Network;
+using Banchou.Network.Message;
 
 namespace Banchou.Pawn.Part {
     public class Rollback : MonoBehaviour {
@@ -37,12 +38,14 @@ namespace Banchou.Pawn.Part {
 
         public void Construct(
             PawnId pawnId,
+            IPawnInstance pawn,
             IObservable<GameState> observeState,
             Dispatcher dispatch,
             PawnActions pawnActions,
             PlayerInputStreams playerInput,
             Subject<InputCommand> commandSubject,
             Subject<Vector3> moveSubject,
+            IObservable<SyncPawn> onSyncPawn,
             GetServerTime getServerTime,
             Animator animator = null
         ) {
@@ -71,7 +74,7 @@ namespace Banchou.Pawn.Part {
                     );
 
                 // Aggregate FSM changes into a list
-                var history = new LinkedList<PawnFSMState>();
+                var fsmHistory = new LinkedList<PawnFSMState>();
 
                 observeState
                     .Select(state => state.GetLatestFSMChange())
@@ -80,23 +83,28 @@ namespace Banchou.Pawn.Part {
                     .DistinctUntilChanged(s => s.StateHash)
                     .Subscribe(fsmState => {
                         // Always have at least one state change on the list
-                        while (history.Count > 1 && history.First.Value.FixedTimeAtChange < getServerTime() - _historyWindow) {
-                            history.RemoveFirst();
+                        while (fsmHistory.Count > 1 && fsmHistory.First.Value.FixedTimeAtChange < getServerTime() - _historyWindow) {
+                            fsmHistory.RemoveFirst();
                         }
-                        history.AddLast(fsmState);
+                        fsmHistory.AddLast(fsmState);
                     })
                     .AddTo(this);
 
                 var lastTargetNormalizedTime = 0f;
                 // Handle rollbacks
                 movesAndCommands
+                    .WithLatestFrom(
+                        onSyncPawn.Buffer(TimeSpan.FromSeconds(_historyWindow)),
+                        (unit, syncHistory) => (unit, syncHistory)
+                    )
                     .CatchIgnoreLog()
-                    .Subscribe(unit => {
-                        // currently don't handle movement rollback, since we don't keep a transform history yet
-                        if (unit.Diff > _rollbackThreshold && State == RollbackState.Complete && unit.Command != InputCommand.None) {
+                    .Subscribe(args => {
+                        var (unit, syncHistory) = args;
+
+                        if (unit.Diff > _rollbackThreshold && State == RollbackState.Complete) {
                             var deltaTime = Mathf.Min(unit.Diff, Time.fixedUnscaledDeltaTime);
 
-                            var targetState = history.Aggregate((target, step) => {
+                            var targetState = fsmHistory.Aggregate((target, step) => {
                                 if (unit.When > step.FixedTimeAtChange) {
                                     return step;
                                 }
@@ -116,6 +124,22 @@ namespace Banchou.Pawn.Part {
 
                             // Tell the RecordStateHistory FSMBehaviours to stop recording
                             State = RollbackState.RollingBack; // For the client
+
+                            // Reposition/rotate to where the pawn was at time of rollback
+                            if (syncHistory.Any()) {
+                                var targetSync = syncHistory.Aggregate((target, step) => {
+                                    if (targetState.FixedTimeAtChange > step.When) {
+                                        return step;
+                                    }
+                                    return target;
+                                });
+
+                                Debug.Log($"Rewinding Pawn {pawnId} transform: {pawn.Position}->{targetSync.Position}");
+
+                                var t = (getServerTime() - targetState.FixedTimeAtChange) / (getServerTime() - targetSync.When);
+                                pawn.Position = Vector3.Lerp(targetSync.Position, pawn.Position, t);
+                                pawn.Forward = Vector3.Lerp(targetSync.Forward, pawn.Forward, t);
+                            }
 
                             animator.Play(
                                 stateNameHash: targetState.StateHash,

@@ -12,12 +12,17 @@ namespace Banchou.Pawn.Part {
         [SerializeField] private int _frequency = 20;
         public void Construct(
             PawnId pawnId,
+            IPawnInstance pawn,
             IObservable<GameState> onStateUpdate,
             ObservePlayerMove onPlayerMove,
-            PushPawnSync pushPawnSync
-        ) {
-            var pawn = GetComponent<IPawnInstance>();
+            PushPawnSync pushPawnSync,
+            GetServerTime getServerTime,
 
+            Rigidbody body,
+            Part.Orientation orientation,
+
+            IObservable<SyncPawn> onPawnSync = null
+        ) {
             onStateUpdate
                 .Select(state => state.IsServer())
                 .DistinctUntilChanged()
@@ -28,17 +33,34 @@ namespace Banchou.Pawn.Part {
                         .SampleFrame(_frequency, FrameCountType.Update)
                         // Sync when movement direction changes
                         .Merge(onPlayerMove().DistinctUntilChanged().Select(__ => new Unit()))
+                        .StartWith(new Unit())
                 )
                 .Subscribe(_ => {
                     pushPawnSync(
                         new SyncPawn {
                             PawnId = pawnId,
                             Position = pawn.Position,
-                            Forward = pawn.Forward
+                            Forward = pawn.Forward,
+                            When = getServerTime()
                         }
                     );
                 })
                 .AddTo(this);
+
+            // if (onPawnSync != null) {
+            //     onPawnSync
+            //         .Where(syncPawn => syncPawn.PawnId == pawnId)
+            //         .CatchIgnoreLog()
+            //         .Subscribe(syncPawn => {
+            //             body.transform.position = syncPawn.Position;
+            //             if (orientation != null) {
+            //                 orientation.transform.rotation = Quaternion.LookRotation(syncPawn.Forward);
+            //             } else {
+            //                 transform.rotation = Quaternion.LookRotation(syncPawn.Forward);
+            //             }
+            //         })
+            //         .AddTo(this);
+            // }
         }
     }
 

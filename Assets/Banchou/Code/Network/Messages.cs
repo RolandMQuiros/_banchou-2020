@@ -71,6 +71,7 @@ namespace Banchou.Network.Message {
         [Key(0)] public PawnId PawnId;
         [Key(1)] public Vector3 Position;
         [Key(2)] public Vector3 Forward;
+        [Key(3)] public float When;
     }
 
     // https://gamedev.stackexchange.com/questions/93477/how-to-keep-server-client-clocks-in-sync-for-precision-networked-games-like-quak

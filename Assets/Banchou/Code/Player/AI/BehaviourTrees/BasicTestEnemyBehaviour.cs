@@ -33,8 +33,6 @@ namespace Banchou.AI {
                 .DistinctUntilChanged()
                 .Subscribe(pawnId => {
                     var pawn = pawnInstances.Get(pawnId) as PawnContext;
-                    var body = pawn.Body;
-                    var agent = pawn.Agent;
                     var targetId = PawnId.Empty;
 
                     var poked = false;
