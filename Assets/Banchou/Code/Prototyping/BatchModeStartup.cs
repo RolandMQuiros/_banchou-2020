@@ -48,7 +48,7 @@ namespace Banchou.Prototype {
                     dispatch(playerActions.AddPlayer(playerId, "Local Player", $"Player {clientId}", clientId));
 
                     var pawnId = getState().NextPawnId();
-                    dispatch(boardActions.AddPawn(pawnId, playerId, "Isaac Remote", new Vector3(Random.Range(-5f, 5f), 3f, Random.Range(-5f, 5f))));
+                    dispatch(boardActions.AddPawn(pawnId, playerId, "Isaac", new Vector3(Random.Range(-5f, 5f), 3f, Random.Range(-5f, 5f))));
                 });
         }
 
