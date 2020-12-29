@@ -125,7 +125,7 @@ namespace Banchou.Pawn.Part {
 
                             // Tells the RecordStateHistory FSMBehaviours to start recording again
                             State = RollbackState.FastForward; // Client
-                            CorrectionTime = unit.Diff;
+                            CorrectionTime = getServerTime() - unit.Diff;
 
                             // Kick off the fast-forward. Need to run this before pushing the commands so the _animator.Play can take
                             animator.Update(deltaTime);
