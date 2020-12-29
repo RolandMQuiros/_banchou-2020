@@ -18,7 +18,7 @@ namespace Banchou.Combatant {
             this.OnTriggerEnterAsObservable()
                 .Subscribe(collider => {
                     var targetable = collider.GetComponent<Targetable>();
-                    if (targetable?.PawnId != PawnId.Empty && pawnId != targetable?.PawnId) {
+                    if (targetable != null && targetable.PawnId != PawnId.Empty && targetable.PawnId != pawnId) {
                         dispatch(combatantActions.AddTarget(pawnId, targetable.PawnId));
                     }
                 })
@@ -27,7 +27,7 @@ namespace Banchou.Combatant {
             this.OnTriggerExitAsObservable()
                 .Subscribe(collider => {
                     var targetable = collider.GetComponent<Targetable>();
-                    if (targetable?.PawnId != PawnId.Empty && pawnId != targetable.PawnId) {
+                    if (targetable != null && targetable.PawnId != PawnId.Empty && targetable.PawnId != pawnId) {
                         dispatch(combatantActions.RemoveTarget(pawnId, targetable.PawnId));
                     }
                 })
