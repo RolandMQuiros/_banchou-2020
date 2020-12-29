@@ -471,8 +471,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _historyWindow: 3
-  _rollbackThreshold: 0.05
-  _rollbackDebounce: 0.032
+  _rollbackThreshold: 0.15
+  _rollbackDebounce: 0.1
 --- !u!114 &-5937054806897504739
 MonoBehaviour:
   m_ObjectHideFlags: 0

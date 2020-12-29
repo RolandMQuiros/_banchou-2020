@@ -44,8 +44,8 @@ namespace Banchou.Network {
             _client = new NetManager(_listener);
 
             _client.SimulateLatency = true;
-            _client.SimulationMinLatency = 300;
-            _client.SimulationMaxLatency = 300;
+            _client.SimulationMinLatency = 600;
+            _client.SimulationMaxLatency = 800;
 
             // Receiving data from server
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {

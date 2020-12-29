@@ -13,6 +13,7 @@ namespace Banchou.Pawn.Part {
         public void Construct(
             PawnId pawnId,
             IPawnInstance pawn,
+            Animator animator,
             IObservable<GameState> onStateUpdate,
             ObservePlayerMove onPlayerMove,
             PushPawnSync pushPawnSync,
@@ -35,6 +36,7 @@ namespace Banchou.Pawn.Part {
                         .Merge(onPlayerMove().DistinctUntilChanged().Select(__ => new Unit()))
                         .StartWith(new Unit())
                 )
+                .CatchIgnoreLog()
                 .Subscribe(_ => {
                     pushPawnSync(
                         new SyncPawn {
@@ -44,6 +46,21 @@ namespace Banchou.Pawn.Part {
                             When = getServerTime()
                         }
                     );
+                })
+                .AddTo(this);
+
+            onStateUpdate
+                .Select(state => state.GetLatestFSMChange())
+                .DistinctUntilChanged()
+                .Where(stateChange => stateChange.PawnId == pawnId)
+                .CatchIgnoreLog()
+                .Subscribe(stateChange => {
+                    pawn.Position = stateChange.Position;
+                    pawn.Forward = stateChange.Forward;
+
+                    var timeSinceStateStart = getServerTime() - stateChange.When;
+                    var targetNormalizedTime = timeSinceStateStart % stateChange.ClipLength;
+                    animator.Play(stateChange.StateHash, 0, targetNormalizedTime);
                 })
                 .AddTo(this);
 

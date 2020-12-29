@@ -14,11 +14,9 @@ using Banchou.Network.Message;
 namespace Banchou.Pawn.Part {
     public class Rollback : MonoBehaviour {
         [SerializeField, Tooltip("How much state history to record, in seconds")]
-        private float _historyWindow = 3f;
+        private float _historyWindow = 2f;
         [SerializeField, Tooltip("Minimum delay between the current time and an input's timestamp before kicking off a rollback")]
-        private float _rollbackThreshold = 0.05f;
-        [SerializeField, Tooltip("How much time after a successful rollback before accepting another rollback")]
-        private float _rollbackDebounce = 0.032f;
+        private float _rollbackThreshold = 0.15f;
         public enum RollbackState : byte {
             Complete,
             RollingBack,
@@ -101,7 +99,6 @@ namespace Banchou.Pawn.Part {
                     .DistinctUntilChanged()
                     .Buffer(movesAndCommands);
 
-                var lastTargetNormalizedTime = 0f;
                 // Handle rollbacks
                 movesAndCommands
                     .WithLatestFrom(observeXformHistory, (unit, xformHistory) => (unit, xformHistory))
@@ -134,13 +131,6 @@ namespace Banchou.Pawn.Part {
                             var timeSinceStateStart = now - targetState.When;
                             var targetNormalizedTime = timeSinceStateStart % targetState.ClipLength;
 
-                            // If a previous command has rewound to a similar time, within some threshold, don't bother rolling back
-                            var debouncedTime = Mathf.Abs(targetNormalizedTime - lastTargetNormalizedTime);
-                            if (debouncedTime < _rollbackDebounce) {
-                                return;
-                            }
-                            lastTargetNormalizedTime = targetNormalizedTime;
-
                             // Tell the RecordStateHistory FSMBehaviours to stop recording
                             State = RollbackState.RollingBack;
 
@@ -152,6 +142,9 @@ namespace Banchou.Pawn.Part {
                                     }
                                     return target;
                                 });
+
+                                Debug.Log($"Rolling back position\n({pawn.Position} at {now}) -> ({targetXform.Position} at {targetXform.When})");
+
                                 pawn.Position = targetXform.Position;
                                 pawn.Forward = targetXform.Forward;
                             }
