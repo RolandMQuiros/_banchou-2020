@@ -13,16 +13,12 @@ namespace Banchou.Pawn.Part {
         public void Construct(
             PawnId pawnId,
             IPawnInstance pawn,
-            Animator animator,
             IObservable<GameState> onStateUpdate,
             ObservePlayerMove onPlayerMove,
             PushPawnSync pushPawnSync,
             GetServerTime getServerTime,
 
-            Rigidbody body,
-            Part.Orientation orientation,
-
-            IObservable<SyncPawn> onPawnSync = null
+            Animator animator = null
         ) {
             onStateUpdate
                 .Select(state => state.IsServer())
