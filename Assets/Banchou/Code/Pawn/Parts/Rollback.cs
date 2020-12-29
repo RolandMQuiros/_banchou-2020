@@ -97,7 +97,7 @@ namespace Banchou.Pawn.Part {
                         When: getServerTime()
                     ))
                     .DistinctUntilChanged()
-                    .Buffer(movesAndCommands);
+                    .Buffer(TimeSpan.FromSeconds(_historyWindow));
 
                 // Handle rollbacks
                 movesAndCommands
@@ -119,13 +119,7 @@ namespace Banchou.Pawn.Part {
                             );
 
                             var deltaTime = Mathf.Min(unit.Diff, Time.fixedUnscaledDeltaTime);
-
-                            var targetState = fsmHistory.Aggregate((target, step) => {
-                                if (unit.When > step.When) {
-                                    return step;
-                                }
-                                return target;
-                            });
+                            var targetState = fsmHistory.First(step => unit.When > step.When);
 
                             // Revert to state when desync happened
                             var timeSinceStateStart = now - targetState.When;
@@ -136,12 +130,7 @@ namespace Banchou.Pawn.Part {
 
                             // Reposition/rotate to where the pawn was at time of rollback
                             if (xformHistory.Any()) {
-                                var targetXform = xformHistory.Aggregate((target, step) => {
-                                    if (unit.When > step.When) {
-                                        return step;
-                                    }
-                                    return target;
-                                });
+                                var targetXform = xformHistory.First(step => unit.When > step.When);
 
                                 Debug.Log($"Rolling back position\n({pawn.Position} at {now}) -> ({targetXform.Position} at {targetXform.When})");
 
