@@ -4,14 +4,7 @@ using UnityEngine;
 namespace Banchou.DependencyInjection {
     public class TreeInjector : MonoBehaviour {
         private void Awake() {
-            var all = gameObject.scene.GetRootGameObjects()
-                .Select(obj => obj.transform);
-
-            // For every object in the scene, traverse up the hierarchy and aggregate the bindings
-            // of every context along the way
-            foreach (var xform in all) {
-                xform.ApplyBindings();
-            }
+            transform.ApplyBindings();
         }
     }
 }

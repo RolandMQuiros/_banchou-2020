@@ -14,7 +14,7 @@ namespace Banchou.DependencyInjection {
         private Dictionary<Type, Binding> _bindings = new Dictionary<Type, Binding>();
 
         public DiContainer(params object[] bindings) {
-            Bind<DiContainer>(this);
+            Bind(this);
             Bind<Instantiator>(Instantiate);
 
             foreach (var binding in bindings) {
@@ -25,14 +25,16 @@ namespace Banchou.DependencyInjection {
         }
 
         public DiContainer(in DiContainer prev, params object[] bindings) {
-            Bind<DiContainer>(this);
-            Bind<Instantiator>(Instantiate);
+            var prevBindings = prev._bindings.Values.Concat(bindings);
 
-            foreach (var binding in bindings) {
+            foreach (var binding in prevBindings) {
                 _bindings[binding.GetType()] = new Binding {
                     Instance = binding
                 };
             }
+
+            Bind(this);
+            Bind<Instantiator>(Instantiate);
         }
 
         public void Bind<T>(T instance) {
