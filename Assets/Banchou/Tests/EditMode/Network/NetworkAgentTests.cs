@@ -63,6 +63,7 @@ namespace Banchou.Test {
 
             _clientStore = new Store<GameState>(GameStateStore.Reducer, new GameState());
             _client = new NetworkClient(
+                _clientStore.ObserveState(),
                 _clientStore.Dispatch,
                 new NetworkActions(_getServerTime),
                 new PlayerInputStreams(),
