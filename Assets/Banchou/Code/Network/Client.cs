@@ -142,7 +142,7 @@ namespace Banchou.Network {
                     .CatchIgnoreLog()
                     .Subscribe(unit => {
                         var message = Envelope.CreateMessage(
-                            PayloadType.PlayerCommand,
+                            PayloadType.PlayerMove,
                             new PlayerMove {
                                 PlayerId = unit.PlayerId,
                                 Direction = unit.Move,
