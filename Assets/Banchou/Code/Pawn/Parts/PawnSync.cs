@@ -19,8 +19,9 @@ namespace Banchou.Pawn.Part {
             var pawn = GetComponent<IPawnInstance>();
 
             onStateUpdate
-                .Where(state => state.IsServer())
+                .Select(state => state.IsServer())
                 .DistinctUntilChanged()
+                .Where(isServer => isServer)
                 .SelectMany(_ =>
                     // Sync at a certain frequency
                     this.FixedUpdateAsObservable()

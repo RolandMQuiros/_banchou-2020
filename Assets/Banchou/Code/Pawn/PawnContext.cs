@@ -84,7 +84,6 @@ namespace Banchou.Pawn {
                         } else {
                             transform.rotation = Quaternion.LookRotation(syncPawn.Forward);
                         }
-                        Debug.Log($"Synced {syncPawn.PawnId} to {syncPawn.Position}");
                     })
                     .AddTo(this);
             }

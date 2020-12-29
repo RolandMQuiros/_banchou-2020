@@ -37,6 +37,13 @@ namespace Banchou {
                 .Where(_ => component.isActiveAndEnabled);
         }
 
+        public static IObservable<T> OnActive<T>(this MonoBehaviour component, IObservable<T> source) {
+            return component.EnabledAsObservable()
+                .Merge(component.OnDisableAsObservable())
+                .Where(_ => component.isActiveAndEnabled)
+                .SelectMany(_ => source);
+        }
+
         public static byte[] ToByteArray<T>(this T obj) where T : struct {
             var size = Marshal.SizeOf(obj);
             var arr = new byte[size];

@@ -11,21 +11,15 @@ using Banchou.Network;
 
 namespace Banchou.Pawn.Part {
     public class Rollback : MonoBehaviour {
-        [SerializeField] private float _historyWindow = 3f;
-        [SerializeField] private float _rollbackThreshold = 0.05f;
-        [SerializeField] private float _stateTimeThreshold = 0.005f;
+        [SerializeField, Tooltip("How much state history to record, in seconds")]
+        private float _historyWindow = 3f;
+        [SerializeField, Tooltip("Minimum delay between the current time and an input's timestamp before kicking off a rollback")]
+        private float _rollbackThreshold = 0.05f;
+        [SerializeField, Tooltip("How much time after a successful rollback before accepting another rollback")]
+        private float _rollbackDebounce = 0.032f;
 
-        [SerializeField] private float _commandDebounce = 0.01f;
-
-        private PawnId _pawnId;
         private GetServerTime _getServerTime;
-        private LinkedList<PawnFSMState> _history = new LinkedList<PawnFSMState>();
         public PawnRollbackState State { get; private set; }
-
-        public float FastForwardStartTime { get; private set; }
-        public float FastForwardCurrentTime { get; private set; }
-
-        [SerializeField] private PawnFSMState[] _debugHistory = null;
 
         [Serializable]
         private struct InputUnit {
@@ -33,30 +27,6 @@ namespace Banchou.Pawn.Part {
             public Vector3 Move;
             public float When;
             public float Diff;
-        }
-        [SerializeField] private InputUnit[] _debugBuffer = null;
-
-        public Rollback PushStateChange(int stateHash, bool isLoop, float clipLength, float when) {
-            while (_history.Count > 1 && _history.First.Value.FixedTimeAtChange < _getServerTime() - _historyWindow) {
-                _history.RemoveFirst();
-            }
-
-            // Only distinct changes
-            if (_history.Count == 0 || _history.Last.Value.StateHash != stateHash) {
-                _history.AddLast(
-                    new PawnFSMState {
-                        PawnId = _pawnId,
-                        StateHash = stateHash,
-                        IsLoop = isLoop,
-                        ClipLength = clipLength,
-                        FixedTimeAtChange = when
-                    }
-                );
-            }
-
-            _debugHistory = _history.ToArray();
-
-            return this;
         }
 
         public void Construct(
@@ -84,7 +54,6 @@ namespace Banchou.Pawn.Part {
                                 When = unit.When,
                                 Diff = getServerTime() - unit.When
                             })
-                            .Throttle(TimeSpan.FromSeconds(_commandDebounce))
                             .Merge(playerInput.ObserveMove(playerId)
                                 .Scan((prev, unit) => unit.When > prev.When ? unit : prev)
                                 .Select(unit => new InputUnit {
@@ -97,6 +66,7 @@ namespace Banchou.Pawn.Part {
 
                 // Aggregate FSM changes into a list
                 var history = new LinkedList<PawnFSMState>();
+
                 observeState
                     .Select(state => state.GetLatestFSMChange())
                     .DistinctUntilChanged()
@@ -131,10 +101,12 @@ namespace Banchou.Pawn.Part {
                             var timeSinceStateStart = getServerTime() - targetState.FixedTimeAtChange;
                             var targetNormalizedTime = timeSinceStateStart % targetState.ClipLength;
 
-                            // If a previous command has rewound to a similar time, within some threshold, don't bother rolling back??????
-                            if (Mathf.Abs(targetNormalizedTime - lastTargetNormalizedTime) < _stateTimeThreshold) {
+                            // If a previous command has rewound to a similar time, within some threshold, don't bother rolling back
+                            var debouncedTime = Mathf.Abs(targetNormalizedTime - lastTargetNormalizedTime);
+                            if (debouncedTime < _rollbackDebounce) {
                                 return;
                             }
+                            lastTargetNormalizedTime = targetNormalizedTime;
 
                             // Tell the RecordStateHistory FSMBehaviours to stop recording
                             dispatch(pawnActions.RollbackStarted()); // For the server
@@ -149,7 +121,6 @@ namespace Banchou.Pawn.Part {
                             // Tells the RecordStateHistory FSMBehaviours to start recording again
                             dispatch(pawnActions.FastForwarding(unit.Diff)); // Server
                             State = PawnRollbackState.FastForward; // Client
-                            FastForwardStartTime = getServerTime() - unit.Diff;
 
                             // Kick off the fast-forward. Need to run this before pushing the commands so the _animator.Play can take
                             animator.Update(deltaTime);
@@ -157,24 +128,8 @@ namespace Banchou.Pawn.Part {
                             // Pump input into streams
                             if (unit.Command == InputCommand.None) {
                                 moveSubject.OnNext(unit.Move);
-                                Debug.Log($"Move {unit.Move} Rollback:\n" +
-                                    $"Server time at packet send: {unit.When}\n" +
-                                    $"\tServer time since packet sent: {getServerTime() - unit.When}\n" +
-                                    $"Server time at previous state start: {targetState.FixedTimeAtChange}\n" +
-                                    $"\tServer time since previous state start: {timeSinceStateStart}\n" +
-                                    $"Target Normalized Time: {targetNormalizedTime}\n" +
-                                    $"Server Time: {getServerTime()}"
-                                );
                             } else {
                                 commandSubject.OnNext(unit.Command);
-                                Debug.Log($"Command {unit.Command} Rollback:\n" +
-                                    $"Server time at packet send: {unit.When}\n" +
-                                    $"\tServer time since packet sent: {getServerTime() - unit.When}\n" +
-                                    $"Server time at previous state start: {targetState.FixedTimeAtChange}\n" +
-                                    $"\tServer time since previous state start: {timeSinceStateStart}\n" +
-                                    $"Target Normalized Time: {targetNormalizedTime}\n" +
-                                    $"Server Time: {getServerTime()}"
-                                );
                             }
 
                             // Resimulate to present
@@ -191,13 +146,6 @@ namespace Banchou.Pawn.Part {
                                 moveSubject.OnNext(unit.Move);
                             } else {
                                 commandSubject.OnNext(unit.Command);
-
-                                var stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-                                Debug.Log($"Command {unit.Command}:\n" +
-                                    $"Server Time: {getServerTime()}\n" +
-                                    $"When: {unit.When}\n" +
-                                    $"Normalized Time: {stateInfo.normalizedTime}"
-                                );
                             }
                         }
                     })

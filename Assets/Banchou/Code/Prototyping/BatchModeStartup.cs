@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 
 using Redux;
+using UniRx;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -8,6 +10,8 @@ using Banchou.Board;
 using Banchou.Network;
 using Banchou.Pawn;
 using Banchou.Player;
+
+using Random = UnityEngine.Random;
 
 namespace Banchou.Prototype {
     public class BatchModeStartup : MonoBehaviour {
@@ -32,6 +36,21 @@ namespace Banchou.Prototype {
             _boardActions = boardActions;
             _networkActions = networkActions;
             _playerActions = playerActions;
+
+            observeState
+                .Select(state => state.GetClients())
+                .DistinctUntilChanged()
+                .Pairwise()
+                .SelectMany(pair => pair.Current.Except(pair.Previous))
+                .CatchIgnoreLog()
+                .Subscribe(clientId => {
+                    var playerId = _getState().NextPlayerId();
+                    _dispatch(_playerActions.AddPlayer(playerId, "Local Player", $"Player {clientId}", clientId));
+
+                    var pawnId = _getState().NextPawnId();
+                    _dispatch(_boardActions.AddPawn(pawnId, playerId, "Isaac Remote", new Vector3(Random.Range(-5f, 5f), 3f, Random.Range(-5f, 5f))));
+                })
+                .AddTo(this);
         }
 
         private void Start() {

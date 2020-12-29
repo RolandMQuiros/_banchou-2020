@@ -69,6 +69,8 @@ namespace Banchou.Network {
 
                 // Generate a new network ID
                 var newNetworkId = Guid.NewGuid();
+                _dispatch(networkActions.ConnectedToClient(newNetworkId));
+
                 _peers[newNetworkId] = peer;
 
                 // Sync the client's state
@@ -163,8 +165,6 @@ namespace Banchou.Network {
                                     // Reliably send stops so pawns don't just run away
                                     peer.Value.Send(prevMessage, DeliveryMethod.ReliableOrdered);
                                     peer.Value.Send(currentMessage, DeliveryMethod.ReliableOrdered);
-                                    if (starting) { Debug.Log("Started"); }
-                                    if (stopping) { Debug.Log("Stopped"); }
                                 } else {
                                     peer.Value.Send(currentMessage, DeliveryMethod.Unreliable);
                                 }
