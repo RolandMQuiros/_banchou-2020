@@ -38,7 +38,7 @@ namespace Banchou.Player {
             // Create new Players based on state
             observePlayersChanges
                 .SelectMany(pair => pair.Current.Except(pair.Previous))
-                .Where(addedId => !_instances.ContainsKey(addedId))
+                .Where(addedId => !_instances.ContainsKey(addedId) && _getState().IsLocalPlayer(addedId))
                 .CatchIgnoreLog()
                 .Subscribe(addedId => {
                     var prefabKey = _getState().GetPlayerPrefabKey(addedId);

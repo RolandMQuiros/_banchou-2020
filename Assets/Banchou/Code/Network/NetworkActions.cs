@@ -18,6 +18,10 @@ namespace Banchou.Network {
             public DateTime ServerTime;
         }
 
+        public struct ConnectedToClient {
+            public Guid ClientNetworkId;
+        }
+
         public struct SyncGameState {
             public GameState GameState;
         }
@@ -31,6 +35,7 @@ namespace Banchou.Network {
         public StateAction.SetNetworkMode SetMode(Mode mode) => new StateAction.SetNetworkMode { Mode = mode };
         public StateAction.NetworkAgentStarted Started(int peerId) => new StateAction.NetworkAgentStarted { PeerId = peerId, When = _getTime() };
         public StateAction.ConnectedToServer ConnectedToServer(Guid clientNetworkid, DateTime serverTime) => new StateAction.ConnectedToServer { ClientNetworkId = clientNetworkid, ServerTime = serverTime };
+        public StateAction.ConnectedToClient ConnectedToClient(Guid clientNetworkId) => new StateAction.ConnectedToClient { ClientNetworkId = clientNetworkId };
         public StateAction.SyncGameState SyncGameState(GameState gameState) => new StateAction.SyncGameState { GameState = gameState };
     }
 }

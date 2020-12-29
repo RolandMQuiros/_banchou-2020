@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 
 namespace Banchou.Network {
@@ -29,6 +30,10 @@ namespace Banchou.Network {
 
         public static bool IsClient(this GameState state) {
             return state.Network.Mode == Mode.Client;
+        }
+
+        public static IEnumerable<Guid> GetClients(this GameState state) {
+            return state.Network.Clients;
         }
     }
 }

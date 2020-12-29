@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 
 namespace Banchou.Network {
@@ -14,6 +16,7 @@ namespace Banchou.Network {
         public int PeerId = 0;
         public bool IsConnecting = false;
         public IPEndPoint IP = new IPEndPoint(127, 9050);
+        public IEnumerable<Guid> Clients = Enumerable.Empty<Guid>();
 
         public NetworkState() { }
         public NetworkState(in NetworkState prev) {
@@ -22,6 +25,7 @@ namespace Banchou.Network {
             PeerId = prev.PeerId;
             IsConnecting = prev.IsConnecting;
             IP = prev.IP;
+            Clients = prev.Clients;
         }
     }
 

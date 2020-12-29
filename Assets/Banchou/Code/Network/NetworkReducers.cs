@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace Banchou.Network {
     public static class NetworkReducers {
@@ -10,9 +11,15 @@ namespace Banchou.Network {
                 };
             }
 
-            if (action is StateAction.ConnectedToServer connected) {
+            if (action is StateAction.ConnectedToServer toServer && prev.Mode == Mode.Client) {
                 return new NetworkState(prev) {
-                    Id = connected.ClientNetworkId
+                    Id = toServer.ClientNetworkId
+                };
+            }
+
+            if (action is StateAction.ConnectedToClient toClient && prev.Mode == Mode.Server) {
+                return new NetworkState(prev) {
+                    Clients = prev.Clients.Append(toClient.ClientNetworkId)
                 };
             }
 
