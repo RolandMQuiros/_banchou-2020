@@ -39,7 +39,7 @@ namespace Banchou.Pawn.Part {
                     .Where(fsmChange => fsmChange.PawnId == pawnId)
                     .CatchIgnoreLog()
                     .Subscribe(fsmChange => {
-                        var timeSinceChange = getServerTime() - fsmChange.FixedTimeAtChange;
+                        var timeSinceChange = getServerTime() - fsmChange.When;
                         var normalizedTime =  timeSinceChange / fsmChange.ClipLength;
                         animator.Play(fsmChange.StateHash, 0, normalizedTime);
                     })

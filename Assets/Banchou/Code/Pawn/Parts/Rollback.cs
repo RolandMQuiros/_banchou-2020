@@ -83,7 +83,7 @@ namespace Banchou.Pawn.Part {
                     .DistinctUntilChanged(s => s.StateHash)
                     .Subscribe(fsmState => {
                         // Always have at least one state change on the list
-                        while (fsmHistory.Count > 1 && fsmHistory.First.Value.FixedTimeAtChange < getServerTime() - _historyWindow) {
+                        while (fsmHistory.Count > 1 && fsmHistory.First.Value.When < getServerTime() - _historyWindow) {
                             fsmHistory.RemoveFirst();
                         }
                         fsmHistory.AddLast(fsmState);
@@ -93,26 +93,20 @@ namespace Banchou.Pawn.Part {
                 var lastTargetNormalizedTime = 0f;
                 // Handle rollbacks
                 movesAndCommands
-                    .WithLatestFrom(
-                        onSyncPawn.Buffer(TimeSpan.FromSeconds(_historyWindow)),
-                        (unit, syncHistory) => (unit, syncHistory)
-                    )
                     .CatchIgnoreLog()
-                    .Subscribe(args => {
-                        var (unit, syncHistory) = args;
-
+                    .Subscribe(unit => {
                         if (unit.Diff > _rollbackThreshold && State == RollbackState.Complete) {
                             var deltaTime = Mathf.Min(unit.Diff, Time.fixedUnscaledDeltaTime);
 
                             var targetState = fsmHistory.Aggregate((target, step) => {
-                                if (unit.When > step.FixedTimeAtChange) {
+                                if (unit.When > step.When) {
                                     return step;
                                 }
                                 return target;
                             });
 
                             // Revert to state when desync happened
-                            var timeSinceStateStart = getServerTime() - targetState.FixedTimeAtChange;
+                            var timeSinceStateStart = getServerTime() - targetState.When;
                             var targetNormalizedTime = timeSinceStateStart % targetState.ClipLength;
 
                             // If a previous command has rewound to a similar time, within some threshold, don't bother rolling back
@@ -126,20 +120,9 @@ namespace Banchou.Pawn.Part {
                             State = RollbackState.RollingBack; // For the client
 
                             // Reposition/rotate to where the pawn was at time of rollback
-                            if (syncHistory.Any()) {
-                                var targetSync = syncHistory.Aggregate((target, step) => {
-                                    if (targetState.FixedTimeAtChange > step.When) {
-                                        return step;
-                                    }
-                                    return target;
-                                });
-
-                                Debug.Log($"Rewinding Pawn {pawnId} transform: {pawn.Position}->{targetSync.Position}");
-
-                                var t = (getServerTime() - targetState.FixedTimeAtChange) / (getServerTime() - targetSync.When);
-                                pawn.Position = Vector3.Lerp(targetSync.Position, pawn.Position, t);
-                                pawn.Forward = Vector3.Lerp(targetSync.Forward, pawn.Forward, t);
-                            }
+                            var t = unit.Diff / (getServerTime() - targetState.When);
+                            pawn.Position = Vector3.Lerp(targetState.Position, pawn.Position, t);
+                            pawn.Forward = Vector3.Lerp(targetState.Forward, pawn.Forward, t);
 
                             animator.Play(
                                 stateNameHash: targetState.StateHash,

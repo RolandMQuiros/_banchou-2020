@@ -10,6 +10,7 @@ namespace Banchou.Pawn.FSM {
     public class RecordStateHistory : FSMBehaviour {
         public void Construct(
             PawnId pawnId,
+            IPawnInstance pawn,
             IObservable<GameState> observeState,
             Dispatcher dispatch,
             PawnActions pawnActions,
@@ -29,7 +30,9 @@ namespace Banchou.Pawn.FSM {
                         fsmUnit.StateInfo.fullPathHash,
                         (clip?.averageDuration ?? 1f) / fsmUnit.StateInfo.speed,
                         clip?.isLooping ?? true,
-                        now
+                        now,
+                        pawn.Position,
+                        pawn.Forward
                     )
                 );
             }

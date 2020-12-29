@@ -12,6 +12,8 @@ namespace Banchou.Pawn {
             public bool IsLoop;
             public float ClipLength;
             public float When;
+            public Vector3 Position;
+            public Vector3 Forward;
         }
     }
 
@@ -22,12 +24,21 @@ namespace Banchou.Pawn {
             _pawnId = pawnId;
         }
 
-        public StateAction.FSMStateChanged FSMStateChanged(int stateNameHash, float clipLength, bool isLoop, float when) => new StateAction.FSMStateChanged {
+        public StateAction.FSMStateChanged FSMStateChanged(
+            int stateNameHash,
+            float clipLength,
+            bool isLoop,
+            float when,
+            Vector3 position,
+            Vector3 forward
+        ) => new StateAction.FSMStateChanged {
             PawnId = _pawnId,
             StateHash = stateNameHash,
             IsLoop = isLoop,
             ClipLength = clipLength,
-            When = when
+            When = when,
+            Position = position,
+            Forward = forward
         };
     }
 }

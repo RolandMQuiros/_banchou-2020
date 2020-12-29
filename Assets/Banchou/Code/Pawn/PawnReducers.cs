@@ -82,7 +82,7 @@ namespace Banchou.Pawn {
                             StateHash = fsmStateChanged.StateHash,
                             IsLoop = fsmStateChanged.IsLoop,
                             ClipLength = fsmStateChanged.ClipLength,
-                            FixedTimeAtChange = fsmStateChanged.When
+                            When = fsmStateChanged.When
                         }
                     };
                 }

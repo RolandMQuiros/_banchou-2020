@@ -40,14 +40,18 @@ namespace Banchou.Pawn {
         public int StateHash;
         public bool IsLoop;
         public float ClipLength;
-        public float FixedTimeAtChange;
+        public float When;
+        public Vector3 Position;
+        public Vector3 Forward;
         public PawnFSMState() { }
         public PawnFSMState(in PawnFSMState prev) {
             PawnId = prev.PawnId;
             StateHash = prev.StateHash;
             IsLoop = prev.IsLoop;
             ClipLength = prev.ClipLength;
-            FixedTimeAtChange = prev.FixedTimeAtChange;
+            When = prev.When;
+            Position = prev.Position;
+            Forward = prev.Forward;
         }
     }
 
