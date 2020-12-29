@@ -46,6 +46,7 @@ namespace Banchou.Pawn.Part {
                 .AddTo(this);
 
             onStateUpdate
+                .Where(state => state.IsClient())
                 .Select(state => state.GetLatestFSMChange())
                 .DistinctUntilChanged()
                 .Where(stateChange => stateChange.PawnId == pawnId)
