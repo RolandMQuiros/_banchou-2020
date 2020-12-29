@@ -22,7 +22,7 @@ namespace Banchou.Network.Message {
         [Key(0)] public PayloadType PayloadType;
         [Key(1)] public byte[] Payload;
 
-        public static byte[] CreateMessage(PayloadType payloadType, object payload, MessagePackSerializerOptions options) {
+        public static byte[] CreateMessage<T>(PayloadType payloadType, T payload, MessagePackSerializerOptions options) {
             return MessagePackSerializer.Serialize(
                 new Envelope {
                     PayloadType = payloadType,
