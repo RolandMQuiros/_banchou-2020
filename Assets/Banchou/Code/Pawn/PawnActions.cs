@@ -8,7 +8,7 @@ namespace Banchou.Pawn {
 
         public struct FSMStateChanged {
             public PawnId PawnId;
-            public int Statehash;
+            public int StateHash;
             public bool IsLoop;
             public float ClipLength;
             public float When;
@@ -24,7 +24,7 @@ namespace Banchou.Pawn {
 
         public StateAction.FSMStateChanged FSMStateChanged(int stateNameHash, float clipLength, bool isLoop, float when) => new StateAction.FSMStateChanged {
             PawnId = _pawnId,
-            Statehash = stateNameHash,
+            StateHash = stateNameHash,
             IsLoop = isLoop,
             ClipLength = clipLength,
             When = when

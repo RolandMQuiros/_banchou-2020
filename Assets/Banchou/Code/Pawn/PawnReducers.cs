@@ -71,15 +71,21 @@ namespace Banchou.Pawn {
             }
 
             if (action is StateAction.FSMStateChanged fsmStateChanged) {
-                return new PawnsState(prev) {
-                    LatestFSMChange = new PawnFSMState(prev.LatestFSMChange) {
-                        PawnId = fsmStateChanged.PawnId,
-                        StateHash = fsmStateChanged.Statehash,
-                        IsLoop = fsmStateChanged.IsLoop,
-                        ClipLength = fsmStateChanged.ClipLength,
-                        FixedTimeAtChange = fsmStateChanged.When
-                    }
-                };
+                var prevChange = prev.LatestFSMChange;
+                var isChangeDifferent = fsmStateChanged.PawnId != prevChange.PawnId ||
+                    fsmStateChanged.StateHash != prevChange.StateHash;
+
+                if (isChangeDifferent) {
+                    return new PawnsState(prev) {
+                        LatestFSMChange = new PawnFSMState(prev.LatestFSMChange) {
+                            PawnId = fsmStateChanged.PawnId,
+                            StateHash = fsmStateChanged.StateHash,
+                            IsLoop = fsmStateChanged.IsLoop,
+                            ClipLength = fsmStateChanged.ClipLength,
+                            FixedTimeAtChange = fsmStateChanged.When
+                        }
+                    };
+                }
             }
 
             if (action is StateAction.IPawnAction pawnAction) {
