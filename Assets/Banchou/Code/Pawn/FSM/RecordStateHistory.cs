@@ -13,11 +13,11 @@ namespace Banchou.Pawn.FSM {
             IObservable<GameState> observeState,
             Dispatcher dispatch,
             PawnActions pawnActions,
-            GetState getState,
             Animator stateMachine,
-            GetServerTime getServerTime
+            GetServerTime getServerTime,
+            Part.Rollback rollback
         ) {
-            void Dispatch(FSMUnit fsmUnit, float now) {
+            void FSMStateChanged(FSMUnit fsmUnit, float now) {
                 var clip = stateMachine
                     .GetCurrentAnimatorClipInfo(fsmUnit.LayerIndex)
                     .OrderByDescending(c => c.weight)
@@ -35,47 +35,40 @@ namespace Banchou.Pawn.FSM {
             }
 
             var fastForwardFrames = 0f;
-            var observeRollbackState = observeState
-                .Select(state => state.GetPawn(pawnId))
-                .DistinctUntilChanged(pawn => pawn?.RollbackState);
 
-            observeRollbackState
-                .Where(pawn => pawn?.RollbackState == PawnRollbackState.FastForward)
-                .SelectMany(pawn => ObserveStateUpdate)
-                .CatchIgnore((Exception error) => Debug.LogException(error))
-                .Subscribe(pawn => {
-                    fastForwardFrames += Time.fixedUnscaledDeltaTime;
-                })
-                .AddTo(this);
-
-            observeRollbackState
-                .Where(pawn => pawn?.RollbackState != PawnRollbackState.FastForward)
-                .Subscribe(_ => {
-                    fastForwardFrames = 0f;
+            ObserveStateUpdate
+                .Subscribe(unit => {
+                    switch (rollback.State) {
+                        case PawnRollbackState.FastForward:
+                            fastForwardFrames += Time.fixedUnscaledDeltaTime;
+                            break;
+                        default:
+                            fastForwardFrames = 0f;
+                            break;
+                    }
                 })
                 .AddTo(this);
 
             ObserveStateEnter
                 .Select(fsmUnit => {
-                    var pawn = getState().GetPawn(pawnId);
-                    switch (pawn.RollbackState) {
+                    switch (rollback.State) {
                         case PawnRollbackState.Complete:
                             return (fsmUnit, getServerTime());
                         case PawnRollbackState.FastForward:
-                            return (fsmUnit, pawn.RollbackCorrectionTime + fastForwardFrames);
+                            return (fsmUnit, rollback.CorrectionTime + fastForwardFrames);
                     }
                     return (fsmUnit, -1f);
                 })
                 .Subscribe(args => {
                     var (fsmUnit, now) = args;
                     if (now >= 0f) {
-                        Dispatch(fsmUnit, now);
+                        FSMStateChanged(fsmUnit, now);
                     }
                 })
                 .AddTo(this);
 
             var startingState = stateMachine.GetCurrentAnimatorStateInfo(0);
-            Dispatch(
+            FSMStateChanged(
                 new FSMUnit {
                     StateInfo = startingState,
                     LayerIndex = 0

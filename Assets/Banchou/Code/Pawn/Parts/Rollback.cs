@@ -20,6 +20,7 @@ namespace Banchou.Pawn.Part {
 
         private GetServerTime _getServerTime;
         public PawnRollbackState State { get; private set; }
+        public float CorrectionTime { get; private set; }
 
         [Serializable]
         private struct InputUnit {
@@ -119,8 +120,8 @@ namespace Banchou.Pawn.Part {
                             );
 
                             // Tells the RecordStateHistory FSMBehaviours to start recording again
-                            dispatch(pawnActions.FastForwarding(unit.Diff)); // Server
                             State = PawnRollbackState.FastForward; // Client
+                            CorrectionTime = unit.Diff;
 
                             // Kick off the fast-forward. Need to run this before pushing the commands so the _animator.Play can take
                             animator.Update(deltaTime);
@@ -139,7 +140,6 @@ namespace Banchou.Pawn.Part {
                                 resimulationTime = Mathf.Min(resimulationTime + deltaTime, unit.Diff);
                             }
 
-                            dispatch(pawnActions.RollbackComplete());
                             State = PawnRollbackState.Complete;
                         } else {
                             if (unit.Command == InputCommand.None) {

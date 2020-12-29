@@ -113,25 +113,6 @@ namespace Banchou.Pawn {
                 };
             }
 
-            if (action is StateAction.RollbackStarted rollbackStarted) {
-                return new PawnState(prev) {
-                    RollbackState = PawnRollbackState.RollingBack
-                };
-            }
-
-            if (action is StateAction.FastForwarding fastForwarding) {
-                return new PawnState(prev) {
-                    RollbackState = PawnRollbackState.FastForward,
-                    RollbackCorrectionTime = fastForwarding.CorrectionTime
-                };
-            }
-
-            if (action is StateAction.RollbackComplete rollbackComplete) {
-                return new PawnState(prev) {
-                    RollbackState = PawnRollbackState.Complete
-                };
-            }
-
             return prev;
         }
     }

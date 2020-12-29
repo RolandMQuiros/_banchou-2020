@@ -77,8 +77,6 @@ namespace Banchou.Pawn {
         public Vector3 SpawnPosition = Vector3.zero;
         public Quaternion SpawnRotation = Quaternion.identity;
 
-        public PawnRollbackState RollbackState = PawnRollbackState.Complete;
-        public float RollbackCorrectionTime = 0f;
         public PawnFSMState FSMState = new PawnFSMState();
 
         public PawnState() { }
@@ -88,8 +86,6 @@ namespace Banchou.Pawn {
             TimeScale = prev.TimeScale;
             SpawnPosition = prev.SpawnPosition;
             SpawnRotation = prev.SpawnRotation;
-            RollbackState = prev.RollbackState;
-            RollbackCorrectionTime = prev.RollbackCorrectionTime;
             FSMState = prev.FSMState;
         }
     }
