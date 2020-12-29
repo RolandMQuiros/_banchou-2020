@@ -39,7 +39,7 @@ namespace Banchou.Pawn.FSM {
             ObserveStateUpdate
                 .Subscribe(unit => {
                     switch (rollback.State) {
-                        case PawnRollbackState.FastForward:
+                        case Part.Rollback.RollbackState.FastForward:
                             fastForwardFrames += Time.fixedUnscaledDeltaTime;
                             break;
                         default:
@@ -52,9 +52,9 @@ namespace Banchou.Pawn.FSM {
             ObserveStateEnter
                 .Select(fsmUnit => {
                     switch (rollback.State) {
-                        case PawnRollbackState.Complete:
+                        case Part.Rollback.RollbackState.Complete:
                             return (fsmUnit, getServerTime());
-                        case PawnRollbackState.FastForward:
+                        case Part.Rollback.RollbackState.FastForward:
                             return (fsmUnit, rollback.CorrectionTime + fastForwardFrames);
                     }
                     return (fsmUnit, -1f);

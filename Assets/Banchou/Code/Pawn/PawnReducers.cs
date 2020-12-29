@@ -116,22 +116,4 @@ namespace Banchou.Pawn {
             return prev;
         }
     }
-
-    public static class PawnSyncReducers {
-        public static PawnSyncState Reduce(in PawnSyncState prev, in object action) {
-            if (action is StateAction.SyncPawn syncPawn) {
-                return new PawnSyncState {
-                    PawnId = syncPawn.PawnId,
-                    Position = syncPawn.Position,
-                    Rotation = syncPawn.Rotation
-                };
-            }
-
-            if (action is Network.StateAction.SyncGameState sync) {
-                return sync.GameState.PawnSync;
-            }
-
-            return prev;
-        }
-    }
 }

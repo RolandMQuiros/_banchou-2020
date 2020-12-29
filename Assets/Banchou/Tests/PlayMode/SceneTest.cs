@@ -12,7 +12,7 @@ using UnityEditor.SceneManagement;
 
 namespace Banchou.Test {
     public class SceneTest : IPrebuildSetup, IPostBuildCleanup {
-        private EditorBuildSettingsScene[] _oldScenes;
+        [SerializeField] private EditorBuildSettingsScene[] _oldScenes;
         protected virtual IEnumerable<string> ScenePaths { get; }
 
         public void Setup() {

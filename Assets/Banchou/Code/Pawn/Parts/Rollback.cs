@@ -17,10 +17,15 @@ namespace Banchou.Pawn.Part {
         private float _rollbackThreshold = 0.05f;
         [SerializeField, Tooltip("How much time after a successful rollback before accepting another rollback")]
         private float _rollbackDebounce = 0.032f;
+        public enum RollbackState : byte {
+            Complete,
+            RollingBack,
+            FastForward
+        }
+        public RollbackState State { get; private set; }
+        public float CorrectionTime { get; private set; }
 
         private GetServerTime _getServerTime;
-        public PawnRollbackState State { get; private set; }
-        public float CorrectionTime { get; private set; }
 
         [Serializable]
         private struct InputUnit {
@@ -88,7 +93,7 @@ namespace Banchou.Pawn.Part {
                     .CatchIgnoreLog()
                     .Subscribe(unit => {
                         // currently don't handle movement rollback, since we don't keep a transform history yet
-                        if (unit.Diff > _rollbackThreshold && State == PawnRollbackState.Complete && unit.Command != InputCommand.None) {
+                        if (unit.Diff > _rollbackThreshold && State == RollbackState.Complete && unit.Command != InputCommand.None) {
                             var deltaTime = Mathf.Min(unit.Diff, Time.fixedUnscaledDeltaTime);
 
                             var targetState = history.Aggregate((target, step) => {
@@ -110,8 +115,7 @@ namespace Banchou.Pawn.Part {
                             lastTargetNormalizedTime = targetNormalizedTime;
 
                             // Tell the RecordStateHistory FSMBehaviours to stop recording
-                            dispatch(pawnActions.RollbackStarted()); // For the server
-                            State = PawnRollbackState.RollingBack; // For the client
+                            State = RollbackState.RollingBack; // For the client
 
                             animator.Play(
                                 stateNameHash: targetState.StateHash,
@@ -120,7 +124,7 @@ namespace Banchou.Pawn.Part {
                             );
 
                             // Tells the RecordStateHistory FSMBehaviours to start recording again
-                            State = PawnRollbackState.FastForward; // Client
+                            State = RollbackState.FastForward; // Client
                             CorrectionTime = unit.Diff;
 
                             // Kick off the fast-forward. Need to run this before pushing the commands so the _animator.Play can take
@@ -140,7 +144,7 @@ namespace Banchou.Pawn.Part {
                                 resimulationTime = Mathf.Min(resimulationTime + deltaTime, unit.Diff);
                             }
 
-                            State = PawnRollbackState.Complete;
+                            State = RollbackState.Complete;
                         } else {
                             if (unit.Command == InputCommand.None) {
                                 moveSubject.OnNext(unit.Move);

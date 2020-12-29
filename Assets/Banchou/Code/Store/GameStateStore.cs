@@ -84,7 +84,6 @@ namespace Banchou {
                 Board = BoardReducers.Reduce(prev.Board, action),
                 Players = PlayerReducers.Reduce(prev.Players, prev.Network, action),
                 Pawns = PawnsReducers.Reduce(prev.Pawns, action),
-                PawnSync = PawnSyncReducers.Reduce(prev.PawnSync, action),
                 Mobs = MobsReducers.Reduce(prev.Mobs, action),
                 Combatants = CombatantsReducers.Reduce(prev.Combatants, action)
             };

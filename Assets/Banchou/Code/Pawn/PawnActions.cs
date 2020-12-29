@@ -13,27 +13,6 @@ namespace Banchou.Pawn {
             public float ClipLength;
             public float When;
         }
-
-        public struct RollbackStarted : IPawnAction {
-            public PawnId PawnId { get; set; }
-        }
-
-        public struct FastForwarding : IPawnAction {
-            public PawnId PawnId { get; set; }
-            public float CorrectionTime;
-        }
-
-        public struct RollbackComplete : IPawnAction {
-            public PawnId PawnId { get; set; }
-        }
-
-        public struct SyncPawn : IPawnAction {
-            public PawnId PawnId { get; set; }
-            public Vector3 Position;
-            public Quaternion Rotation;
-            public int StateHash;
-            public float NormalizedTime;
-        }
     }
 
     public class PawnActions {
@@ -50,26 +29,5 @@ namespace Banchou.Pawn {
             ClipLength = clipLength,
             When = when
         };
-
-        public StateAction.SyncPawn SyncPawn(Vector3 position, Quaternion rotation) => new StateAction.SyncPawn {
-            PawnId = _pawnId,
-            Position = position,
-            Rotation = rotation
-        };
-
-        public StateAction.SyncPawn SyncPawn(Vector3 position, Quaternion rotation, int stateHash, float normalizedTime) => new StateAction.SyncPawn {
-            PawnId = _pawnId,
-            Position = position,
-            Rotation = rotation,
-            StateHash = stateHash,
-            NormalizedTime = normalizedTime
-        };
-
-        public StateAction.RollbackStarted RollbackStarted() => new StateAction.RollbackStarted { PawnId = _pawnId };
-        public StateAction.FastForwarding FastForwarding(float correctionTime) => new StateAction.FastForwarding {
-            PawnId = _pawnId,
-            CorrectionTime = correctionTime
-        };
-        public StateAction.RollbackComplete RollbackComplete() => new StateAction.RollbackComplete { PawnId = _pawnId };
     }
 }

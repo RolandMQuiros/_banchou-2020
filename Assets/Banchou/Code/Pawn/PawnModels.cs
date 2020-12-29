@@ -51,24 +51,6 @@ namespace Banchou.Pawn {
         }
     }
 
-    public class PawnSyncState {
-        public PawnId PawnId;
-        public Vector3 Position;
-        public Quaternion Rotation;
-        public PawnSyncState() { }
-        public PawnSyncState(in PawnSyncState prev) {
-            PawnId = prev.PawnId;
-            Position = prev.Position;
-            Rotation = prev.Rotation;
-        }
-    }
-
-    public enum PawnRollbackState : byte {
-        Complete,
-        RollingBack,
-        FastForward
-    }
-
     public class PawnState {
         public PlayerId PlayerId;
         public string PrefabKey = string.Empty;
@@ -92,13 +74,11 @@ namespace Banchou.Pawn {
 
     public class PawnsState {
         public Dictionary<PawnId, PawnState> States = new Dictionary<PawnId, PawnState>();
-        public PawnSyncState LatestSync = new PawnSyncState();
         public PawnFSMState LatestFSMChange = new PawnFSMState();
 
         public PawnsState() { }
         public PawnsState(in PawnsState prev) {
             States = prev.States;
-            LatestSync = prev.LatestSync;
             LatestFSMChange = prev.LatestFSMChange;
         }
     }
