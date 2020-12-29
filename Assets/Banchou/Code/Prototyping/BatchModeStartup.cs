@@ -44,13 +44,12 @@ namespace Banchou.Prototype {
                 .SelectMany(pair => pair.Current.Except(pair.Previous))
                 .CatchIgnoreLog()
                 .Subscribe(clientId => {
-                    var playerId = _getState().NextPlayerId();
-                    _dispatch(_playerActions.AddPlayer(playerId, "Local Player", $"Player {clientId}", clientId));
+                    var playerId = getState().NextPlayerId();
+                    dispatch(playerActions.AddPlayer(playerId, "Local Player", $"Player {clientId}", clientId));
 
-                    var pawnId = _getState().NextPawnId();
-                    _dispatch(_boardActions.AddPawn(pawnId, playerId, "Isaac Remote", new Vector3(Random.Range(-5f, 5f), 3f, Random.Range(-5f, 5f))));
-                })
-                .AddTo(this);
+                    var pawnId = getState().NextPawnId();
+                    dispatch(boardActions.AddPawn(pawnId, playerId, "Isaac Remote", new Vector3(Random.Range(-5f, 5f), 3f, Random.Range(-5f, 5f))));
+                });
         }
 
         private void Start() {
