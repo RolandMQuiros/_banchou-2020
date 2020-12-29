@@ -23,6 +23,9 @@ namespace Banchou.Player.Part {
 
             this.FixedUpdateAsObservable()
                 .Select(_ => _moveInput.CameraPlaneProject())
+                // Quantize the world direction so we don't emit changes every frame
+                // This eases the load on Rollback
+                .Select(direction => Snapping.Snap(direction, new Vector3(0.25f, 0.25f, 0.25f), SnapAxis.All))
                 .DistinctUntilChanged()
                 .Subscribe(direction => {
                     _playerInputStreams.PushMove(_playerId, direction, _getTime());
