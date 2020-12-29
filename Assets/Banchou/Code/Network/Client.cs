@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 
 using LiteNetLib;
@@ -29,6 +31,7 @@ namespace Banchou.Network {
         private CompositeDisposable _subscriptions = new CompositeDisposable();
 
         public NetworkClient(
+            IObservable<GameState> onStateUpdate,
             Dispatcher dispatch,
             NetworkActions networkActions,
             PlayerInputStreams playerInput,
@@ -39,6 +42,10 @@ namespace Banchou.Network {
             _messagePackOptions = messagePackOptions;
             _listener = new EventBasedNetListener();
             _client = new NetManager(_listener);
+
+            _client.SimulateLatency = true;
+            _client.SimulationMinLatency = 300;
+            _client.SimulationMaxLatency = 300;
 
             // Receiving data from server
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
@@ -92,6 +99,61 @@ namespace Banchou.Network {
 
                 dataReader.Recycle();
             };
+
+            var observeLocalPlayers = onStateUpdate
+                .DistinctUntilChanged(state => state.GetPlayers())
+                .Select(
+                    state => new HashSet<PlayerId>(
+                        state.GetPlayers()
+                            .Where(p => p.Value.NetworkId == state.GetNetworkId())
+                            .Select(p => p.Key)
+                    )
+                );
+
+            _subscriptions.Add(
+                observeLocalPlayers
+                    .SelectMany(
+                        localPlayers => playerInput
+                            .ObserveCommand()
+                            .Where(unit => localPlayers.Contains(unit.PlayerId))
+                    )
+                    .CatchIgnoreLog()
+                    .Subscribe(unit => {
+                        var message = Envelope.CreateMessage(
+                            PayloadType.PlayerCommand,
+                            new PlayerCommand {
+                                PlayerId = unit.PlayerId,
+                                Command = unit.Command,
+                                When = unit.When
+                            },
+                            _messagePackOptions
+                        );
+                        _peer.Send(message, DeliveryMethod.Unreliable);
+                    })
+            );
+
+            _subscriptions.Add(
+                observeLocalPlayers
+                    .SelectMany(
+                        localPlayers => playerInput
+                            .ObserveMove()
+                            .Where(unit => localPlayers.Contains(unit.PlayerId))
+                    )
+                    .CatchIgnoreLog()
+                    .Subscribe(unit => {
+                        var message = Envelope.CreateMessage(
+                            PayloadType.PlayerCommand,
+                            new PlayerMove {
+                                PlayerId = unit.PlayerId,
+                                Direction = unit.Move,
+                                When = unit.When
+                            },
+                            _messagePackOptions
+                        );
+                        _peer.Send(message, DeliveryMethod.Unreliable);
+                    })
+            );
+
 
             Debug.Log($"Network client constructed at time {DateTime.UtcNow.Ticks}");
         }

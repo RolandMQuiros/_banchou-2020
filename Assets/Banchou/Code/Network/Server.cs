@@ -179,6 +179,7 @@ namespace Banchou.Network {
                     .Subscribe(command => {
                         foreach (var peer in _peers) {
                             var playerNetworkId = getState().GetPlayerNetworkId(command.PlayerId);
+                            // Don't send clients their own inputs
                             if (peer.Key != playerNetworkId) {
                                 var message = Envelope.CreateMessage(
                                     PayloadType.PlayerCommand,
