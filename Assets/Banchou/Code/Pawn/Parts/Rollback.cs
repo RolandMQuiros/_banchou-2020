@@ -4,6 +4,7 @@ using System.Linq;
 
 using Redux;
 using UniRx;
+using UniRx.Triggers;
 using UnityEngine;
 
 using Banchou.Player;
@@ -91,19 +92,22 @@ namespace Banchou.Pawn.Part {
                     })
                     .AddTo(this);
 
+                var observeXformHistory = this.FixedUpdateAsObservable()
+                    .Select(_ => (
+                        Position: pawn.Position,
+                        Forward: pawn.Forward,
+                        When: getServerTime()
+                    ))
+                    .DistinctUntilChanged()
+                    .Buffer(movesAndCommands);
+
                 var lastTargetNormalizedTime = 0f;
                 // Handle rollbacks
                 movesAndCommands
-                    .WithLatestFrom(
-                        // Get a list of syncs since the last input
-                        onSyncPawn
-                            .Where(sync => sync.PawnId == pawnId)
-                            .Buffer(movesAndCommands),
-                        (unit, syncHistory) => (unit, syncHistory)
-                    )
+                    .WithLatestFrom(observeXformHistory, (unit, xformHistory) => (unit, xformHistory))
                     .CatchIgnoreLog()
                     .Subscribe(args => {
-                        var (unit, syncHistory) = args;
+                        var (unit, xformHistory) = args;
 
                         if (unit.Diff > _rollbackThreshold && State == RollbackState.Complete) {
                             var now = getServerTime();
@@ -141,15 +145,15 @@ namespace Banchou.Pawn.Part {
                             State = RollbackState.RollingBack;
 
                             // Reposition/rotate to where the pawn was at time of rollback
-                            if (syncHistory.Any()) {
-                                var targetSync = syncHistory.Aggregate((target, step) => {
+                            if (xformHistory.Any()) {
+                                var targetXform = xformHistory.Aggregate((target, step) => {
                                     if (unit.When > step.When) {
                                         return step;
                                     }
                                     return target;
                                 });
-                                pawn.Position = targetSync.Position;
-                                pawn.Forward = targetSync.Forward;
+                                pawn.Position = targetXform.Position;
+                                pawn.Forward = targetXform.Forward;
                             }
 
                             // Rollback
