@@ -59,8 +59,10 @@ namespace Banchou.Pawn.FSM {
                             return (fsmUnit, getServerTime());
                         case Part.Rollback.RollbackState.FastForward:
                             return (fsmUnit, rollback.CorrectionTime + fastForwardFrames);
+                        case Part.Rollback.RollbackState.RollingBack:
+                        default:
+                            return (fsmUnit, -1f);
                     }
-                    return (fsmUnit, -1f);
                 })
                 .Subscribe(args => {
                     var (fsmUnit, now) = args;
