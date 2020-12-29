@@ -148,26 +148,7 @@ namespace Banchou.Network {
                                     _messagePackOptions
                                 );
 
-                                var starting = pair.Current.Move != Vector3.zero && pair.Previous.Move == Vector3.zero;
-                                var stopping = pair.Previous.Move != Vector3.zero && pair.Current.Move == Vector3.zero;
-
-                                if (starting || stopping) {
-                                    var prevMessage = Envelope.CreateMessage(
-                                        PayloadType.PlayerMove,
-                                        new PlayerMove {
-                                            PlayerId = pair.Previous.PlayerId,
-                                            Direction = pair.Previous.Move,
-                                            When = pair.Previous.When
-                                        },
-                                        _messagePackOptions
-                                    );
-
-                                    // Reliably send stops so pawns don't just run away
-                                    peer.Value.Send(prevMessage, DeliveryMethod.ReliableOrdered);
-                                    peer.Value.Send(currentMessage, DeliveryMethod.ReliableOrdered);
-                                } else {
-                                    peer.Value.Send(currentMessage, DeliveryMethod.Unreliable);
-                                }
+                                peer.Value.Send(currentMessage, DeliveryMethod.ReliableUnordered);
                             }
                         }
                     })

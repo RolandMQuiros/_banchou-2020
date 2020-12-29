@@ -120,7 +120,7 @@ namespace Banchou.Pawn.Part {
                             State = RollbackState.RollingBack; // For the client
 
                             // Reposition/rotate to where the pawn was at time of rollback
-                            var t = unit.Diff / (getServerTime() - targetState.When);
+                            var t = (getServerTime() - unit.Diff) / timeSinceStateStart;
                             pawn.Position = Vector3.Lerp(targetState.Position, pawn.Position, t);
                             pawn.Forward = Vector3.Lerp(targetState.Forward, pawn.Forward, t);
 
