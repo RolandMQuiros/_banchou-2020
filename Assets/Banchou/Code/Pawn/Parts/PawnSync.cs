@@ -3,6 +3,7 @@ using UnityEngine;
 using UniRx;
 using UniRx.Triggers;
 
+using Banchou.Network;
 using Banchou.Network.Message;
 using Banchou.Player;
 
@@ -18,8 +19,7 @@ namespace Banchou.Pawn.Part {
             var pawn = GetComponent<IPawnInstance>();
 
             onStateUpdate
-                .Select(state => state.Network.Id)
-                .Where(networkId => networkId == default)
+                .Where(state => state.IsServer())
                 .DistinctUntilChanged()
                 .SelectMany(_ =>
                     // Sync at a certain frequency

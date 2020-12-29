@@ -388,6 +388,7 @@ MonoBehaviour:
   _rigidbody: {fileID: 0}
   _orientation: {fileID: 0}
   _agent: {fileID: 0}
+  _rollback: {fileID: 0}
 --- !u!114 &1048794789454655902
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -469,6 +470,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b749cb4d4ba313e4ab1063bf47167f57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _historyWindow: 3
+  _rollbackThreshold: 0.05
+  _stateTimeThreshold: 0.005
+  _commandDebounce: 0.05
+  _debugHistory: []
+  _debugBuffer: []
 --- !u!114 &-5937054806897504739
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1928,6 +1935,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8e484611bb073bc4694f9a0ab7aac80f,
         type: 3}
+      propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8e484611bb073bc4694f9a0ab7aac80f,
+        type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
@@ -1943,6 +1955,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8e484611bb073bc4694f9a0ab7aac80f,
         type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8e484611bb073bc4694f9a0ab7aac80f,
+        type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
@@ -1954,16 +1971,6 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 8e484611bb073bc4694f9a0ab7aac80f,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 8e484611bb073bc4694f9a0ab7aac80f,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 8e484611bb073bc4694f9a0ab7aac80f,
-        type: 3}
-      propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8e484611bb073bc4694f9a0ab7aac80f,
@@ -3038,14 +3045,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5866666021909216657, guid: 8e484611bb073bc4694f9a0ab7aac80f,
         type: 3}
-      propertyPath: m_UpdateMode
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5866666021909216657, guid: 8e484611bb073bc4694f9a0ab7aac80f,
-        type: 3}
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: b218e1a7141f1e843b9bef7c6f869522, type: 2}
+    - target: {fileID: 5866666021909216657, guid: 8e484611bb073bc4694f9a0ab7aac80f,
+        type: 3}
+      propertyPath: m_UpdateMode
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5899222213045986162, guid: 8e484611bb073bc4694f9a0ab7aac80f,
         type: 3}
       propertyPath: m_Layer

@@ -15,6 +15,8 @@ namespace Banchou.Pawn.Part {
         [SerializeField] private float _rollbackThreshold = 0.05f;
         [SerializeField] private float _stateTimeThreshold = 0.005f;
 
+        [SerializeField] private float _commandDebounce = 0.01f;
+
         private PawnId _pawnId;
         private GetServerTime _getServerTime;
         private LinkedList<PawnFSMState> _history = new LinkedList<PawnFSMState>();
@@ -82,6 +84,7 @@ namespace Banchou.Pawn.Part {
                                 When = unit.When,
                                 Diff = getServerTime() - unit.When
                             })
+                            .Throttle(TimeSpan.FromSeconds(_commandDebounce))
                             .Merge(playerInput.ObserveMove(playerId)
                                 .Scan((prev, unit) => unit.When > prev.When ? unit : prev)
                                 .Select(unit => new InputUnit {
