@@ -27,8 +27,9 @@ namespace MessagePack.Formatters.Banchou.Network.Message
         public void Serialize(ref MessagePackWriter writer, global::Banchou.Network.Message.ConnectClient value, global::MessagePack.MessagePackSerializerOptions options)
         {
             IFormatterResolver formatterResolver = options.Resolver;
-            writer.WriteArrayHeader(1);
-            formatterResolver.GetFormatterWithVerify<global::System.Guid>().Serialize(ref writer, value.ClientNetworkId, options);
+            writer.WriteArrayHeader(2);
+            formatterResolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.ConnectionKey, options);
+            writer.Write(value.ClientConnectionTime);
         }
 
         public global::Banchou.Network.Message.ConnectClient Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
@@ -41,7 +42,8 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             options.Security.DepthStep(ref reader);
             IFormatterResolver formatterResolver = options.Resolver;
             var length = reader.ReadArrayHeader();
-            var __ClientNetworkId__ = default(global::System.Guid);
+            var __ConnectionKey__ = default(string);
+            var __ClientConnectionTime__ = default(long);
 
             for (int i = 0; i < length; i++)
             {
@@ -50,7 +52,10 @@ namespace MessagePack.Formatters.Banchou.Network.Message
                 switch (key)
                 {
                     case 0:
-                        __ClientNetworkId__ = formatterResolver.GetFormatterWithVerify<global::System.Guid>().Deserialize(ref reader, options);
+                        __ConnectionKey__ = formatterResolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
+                        break;
+                    case 1:
+                        __ClientConnectionTime__ = reader.ReadInt64();
                         break;
                     default:
                         reader.Skip();
@@ -59,7 +64,8 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             }
 
             var ____result = new global::Banchou.Network.Message.ConnectClient();
-            ____result.ClientNetworkId = __ClientNetworkId__;
+            ____result.ConnectionKey = __ConnectionKey__;
+            ____result.ClientConnectionTime = __ClientConnectionTime__;
             reader.Depth--;
             return ____result;
         }

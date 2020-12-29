@@ -291,5 +291,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: 3f175faf0976cac488cf2752da9028b2,
         type: 2}
+    - target: {fileID: 3973638542133023892, guid: 985a01c2367f01b4493f13fde46cafd5,
+        type: 3}
+      propertyPath: m_HorizontalAlignment
+      value: 4
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 985a01c2367f01b4493f13fde46cafd5, type: 3}

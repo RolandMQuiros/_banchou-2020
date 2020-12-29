@@ -28,7 +28,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
         {
             IFormatterResolver formatterResolver = options.Resolver;
             writer.WriteArrayHeader(1);
-            writer.Write(value.LocalTime);
+            writer.Write(value.ClientTime);
         }
 
         public global::Banchou.Network.Message.ServerTimeRequest Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
@@ -41,7 +41,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             options.Security.DepthStep(ref reader);
             IFormatterResolver formatterResolver = options.Resolver;
             var length = reader.ReadArrayHeader();
-            var __LocalTime__ = default(float);
+            var __ClientTime__ = default(long);
 
             for (int i = 0; i < length; i++)
             {
@@ -50,7 +50,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
                 switch (key)
                 {
                     case 0:
-                        __LocalTime__ = reader.ReadSingle();
+                        __ClientTime__ = reader.ReadInt64();
                         break;
                     default:
                         reader.Skip();
@@ -59,7 +59,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             }
 
             var ____result = new global::Banchou.Network.Message.ServerTimeRequest();
-            ____result.LocalTime = __LocalTime__;
+            ____result.ClientTime = __ClientTime__;
             reader.Depth--;
             return ____result;
         }

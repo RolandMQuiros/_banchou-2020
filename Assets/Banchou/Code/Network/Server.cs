@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 
 using LiteNetLib;
@@ -28,6 +27,9 @@ namespace Banchou.Network {
         private Dictionary<Guid, NetPeer> _peers;
         private CompositeDisposable _subscriptions = new CompositeDisposable();
 
+        private readonly long _startTime = DateTime.UtcNow.Ticks;
+        private long Uptime => DateTime.UtcNow.Ticks - _startTime;
+
         public NetworkServer(
             Guid networkId,
             IObservable<GameState> observeState,
@@ -46,11 +48,16 @@ namespace Banchou.Network {
             _dispatch = dispatch;
             _networkActions = networkActions;
 
+            var clients = new Dictionary<IPEndPoint, ConnectClient>();
+
             _listener.ConnectionRequestEvent += request => {
                 Debug.Log($"Connection request from {request.RemoteEndPoint}");
 
-                if (_server.ConnectedPeersCount < 10) {
-                    request.AcceptIfKey("BanchouConnectionKey");
+                var connectData = MessagePackSerializer.Deserialize<ConnectClient>(request.Data.GetRemainingBytes(), _messagePackOptions);
+
+                if (_server.ConnectedPeersCount < 10 && connectData.ConnectionKey == "BanchouConnectionKey") {
+                    request.Accept();
+                    clients[request.RemoteEndPoint] = connectData;
                     Debug.Log($"Accepted connection from {request.RemoteEndPoint}");
                 } else {
                     request.Reject();
@@ -75,7 +82,8 @@ namespace Banchou.Network {
                     new SyncClient {
                         ClientNetworkId = newNetworkId,
                         GameStateBytes = gameStateStream.ToArray(),
-                        When = DateTime.UtcNow
+                        ClientTime = clients[peer.EndPoint].ClientConnectionTime,
+                        ServerTime = Uptime - (peer.Ping / 2)
                     },
                     _messagePackOptions
                 );
@@ -83,45 +91,23 @@ namespace Banchou.Network {
                 peer.Send(syncClientMessage, DeliveryMethod.ReliableOrdered);
             };
 
-            _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
-                // Calculate when the event was sent
-                var when = Time.fixedUnscaledTime;// - fromPeer.Ping / 2000f;
+            long When(float ping) {
+                return Uptime - TimeSpan.FromMilliseconds(ping / 2).Ticks;
+            }
 
+            _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
                 // Open envelope
                 var envelope = MessagePackSerializer.Deserialize<Envelope>(dataReader.GetRemainingBytes(), _messagePackOptions);
 
                 // Deserialize payload
                 switch (envelope.PayloadType) {
-                    case PayloadType.ConnectClient: {
-                        var connect = MessagePackSerializer.Deserialize<ConnectClient>(envelope.Payload, _messagePackOptions);
-                        _peers[connect.ClientNetworkId] = fromPeer;
-
-                        Debug.Log($"Syncing client at {fromPeer.EndPoint}");
-
-                        // Sync the client's state
-                        var gameStateStream = new MemoryStream();
-                        using (var writer = new BsonWriter(gameStateStream)) {
-                            jsonSerializer.Serialize(writer, getState());
-                        }
-
-                        var syncClientMessage = Envelope.CreateMessage(
-                            PayloadType.SyncClient,
-                            new SyncClient {
-                                GameStateBytes = gameStateStream.ToArray()
-                            },
-                            _messagePackOptions
-                        );
-
-                        fromPeer.Send(syncClientMessage, DeliveryMethod.ReliableOrdered);
-                    } break;
                     case PayloadType.ServerTimeRequest: {
-                        Debug.Log($"Server Time Response, Ping: {fromPeer.Ping}");
                         var request = MessagePackSerializer.Deserialize<ServerTimeRequest>(envelope.Payload, _messagePackOptions);
                         var response = Envelope.CreateMessage(
                             PayloadType.ServerTimeResponse,
                             new ServerTimeResponse {
-                                LocalTime = request.LocalTime,
-                                ServerTime = when
+                                ClientTime = request.ClientTime,
+                                ServerTime = When(fromPeer.Ping)
                             },
                             _messagePackOptions
                         );
@@ -210,7 +196,7 @@ namespace Banchou.Network {
             );
 
             _instances[networkId] = this;
-            Debug.Log("Server constructed");
+            Debug.Log($"Network server constructed at time {_startTime}");
         }
 
         public void SyncPawn(SyncPawn syncPawn) {
@@ -226,7 +212,7 @@ namespace Banchou.Network {
         }
 
         public float GetTime() {
-            return Time.fixedUnscaledTime;
+            return (float)TimeSpan.FromTicks(Uptime).TotalSeconds;
         }
 
         public NetworkServer Start<T>(IObservable<T> pollInterval) {

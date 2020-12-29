@@ -27,10 +27,11 @@ namespace MessagePack.Formatters.Banchou.Network.Message
         public void Serialize(ref MessagePackWriter writer, global::Banchou.Network.Message.SyncClient value, global::MessagePack.MessagePackSerializerOptions options)
         {
             IFormatterResolver formatterResolver = options.Resolver;
-            writer.WriteArrayHeader(3);
+            writer.WriteArrayHeader(4);
             formatterResolver.GetFormatterWithVerify<global::System.Guid>().Serialize(ref writer, value.ClientNetworkId, options);
             formatterResolver.GetFormatterWithVerify<byte[]>().Serialize(ref writer, value.GameStateBytes, options);
-            formatterResolver.GetFormatterWithVerify<global::System.DateTime>().Serialize(ref writer, value.When, options);
+            writer.Write(value.ClientTime);
+            writer.Write(value.ServerTime);
         }
 
         public global::Banchou.Network.Message.SyncClient Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
@@ -45,7 +46,8 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             var length = reader.ReadArrayHeader();
             var __ClientNetworkId__ = default(global::System.Guid);
             var __GameStateBytes__ = default(byte[]);
-            var __When__ = default(global::System.DateTime);
+            var __ClientTime__ = default(long);
+            var __ServerTime__ = default(long);
 
             for (int i = 0; i < length; i++)
             {
@@ -60,7 +62,10 @@ namespace MessagePack.Formatters.Banchou.Network.Message
                         __GameStateBytes__ = formatterResolver.GetFormatterWithVerify<byte[]>().Deserialize(ref reader, options);
                         break;
                     case 2:
-                        __When__ = formatterResolver.GetFormatterWithVerify<global::System.DateTime>().Deserialize(ref reader, options);
+                        __ClientTime__ = reader.ReadInt64();
+                        break;
+                    case 3:
+                        __ServerTime__ = reader.ReadInt64();
                         break;
                     default:
                         reader.Skip();
@@ -71,7 +76,8 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             var ____result = new global::Banchou.Network.Message.SyncClient();
             ____result.ClientNetworkId = __ClientNetworkId__;
             ____result.GameStateBytes = __GameStateBytes__;
-            ____result.When = __When__;
+            ____result.ClientTime = __ClientTime__;
+            ____result.ServerTime = __ServerTime__;
             reader.Depth--;
             return ____result;
         }

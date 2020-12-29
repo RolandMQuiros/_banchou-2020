@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 
 using LiteNetLib;
+using LiteNetLib.Utils;
 using MessagePack;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
@@ -22,8 +23,8 @@ namespace Banchou.Network {
         private NetManager _client;
         private NetPeer _peer;
 
-        private float _lastServerTime = 0f;
-        private float _lastLocalTime = 0f;
+        private long _lastServerTime = 0;
+        private long _lastLocalTime = DateTime.UtcNow.Ticks;
 
         private CompositeDisposable _subscriptions = new CompositeDisposable();
 
@@ -39,14 +40,10 @@ namespace Banchou.Network {
             _listener = new EventBasedNetListener();
             _client = new NetManager(_listener);
 
-            _client.SimulateLatency = true;
-            _client.SimulationMinLatency = 150;
-            _client.SimulationMaxLatency = 300;
-
             // Receiving data from server
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
                 // Calculate when the event was sent
-                var when = Time.fixedUnscaledTime - (fromPeer.Ping / 1000f);
+                var when = (DateTime.UtcNow - TimeSpan.FromMilliseconds(fromPeer.Ping / 2)).Ticks;
                 var envelope = MessagePackSerializer.Deserialize<Envelope>(dataReader.GetRemainingBytes(), messagePackOptions);
 
                 // Using the type flag, check what we need to deserialize message into
@@ -54,20 +51,21 @@ namespace Banchou.Network {
                     case PayloadType.ServerTimeResponse: {
                         var response = MessagePackSerializer.Deserialize<ServerTimeResponse>(envelope.Payload, messagePackOptions);
                         // Requests are sent using unreliable delivery, so we should only care about the responses to the latest request
-                        if (response.LocalTime > _lastLocalTime) {
+                        if (response.ClientTime > _lastLocalTime) {
                             // Ping compensation happens on the server, and we only need a frame of reference
-                            _lastLocalTime = response.LocalTime;
+                            _lastLocalTime = response.ClientTime;
                             _lastServerTime = response.ServerTime;
                         }
-                        Debug.Log($"[Time Ping] {fromPeer.Ping}");
                     } break;
                     case PayloadType.SyncClient: {
                         var syncClient = MessagePackSerializer.Deserialize<SyncClient>(envelope.Payload, messagePackOptions);
                         var bsonStream = new MemoryStream(syncClient.GameStateBytes);
                         using (var reader = new BsonReader(bsonStream)) {
                             var gameState = jsonSerializer.Deserialize<GameState>(reader);
-                            dispatch(networkActions.ConnectedToServer(syncClient.ClientNetworkId, syncClient.When));
                             dispatch(networkActions.SyncGameState(gameState));
+                            dispatch(networkActions.ConnectedToServer(syncClient.ClientNetworkId, new DateTime(syncClient.ServerTime)));
+                            _lastLocalTime = syncClient.ClientTime;
+                            _lastServerTime = syncClient.ServerTime;
                         }
                     } break;
                     case PayloadType.ReduxAction: {
@@ -89,12 +87,13 @@ namespace Banchou.Network {
                     case PayloadType.PlayerCommand: {
                         var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, messagePackOptions);
                         playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, playerCommand.When);
-                        Debug.Log($"[Command Ping] {fromPeer.Ping}");
                     } break;
                 }
 
                 dataReader.Recycle();
             };
+
+            Debug.Log($"Network client constructed at time {DateTime.UtcNow.Ticks}");
         }
 
         /// <summary>
@@ -111,7 +110,19 @@ namespace Banchou.Network {
             IObservable<T> timeInterval
         ) {
             _client.Start();
-            _peer = _client.Connect(host, "BanchouConnectionKey");
+
+            var connectArgs = new NetDataWriter();
+            connectArgs.Put(
+                MessagePackSerializer.Serialize<ConnectClient>(
+                    new ConnectClient {
+                        ConnectionKey = "BanchouConnectionKey",
+                        ClientConnectionTime = DateTime.UtcNow.Ticks
+                    },
+                    _messagePackOptions
+                )
+            );
+
+            _peer = _client.Connect(host, connectArgs);
             Debug.Log($"Connected to server at {_client.FirstPeer.EndPoint}");
 
             _subscriptions.Add(
@@ -128,7 +139,7 @@ namespace Banchou.Network {
                         var request = Envelope.CreateMessage(
                             PayloadType.ServerTimeRequest,
                             new ServerTimeRequest {
-                                LocalTime = Time.fixedUnscaledTime
+                                ClientTime = DateTime.UtcNow.Ticks
                             },
                             _messagePackOptions
                         );
@@ -144,7 +155,7 @@ namespace Banchou.Network {
         /// </summary>
         /// <returns>The estimated server time</returns>
         public float GetTime() {
-            return _lastServerTime + (Time.fixedUnscaledTime - _lastLocalTime);
+            return (float)TimeSpan.FromTicks(_lastServerTime + (DateTime.UtcNow.Ticks - _lastLocalTime)).TotalSeconds;
         }
 
         public void Dispose() {
