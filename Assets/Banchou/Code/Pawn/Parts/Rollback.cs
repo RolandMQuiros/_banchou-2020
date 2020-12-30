@@ -85,6 +85,9 @@ namespace Banchou.Pawn.Part {
                         // Always have at least one state change on the list, regardless of how old it is
                         while (fsmHistory.Count > 1 && fsmHistory.First.Value.When < getServerTime() - _historyWindow) {
                             fsmHistory.RemoveFirst();
+                            if (fsmHistory.Count == 0) {
+                                Debug.LogError("HOW THE FUCK DID YOU DO THIS");
+                            }
                         }
                         fsmHistory.AddLast(fsmState);
                     })
@@ -176,6 +179,9 @@ namespace Banchou.Pawn.Part {
 
                             // Need to call this once so triggers can be set, for some reason
                             animator.Update(deltaTime);
+
+                            // I'd like to add to the xformHistory after every call to Animator.Update, but the positions are only updated
+                            // at the next FixedUpdate, and all at the same time.
 
                             // Pump input into streams
                             if (unit.Command == InputCommand.None) {

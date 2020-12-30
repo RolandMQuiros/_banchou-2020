@@ -14,6 +14,8 @@ using UnityEngine;
 using Banchou.Player;
 using Banchou.Network.Message;
 
+using Stopwatch = System.Diagnostics.Stopwatch;
+
 #pragma warning disable 0618
 
 namespace Banchou.Network {
@@ -27,8 +29,7 @@ namespace Banchou.Network {
         private Dictionary<Guid, NetPeer> _peers;
         private CompositeDisposable _subscriptions = new CompositeDisposable();
 
-        private readonly long _startTime = DateTime.UtcNow.Ticks;
-        private long Uptime => DateTime.UtcNow.Ticks - _startTime;
+        private Stopwatch _stopwatch = Stopwatch.StartNew();
 
         public NetworkServer(
             Guid networkId,
@@ -49,6 +50,10 @@ namespace Banchou.Network {
             _networkActions = networkActions;
 
             var clients = new Dictionary<IPEndPoint, ConnectClient>();
+
+            long When(float ping) {
+                return _stopwatch.ElapsedTicks - TimeSpan.FromMilliseconds(ping / 2).Ticks;
+            }
 
             _listener.ConnectionRequestEvent += request => {
                 Debug.Log($"Connection request from {request.RemoteEndPoint}");
@@ -85,17 +90,13 @@ namespace Banchou.Network {
                         ClientNetworkId = newNetworkId,
                         GameStateBytes = gameStateStream.ToArray(),
                         ClientTime = clients[peer.EndPoint].ClientConnectionTime,
-                        ServerTime = Uptime - (peer.Ping / 2)
+                        ServerTime = When(peer.Ping)
                     },
                     _messagePackOptions
                 );
 
                 peer.Send(syncClientMessage, DeliveryMethod.ReliableOrdered);
             };
-
-            long When(float ping) {
-                return Uptime - TimeSpan.FromMilliseconds(ping / 2).Ticks;
-            }
 
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
                 // Open envelope
@@ -178,7 +179,7 @@ namespace Banchou.Network {
             );
 
             _instances[networkId] = this;
-            Debug.Log($"Network server constructed at time {_startTime}");
+            Debug.Log($"Network server constructed {Stopwatch.IsHighResolution}");
         }
 
         public void SyncPawn(SyncPawn syncPawn) {
@@ -194,7 +195,7 @@ namespace Banchou.Network {
         }
 
         public float GetTime() {
-            return (float)TimeSpan.FromTicks(Uptime).TotalSeconds;
+            return (float)_stopwatch.Elapsed.TotalSeconds;
         }
 
         public NetworkServer Start<T>(IObservable<T> pollInterval) {
