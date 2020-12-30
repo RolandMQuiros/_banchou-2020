@@ -42,7 +42,7 @@ namespace Banchou.Prototype {
                 .DistinctUntilChanged()
                 .Pairwise()
                 .SelectMany(pair => pair.Current.Except(pair.Previous))
-                .DelayFrame(1)
+                .Delay(TimeSpan.FromSeconds(2f))
                 .CatchIgnoreLog()
                 .Subscribe(clientId => {
                     var playerId = getState().NextPlayerId();

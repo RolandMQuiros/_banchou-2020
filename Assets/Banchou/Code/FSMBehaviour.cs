@@ -47,7 +47,7 @@ namespace Banchou {
         }
 
         public override void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex, AnimatorControllerPlayable playable) {
-            var deltaTime = (stateInfo.normalizedTime - _previousTime) * stateInfo.length;
+            var deltaTime = (stateInfo.normalizedTime - _previousTime) * stateInfo.length; // doesn't work
             ObserveStateUpdate.OnNext(new FSMUnit {
                 StateInfo = stateInfo,
                 DeltaTime = deltaTime,

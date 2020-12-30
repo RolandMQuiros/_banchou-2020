@@ -23,8 +23,6 @@ namespace Banchou.Pawn.FSM {
             GetState getState,
             Animator animator
         ) {
-            var enterTime = Time.fixedTime;
-            var exitTime = Time.fixedTime;
             var commandHash = Animator.StringToHash($"C:{_acceptedCommand.ToString()}");
             var wasTriggered = false;
 

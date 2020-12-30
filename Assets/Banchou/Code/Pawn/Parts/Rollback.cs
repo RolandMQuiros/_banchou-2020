@@ -93,6 +93,7 @@ namespace Banchou.Pawn.Part {
                 var xformHistory = new LinkedList<(Vector3 Position, Vector3 Forward, float When)>();
                 this.FixedUpdateAsObservable()
                     .SampleFrame(30, FrameCountType.FixedUpdate)
+                    .Where(_ => State == RollbackState.Complete)
                     .Subscribe(_ => {
                         var now = getServerTime();
 
@@ -144,6 +145,7 @@ namespace Banchou.Pawn.Part {
                                     Debug.Log($"{unit.When} > {step.When} == {unit.When > step.When}");
                                     return unit.When > step.When;
                                 });
+
                             if (targetXform.When != 0f) {
                                 Debug.Log("Transform History:\n" +
                                     string.Join(
@@ -160,7 +162,8 @@ namespace Banchou.Pawn.Part {
                                 pawn.Forward = targetXform.Forward;
                             }
 
-                            // Rollback
+                            // Rewind
+                            animator.enabled = false;
                             animator.Play(
                                 stateNameHash: targetState.StateHash,
                                 layer: 0,
@@ -168,10 +171,10 @@ namespace Banchou.Pawn.Part {
                             );
 
                             // Tells the RecordStateHistory FSMBehaviours to start recording again
-                            State = RollbackState.FastForward; // Client
+                            State = RollbackState.FastForward;
                             CorrectionTime = getServerTime() - unit.Diff;
 
-                            // Kick off the fast-forward. Need to run this before pushing the commands so the _animator.Play can take
+                            // Need to call this once so triggers can be set, for some reason
                             animator.Update(deltaTime);
 
                             // Pump input into streams
@@ -182,11 +185,12 @@ namespace Banchou.Pawn.Part {
                             }
 
                             // Resimulate to present
-                            var resimulationTime = deltaTime; // Skip the first update
+                            var resimulationTime = deltaTime; // Skip first one
                             while (resimulationTime < unit.Diff) {
                                 animator.Update(Mathf.Min(deltaTime, unit.Diff - resimulationTime));
                                 resimulationTime = Mathf.Min(resimulationTime + deltaTime, unit.Diff);
                             }
+                            animator.enabled = true;
 
                             State = RollbackState.Complete;
                         } else {
