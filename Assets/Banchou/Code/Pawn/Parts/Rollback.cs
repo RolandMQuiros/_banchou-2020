@@ -70,7 +70,9 @@ namespace Banchou.Pawn.Part {
                                     Diff = getServerTime() - unit.When
                                 })
                             )
-                    );
+                    )
+                    .BatchFrame(1, FrameCountType.FixedUpdate)
+                    .SelectMany(units => units.OrderBy(unit => unit.When));
 
                 // Aggregate FSM changes into a list
                 var fsmHistory = new LinkedList<PawnFSMState>();
@@ -95,7 +97,6 @@ namespace Banchou.Pawn.Part {
 
                 var xformHistory = new LinkedList<(Vector3 Position, Vector3 Forward, float When)>();
                 this.FixedUpdateAsObservable()
-                    .SampleFrame(30, FrameCountType.FixedUpdate)
                     .Where(_ => State == RollbackState.Complete)
                     .Subscribe(_ => {
                         var now = getServerTime();
@@ -131,8 +132,18 @@ namespace Banchou.Pawn.Part {
                                 $"\tNow: {getServerTime()}\n"
                             );
 
+                            Debug.Log(
+                                "FSM Rollback History:\n\t" +
+                                string.Join(
+                                    "\n\t",
+                                    fsmHistory.Select(step => $"Hash: {step.StateHash}, Position: {step.PawnId}, When: {step.When}")
+                                )
+                            );
+
                             var deltaTime = Mathf.Min(unit.Diff, Time.fixedUnscaledDeltaTime);
-                            var targetState = fsmHistory.First(step => unit.When > step.When);
+                            var targetState = fsmHistory
+                                .OrderByDescending(step => step.When)
+                                .First(step => unit.When > step.When);
 
                             // Revert to state when desync happened
                             var timeSinceStateStart = now - targetState.When;
@@ -143,14 +154,10 @@ namespace Banchou.Pawn.Part {
 
                             // Reposition/rotate to where the pawn was at time of rollback
                             var targetXform = xformHistory
-                                .Reverse()
-                                .FirstOrDefault(step => {
-                                    Debug.Log($"{unit.When} > {step.When} == {unit.When > step.When}");
-                                    return unit.When > step.When;
-                                });
+                                .FirstOrDefault(step => unit.When < step.When);
 
                             if (targetXform.When != 0f) {
-                                Debug.Log("Transform History:\n" +
+                                Debug.Log("Transform History:\n\t" +
                                     string.Join(
                                         "\n\t",
                                         xformHistory.Select(
@@ -159,14 +166,14 @@ namespace Banchou.Pawn.Part {
                                     )
                                 );
 
-                                Debug.Log($"Rolling back position\n({pawn.Position} at {now}) -> ({targetXform.Position} at {targetXform.When})");
+                                Debug.Log($"Rolling back position\n({pawn.Position} at {now}) -> ({targetXform.Position} at {targetXform.When}) for input at {unit.When}");
 
                                 pawn.Position = targetXform.Position;
                                 pawn.Forward = targetXform.Forward;
                             }
 
                             // Rewind
-                            animator.enabled = false;
+                            // animator.enabled = false;
                             animator.Play(
                                 stateNameHash: targetState.StateHash,
                                 layer: 0,
@@ -196,7 +203,7 @@ namespace Banchou.Pawn.Part {
                                 animator.Update(Mathf.Min(deltaTime, unit.Diff - resimulationTime));
                                 resimulationTime = Mathf.Min(resimulationTime + deltaTime, unit.Diff);
                             }
-                            animator.enabled = true;
+                            // animator.enabled = true;
 
                             State = RollbackState.Complete;
                         } else {

@@ -470,8 +470,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b749cb4d4ba313e4ab1063bf47167f57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _historyWindow: 3
-  _rollbackThreshold: 0.15
+  _historyWindow: 1
+  _rollbackThreshold: 0.016666668
 --- !u!114 &-5937054806897504739
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -685,9 +685,7 @@ MonoBehaviour:
   m_AnimatedTarget: {fileID: 3989811475507675608}
   m_LayerIndex: 0
   m_ShowDebugText: 0
-  m_ChildCameras:
-  - {fileID: 1373917973189275895}
-  - {fileID: 3314888068841010620}
+  m_ChildCameras: []
   m_Instructions:
   - m_FullHash: -1304015446
     m_VirtualCamera: {fileID: 1373917973189275895}

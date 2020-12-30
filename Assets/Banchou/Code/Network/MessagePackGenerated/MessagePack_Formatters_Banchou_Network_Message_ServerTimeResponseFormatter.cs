@@ -42,8 +42,8 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             options.Security.DepthStep(ref reader);
             IFormatterResolver formatterResolver = options.Resolver;
             var length = reader.ReadArrayHeader();
-            var __ClientTime__ = default(long);
-            var __ServerTime__ = default(long);
+            var __ClientTime__ = default(float);
+            var __ServerTime__ = default(float);
 
             for (int i = 0; i < length; i++)
             {
@@ -52,10 +52,10 @@ namespace MessagePack.Formatters.Banchou.Network.Message
                 switch (key)
                 {
                     case 0:
-                        __ClientTime__ = reader.ReadInt64();
+                        __ClientTime__ = reader.ReadSingle();
                         break;
                     case 1:
-                        __ServerTime__ = reader.ReadInt64();
+                        __ServerTime__ = reader.ReadSingle();
                         break;
                     default:
                         reader.Skip();

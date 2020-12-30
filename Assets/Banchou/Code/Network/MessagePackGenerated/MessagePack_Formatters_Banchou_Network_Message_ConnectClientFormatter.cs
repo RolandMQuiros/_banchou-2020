@@ -43,7 +43,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             IFormatterResolver formatterResolver = options.Resolver;
             var length = reader.ReadArrayHeader();
             var __ConnectionKey__ = default(string);
-            var __ClientConnectionTime__ = default(long);
+            var __ClientConnectionTime__ = default(float);
 
             for (int i = 0; i < length; i++)
             {
@@ -55,7 +55,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
                         __ConnectionKey__ = formatterResolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
                         break;
                     case 1:
-                        __ClientConnectionTime__ = reader.ReadInt64();
+                        __ClientConnectionTime__ = reader.ReadSingle();
                         break;
                     default:
                         reader.Skip();

@@ -46,8 +46,8 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             var length = reader.ReadArrayHeader();
             var __ClientNetworkId__ = default(global::System.Guid);
             var __GameStateBytes__ = default(byte[]);
-            var __ClientTime__ = default(long);
-            var __ServerTime__ = default(long);
+            var __ClientTime__ = default(float);
+            var __ServerTime__ = default(float);
 
             for (int i = 0; i < length; i++)
             {
@@ -62,10 +62,10 @@ namespace MessagePack.Formatters.Banchou.Network.Message
                         __GameStateBytes__ = formatterResolver.GetFormatterWithVerify<byte[]>().Deserialize(ref reader, options);
                         break;
                     case 2:
-                        __ClientTime__ = reader.ReadInt64();
+                        __ClientTime__ = reader.ReadSingle();
                         break;
                     case 3:
-                        __ServerTime__ = reader.ReadInt64();
+                        __ServerTime__ = reader.ReadSingle();
                         break;
                     default:
                         reader.Skip();

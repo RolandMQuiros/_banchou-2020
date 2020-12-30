@@ -16,8 +16,6 @@ using UniRx;
 using Banchou.Player;
 using Banchou.Network.Message;
 
-using Stopwatch = System.Diagnostics.Stopwatch;
-
 #pragma warning disable 0618
 
 namespace Banchou.Network {
@@ -27,10 +25,9 @@ namespace Banchou.Network {
         private NetManager _client;
         private NetPeer _peer;
 
-        private Stopwatch _stopwatch = Stopwatch.StartNew();
-
-        private long _lastServerTime = 0;
-        private long _lastLocalTime = 0;
+        private float Now => Time.fixedUnscaledTime;
+        private float _lastServerTime = 0;
+        private float _lastLocalTime = 0;
 
         private CompositeDisposable _subscriptions = new CompositeDisposable();
 
@@ -47,14 +44,13 @@ namespace Banchou.Network {
             _listener = new EventBasedNetListener();
             _client = new NetManager(_listener);
 
-            // _client.SimulateLatency = false;
-            // _client.SimulationMinLatency = 600;
+            // _client.SimulateLatency = true;
+            // _client.SimulationMinLatency = 300;
             // _client.SimulationMaxLatency = 800;
 
             // Receiving data from server
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
                 // Calculate when the event was sent
-                var when = _stopwatch.ElapsedTicks - TimeSpan.FromMilliseconds(fromPeer.Ping / 2).Ticks;
                 var envelope = MessagePackSerializer.Deserialize<Envelope>(dataReader.GetRemainingBytes(), messagePackOptions);
 
                 // Using the type flag, check what we need to deserialize message into
@@ -62,8 +58,9 @@ namespace Banchou.Network {
                     case PayloadType.ServerTimeResponse: {
                         var response = MessagePackSerializer.Deserialize<ServerTimeResponse>(envelope.Payload, messagePackOptions);
                         // Requests are sent using unreliable delivery, so we should only care about the responses to the latest request
-                        if (response.ClientTime == _lastLocalTime) {
+                        if (response.ClientTime > _lastLocalTime) {
                             // Ping compensation happens on the server, and we only need a frame of reference
+                            _lastLocalTime = response.ClientTime;
                             _lastServerTime = response.ServerTime;
                         }
                     } break;
@@ -73,9 +70,8 @@ namespace Banchou.Network {
                         using (var reader = new BsonReader(bsonStream)) {
                             var gameState = jsonSerializer.Deserialize<GameState>(reader);
                             dispatch(networkActions.SyncGameState(gameState));
-                            dispatch(networkActions.ConnectedToServer(syncClient.ClientNetworkId, new DateTime(syncClient.ServerTime)));
+                            dispatch(networkActions.ConnectedToServer(syncClient.ClientNetworkId, DateTime.Now));
 
-                            Debug.Log($"Time at connect: {_lastLocalTime}\nTime at response: {_stopwatch.ElapsedTicks}\nDiff:{_stopwatch.ElapsedTicks - _lastLocalTime}\nReceived Client Time:{syncClient.ClientTime}\nReceived Server Time:{syncClient.ServerTime}");
                             _lastLocalTime = syncClient.ClientTime;
                             _lastServerTime = syncClient.ServerTime;
                         }
@@ -94,11 +90,19 @@ namespace Banchou.Network {
                     break;
                     case PayloadType.PlayerMove: {
                         var playerMove = MessagePackSerializer.Deserialize<PlayerMove>(envelope.Payload, messagePackOptions);
-                        playerInput.PushMove(playerMove.PlayerId, playerMove.Direction, playerMove.When);
+                        playerInput.PushMove(
+                            playerMove.PlayerId,
+                            playerMove.Direction,
+                            Snapping.Snap(playerMove.When, Time.fixedUnscaledDeltaTime)
+                        );
                     } break;
                     case PayloadType.PlayerCommand: {
                         var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, messagePackOptions);
-                        playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, playerCommand.When);
+                        playerInput.PushCommand(
+                            playerCommand.PlayerId,
+                            playerCommand.Command,
+                            Snapping.Snap(playerCommand.When, Time.fixedUnscaledDeltaTime)
+                        );
                     } break;
                 }
 
@@ -159,8 +163,7 @@ namespace Banchou.Network {
                     })
             );
 
-            _lastLocalTime = _stopwatch.ElapsedTicks;
-            Debug.Log($"Network client constructed {Stopwatch.Frequency}");
+            Debug.Log($"Network client constructed");
         }
 
         /// <summary>
@@ -183,7 +186,7 @@ namespace Banchou.Network {
                 MessagePackSerializer.Serialize<ConnectClient>(
                     new ConnectClient {
                         ConnectionKey = "BanchouConnectionKey",
-                        ClientConnectionTime = _stopwatch.ElapsedTicks
+                        ClientConnectionTime = Now
                     },
                     _messagePackOptions
                 )
@@ -203,11 +206,10 @@ namespace Banchou.Network {
                     .StartWith(default(T))
                     .CatchIgnoreLog()
                     .Subscribe(_ => {
-                        _lastLocalTime = _stopwatch.ElapsedTicks;
                         var request = Envelope.CreateMessage(
                             PayloadType.ServerTimeRequest,
                             new ServerTimeRequest {
-                                ClientTime = _lastLocalTime
+                                ClientTime = Now
                             },
                             _messagePackOptions
                         );
@@ -223,7 +225,7 @@ namespace Banchou.Network {
         /// </summary>
         /// <returns>The estimated server time</returns>
         public float GetTime() {
-            return (float)TimeSpan.FromTicks(_lastServerTime + (_stopwatch.ElapsedTicks - _lastLocalTime)).TotalSeconds;
+            return _lastServerTime + Now - _lastLocalTime;
         }
 
         public void Dispose() {

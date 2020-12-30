@@ -8,7 +8,6 @@ using UniRx;
 
 using Banchou.DependencyInjection;
 using Banchou.Network;
-using Banchou.Network.Message;
 using Banchou.Pawn.Part;
 using Banchou.Player;
 
@@ -29,14 +28,8 @@ namespace Banchou.Pawn {
         #region IPawnInstance
         public PawnId PawnId { get; private set; }
         public Vector3 Position {
-            get => _rigidbody?.position ?? transform.position;
-            set {
-                if (_rigidbody != null) {
-                    _rigidbody.position = value;
-                } else {
-                    transform.position = value;
-                }
-            }
+            get => transform.position;
+            set { transform.position = value; }
         }
         public Vector3 Forward {
             get => _orientation?.transform.forward ?? transform.forward;

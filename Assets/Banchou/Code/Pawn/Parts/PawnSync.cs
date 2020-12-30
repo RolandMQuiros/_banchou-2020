@@ -16,9 +16,7 @@ namespace Banchou.Pawn.Part {
             IObservable<GameState> onStateUpdate,
             ObservePlayerMove onPlayerMove,
             PushPawnSync pushPawnSync,
-            GetServerTime getServerTime,
-
-            Animator animator = null
+            GetServerTime getServerTime
         ) {
             onStateUpdate
                 .Select(state => state.IsServer())
@@ -44,37 +42,6 @@ namespace Banchou.Pawn.Part {
                     );
                 })
                 .AddTo(this);
-
-            // onStateUpdate
-            //     .Where(state => state.IsClient())
-            //     .Select(state => state.GetLatestFSMChange())
-            //     .DistinctUntilChanged()
-            //     .Where(stateChange => stateChange.PawnId == pawnId)
-            //     .CatchIgnoreLog()
-            //     .Subscribe(stateChange => {
-            //         pawn.Position = stateChange.Position;
-            //         pawn.Forward = stateChange.Forward;
-
-            //         var timeSinceStateStart = getServerTime() - stateChange.When;
-            //         var targetNormalizedTime = timeSinceStateStart % stateChange.ClipLength;
-            //         animator.Play(stateChange.StateHash, 0, targetNormalizedTime);
-            //     })
-            //     .AddTo(this);
-
-            // if (onPawnSync != null) {
-            //     onPawnSync
-            //         .Where(syncPawn => syncPawn.PawnId == pawnId)
-            //         .CatchIgnoreLog()
-            //         .Subscribe(syncPawn => {
-            //             body.transform.position = syncPawn.Position;
-            //             if (orientation != null) {
-            //                 orientation.transform.rotation = Quaternion.LookRotation(syncPawn.Forward);
-            //             } else {
-            //                 transform.rotation = Quaternion.LookRotation(syncPawn.Forward);
-            //             }
-            //         })
-            //         .AddTo(this);
-            // }
         }
     }
 

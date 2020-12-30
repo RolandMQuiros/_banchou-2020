@@ -14,8 +14,6 @@ using UnityEngine;
 using Banchou.Player;
 using Banchou.Network.Message;
 
-using Stopwatch = System.Diagnostics.Stopwatch;
-
 #pragma warning disable 0618
 
 namespace Banchou.Network {
@@ -28,8 +26,6 @@ namespace Banchou.Network {
         private NetManager _server;
         private Dictionary<Guid, NetPeer> _peers;
         private CompositeDisposable _subscriptions = new CompositeDisposable();
-
-        private Stopwatch _stopwatch = Stopwatch.StartNew();
 
         public NetworkServer(
             Guid networkId,
@@ -51,8 +47,8 @@ namespace Banchou.Network {
 
             var clients = new Dictionary<IPEndPoint, ConnectClient>();
 
-            long When(float ping) {
-                return _stopwatch.ElapsedTicks - TimeSpan.FromMilliseconds(ping / 2).Ticks;
+            float When(float ping) {
+                return Time.fixedUnscaledTime - (ping / 2000f);
             }
 
             _listener.ConnectionRequestEvent += request => {
@@ -99,6 +95,8 @@ namespace Banchou.Network {
             };
 
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
+                Debug.Log($"Server Ping: {fromPeer.Ping}");
+
                 // Open envelope
                 var envelope = MessagePackSerializer.Deserialize<Envelope>(dataReader.GetRemainingBytes(), _messagePackOptions);
 
@@ -118,11 +116,19 @@ namespace Banchou.Network {
                     } break;
                     case PayloadType.PlayerCommand: {
                         var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, _messagePackOptions);
-                        playerInput.PushCommand(playerCommand.PlayerId, playerCommand.Command, playerCommand.When);
+                        playerInput.PushCommand(
+                            playerCommand.PlayerId,
+                            playerCommand.Command,
+                            playerCommand.When
+                        );
                     } break;
                     case PayloadType.PlayerMove: {
                         var playerMove = MessagePackSerializer.Deserialize<PlayerMove>(envelope.Payload, _messagePackOptions);
-                        playerInput.PushMove(playerMove.PlayerId, playerMove.Direction, playerMove.When);
+                        playerInput.PushMove(
+                            playerMove.PlayerId,
+                            playerMove.Direction,
+                            playerMove.When
+                        );
                     } break;
                 }
 
@@ -179,7 +185,7 @@ namespace Banchou.Network {
             );
 
             _instances[networkId] = this;
-            Debug.Log($"Network server constructed {Stopwatch.IsHighResolution}");
+            Debug.Log($"Network server constructed");
         }
 
         public void SyncPawn(SyncPawn syncPawn) {
@@ -195,7 +201,7 @@ namespace Banchou.Network {
         }
 
         public float GetTime() {
-            return (float)_stopwatch.Elapsed.TotalSeconds;
+            return Time.fixedUnscaledTime;
         }
 
         public NetworkServer Start<T>(IObservable<T> pollInterval) {
