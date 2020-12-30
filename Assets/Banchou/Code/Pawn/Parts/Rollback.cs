@@ -93,10 +93,14 @@ namespace Banchou.Pawn.Part {
                 var observeXformHistory = this.FixedUpdateAsObservable()
                     .Select(_ => (
                         Position: pawn.Position,
-                        Forward: pawn.Forward,
-                        When: getServerTime()
+                        Forward: pawn.Forward
                     ))
                     .DistinctUntilChanged()
+                    .Select(xform => (
+                        Position: xform.Position,
+                        Forward: xform.Forward,
+                        When: getServerTime()
+                    ))
                     .Buffer(TimeSpan.FromSeconds(_historyWindow));
 
                 // Handle rollbacks
@@ -129,8 +133,16 @@ namespace Banchou.Pawn.Part {
                             State = RollbackState.RollingBack;
 
                             // Reposition/rotate to where the pawn was at time of rollback
-                            if (xformHistory.Any()) {
-                                var targetXform = xformHistory.First(step => unit.When > step.When);
+                            var targetXform = xformHistory.FirstOrDefault(step => unit.When > step.When);
+                            if (targetXform.When != 0f) {
+                                Debug.Log("Transform History:\n" +
+                                    string.Join(
+                                        "\n\t",
+                                        xformHistory.Select(
+                                            x => $"{x.Position}, {x.Forward}, {x.When}"
+                                        )
+                                    )
+                                );
 
                                 Debug.Log($"Rolling back position\n({pawn.Position} at {now}) -> ({targetXform.Position} at {targetXform.When})");
 
