@@ -28,7 +28,16 @@ namespace Banchou.Pawn {
 
         #region IPawnInstance
         public PawnId PawnId { get; private set; }
-        public Vector3 Position { get => _rigidbody?.position ?? transform.position; set => transform.position = value; }
+        public Vector3 Position {
+            get => _rigidbody?.position ?? transform.position;
+            set {
+                if (_rigidbody != null) {
+                    _rigidbody.position = value;
+                } else {
+                    transform.position = value;
+                }
+            }
+        }
         public Vector3 Forward {
             get => _orientation?.transform.forward ?? transform.forward;
             set {

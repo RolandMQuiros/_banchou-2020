@@ -90,26 +90,31 @@ namespace Banchou.Pawn.Part {
                     })
                     .AddTo(this);
 
-                var observeXformHistory = this.FixedUpdateAsObservable()
-                    .Select(_ => (
-                        Position: pawn.Position,
-                        Forward: pawn.Forward
-                    ))
-                    .DistinctUntilChanged()
-                    .Select(xform => (
-                        Position: xform.Position,
-                        Forward: xform.Forward,
-                        When: getServerTime()
-                    ))
-                    .Buffer(TimeSpan.FromSeconds(_historyWindow));
+                var xformHistory = new LinkedList<(Vector3 Position, Vector3 Forward, float When)>();
+                this.FixedUpdateAsObservable()
+                    .SampleFrame(30, FrameCountType.FixedUpdate)
+                    .Subscribe(_ => {
+                        var now = getServerTime();
+
+                        while (xformHistory.First.Value.When < now - _historyWindow) {
+                            xformHistory.RemoveFirst();
+                        }
+
+                        var last = fsmHistory.LastOrDefault();
+                        if (last == null || last.Position != pawn.Position || last.Forward != pawn.Forward) {
+                            xformHistory.AddLast((
+                                Position: pawn.Position,
+                                Forward: pawn.Forward,
+                                When: now
+                            ));
+                        }
+                    })
+                    .AddTo(this);
 
                 // Handle rollbacks
                 movesAndCommands
-                    .WithLatestFrom(observeXformHistory, (unit, xformHistory) => (unit, xformHistory))
                     .CatchIgnoreLog()
-                    .Subscribe(args => {
-                        var (unit, xformHistory) = args;
-
+                    .Subscribe(unit => {
                         if (unit.Diff > _rollbackThreshold && State == RollbackState.Complete) {
                             var now = getServerTime();
 
@@ -133,7 +138,12 @@ namespace Banchou.Pawn.Part {
                             State = RollbackState.RollingBack;
 
                             // Reposition/rotate to where the pawn was at time of rollback
-                            var targetXform = xformHistory.FirstOrDefault(step => unit.When > step.When);
+                            var targetXform = xformHistory
+                                .Reverse()
+                                .FirstOrDefault(step => {
+                                    Debug.Log($"{unit.When} > {step.When} == {unit.When > step.When}");
+                                    return unit.When > step.When;
+                                });
                             if (targetXform.When != 0f) {
                                 Debug.Log("Transform History:\n" +
                                     string.Join(

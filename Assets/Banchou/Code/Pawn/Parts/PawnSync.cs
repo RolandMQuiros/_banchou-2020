@@ -45,21 +45,21 @@ namespace Banchou.Pawn.Part {
                 })
                 .AddTo(this);
 
-            onStateUpdate
-                .Where(state => state.IsClient())
-                .Select(state => state.GetLatestFSMChange())
-                .DistinctUntilChanged()
-                .Where(stateChange => stateChange.PawnId == pawnId)
-                .CatchIgnoreLog()
-                .Subscribe(stateChange => {
-                    pawn.Position = stateChange.Position;
-                    pawn.Forward = stateChange.Forward;
+            // onStateUpdate
+            //     .Where(state => state.IsClient())
+            //     .Select(state => state.GetLatestFSMChange())
+            //     .DistinctUntilChanged()
+            //     .Where(stateChange => stateChange.PawnId == pawnId)
+            //     .CatchIgnoreLog()
+            //     .Subscribe(stateChange => {
+            //         pawn.Position = stateChange.Position;
+            //         pawn.Forward = stateChange.Forward;
 
-                    var timeSinceStateStart = getServerTime() - stateChange.When;
-                    var targetNormalizedTime = timeSinceStateStart % stateChange.ClipLength;
-                    animator.Play(stateChange.StateHash, 0, targetNormalizedTime);
-                })
-                .AddTo(this);
+            //         var timeSinceStateStart = getServerTime() - stateChange.When;
+            //         var targetNormalizedTime = timeSinceStateStart % stateChange.ClipLength;
+            //         animator.Play(stateChange.StateHash, 0, targetNormalizedTime);
+            //     })
+            //     .AddTo(this);
 
             // if (onPawnSync != null) {
             //     onPawnSync
