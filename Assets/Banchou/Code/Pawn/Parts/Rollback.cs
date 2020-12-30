@@ -96,7 +96,7 @@ namespace Banchou.Pawn.Part {
                     .Subscribe(_ => {
                         var now = getServerTime();
 
-                        while (xformHistory.First.Value.When < now - _historyWindow) {
+                        while (xformHistory.Count > 1 && xformHistory.First.Value.When < now - _historyWindow) {
                             xformHistory.RemoveFirst();
                         }
 
