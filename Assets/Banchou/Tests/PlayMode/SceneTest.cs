@@ -26,7 +26,9 @@ namespace Banchou.Test {
 
         public void Cleanup() {
             #if UNITY_EDITOR
-                EditorBuildSettings.scenes = _oldScenes;
+                EditorBuildSettings.scenes = EditorBuildSettings.scenes
+                    .Where(scene => !ScenePaths.Contains(scene.path))
+                    .ToArray();
             #endif
         }
 
