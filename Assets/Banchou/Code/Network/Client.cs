@@ -26,8 +26,10 @@ namespace Banchou.Network {
         private NetPeer _peer;
 
         private float Now => Time.fixedUnscaledTime;
-        private float _lastServerTime = 0;
-        private float _lastLocalTime = 0;
+        private float _lastServerTime = 0f;
+        private float _lastLocalTime = 0f;
+
+        private float _timeRequestTime = 0f;
 
         private CompositeDisposable _subscriptions = new CompositeDisposable();
 
@@ -44,9 +46,9 @@ namespace Banchou.Network {
             _listener = new EventBasedNetListener();
             _client = new NetManager(_listener);
 
-            // _client.SimulateLatency = true;
-            // _client.SimulationMinLatency = 300;
-            // _client.SimulationMaxLatency = 800;
+            _client.SimulateLatency = true;
+            _client.SimulationMinLatency = 300;
+            _client.SimulationMaxLatency = 300;
 
             // Receiving data from server
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
@@ -62,6 +64,18 @@ namespace Banchou.Network {
                             // Ping compensation happens on the server, and we only need a frame of reference
                             _lastLocalTime = response.ClientTime;
                             _lastServerTime = response.ServerTime;
+
+                            Debug.Log(
+                                "Time Request Response\n" +
+                                $"\tPing: {fromPeer.Ping}\n" +
+                                $"\tTime at request: {_timeRequestTime}\n" +
+                                $"\tTime at response: {Time.fixedUnscaledTime}\n" +
+                                $"\tResponse time: {Time.fixedUnscaledTime - _timeRequestTime}\n" +
+                                $"\t_lastLocalTime: {_lastLocalTime}\n" +
+                                $"\t_lastServerTime: {_lastServerTime}\n" +
+                                $"\t_lastServerTime - _lastLocalTime = {_lastServerTime - _lastLocalTime} ~ Ping / 2\n" +
+                                $"\t_lastServerTime - response time / 2 = {_lastServerTime - ((Time.fixedUnscaledTime - _timeRequestTime) / 2f)} ~ {_timeRequestTime}?"
+                            );
                         }
                     } break;
                     case PayloadType.SyncClient: {
@@ -206,6 +220,7 @@ namespace Banchou.Network {
                     .StartWith(default(T))
                     .CatchIgnoreLog()
                     .Subscribe(_ => {
+                        _timeRequestTime = Now;
                         var request = Envelope.CreateMessage(
                             PayloadType.ServerTimeRequest,
                             new ServerTimeRequest {

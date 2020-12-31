@@ -45,10 +45,14 @@ namespace Banchou.Network {
             _dispatch = dispatch;
             _networkActions = networkActions;
 
+            _server.SimulateLatency = true;
+            _server.SimulationMinLatency = 300;
+            _server.SimulationMaxLatency = 300;
+
             var clients = new Dictionary<IPEndPoint, ConnectClient>();
 
             float When(float ping) {
-                return Time.fixedUnscaledTime - (ping / 2000f);
+                return Time.fixedUnscaledTime - (ping / 1000f);
             }
 
             _listener.ConnectionRequestEvent += request => {
