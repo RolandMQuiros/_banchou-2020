@@ -16,7 +16,9 @@ namespace Banchou.Pawn.FSM {
                 .Where(_ => IsStateActive)
                 .Subscribe(_ => {
                     if (_rootOrientation) {
-                        orientation.transform.rotation *= animator.deltaRotation;
+                        orientation.TrackRotation(
+                            orientation.transform.rotation * animator.deltaRotation
+                        );
                     }
 
                     if (_rootPosition) {

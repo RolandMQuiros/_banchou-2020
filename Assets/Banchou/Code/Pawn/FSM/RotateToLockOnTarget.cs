@@ -36,10 +36,13 @@ namespace Banchou.Pawn.FSM {
                         targetInstance.Position - orientation.transform.position,
                         orientation.transform.up
                     ).normalized;
-                    orientation.transform.rotation = Quaternion.RotateTowards(
-                        orientation.transform.rotation,
-                        Quaternion.LookRotation(direction),
-                        _rotationSpeed * Time.fixedDeltaTime
+
+                    orientation.TrackRotation(
+                        Quaternion.RotateTowards(
+                            orientation.transform.rotation,
+                            Quaternion.LookRotation(direction),
+                            _rotationSpeed * Time.fixedDeltaTime
+                        )
                     );
                 })
                 .AddTo(this);

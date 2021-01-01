@@ -56,10 +56,12 @@ namespace Banchou.Pawn.FSM {
                     }
 
                     if (faceDirection != Vector3.zero) {
-                        orientation.transform.rotation = Quaternion.RotateTowards(
-                            orientation.transform.rotation,
-                            Quaternion.LookRotation(faceDirection.normalized),
-                            _rotationSpeed * Time.fixedDeltaTime
+                        orientation.TrackRotation(
+                            Quaternion.RotateTowards(
+                                orientation.transform.rotation,
+                                Quaternion.LookRotation(faceDirection.normalized),
+                                _rotationSpeed * Time.fixedDeltaTime
+                            )
                         );
                     }
                 })
@@ -70,7 +72,7 @@ namespace Banchou.Pawn.FSM {
                     .Subscribe(_ => {
                         // Snap to the facing direction on state exit.
                         // Helps face the character in the intended direction when jumping mid-turn.
-                        orientation.transform.rotation = Quaternion.LookRotation(faceDirection.normalized);
+                        orientation.TrackRotation(Quaternion.LookRotation(faceDirection.normalized));
                     })
                     .AddTo(this);
             }

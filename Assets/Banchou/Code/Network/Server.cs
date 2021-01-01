@@ -99,8 +99,6 @@ namespace Banchou.Network {
             };
 
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
-                Debug.Log($"Server Ping: {fromPeer.Ping}");
-
                 // Open envelope
                 var envelope = MessagePackSerializer.Deserialize<Envelope>(dataReader.GetRemainingBytes(), _messagePackOptions);
 

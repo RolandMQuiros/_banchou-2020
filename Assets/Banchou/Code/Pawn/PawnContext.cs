@@ -29,7 +29,7 @@ namespace Banchou.Pawn {
         public PawnId PawnId { get; private set; }
         public Vector3 Position {
             get => transform.position;
-            set { transform.position = value; }
+            set => transform.position = value;
         }
         public Vector3 Forward {
             get => _orientation?.transform.forward ?? transform.forward;

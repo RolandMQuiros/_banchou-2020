@@ -89,10 +89,12 @@ namespace Banchou.Pawn.FSM {
                 .CatchIgnoreLog()
                 .Subscribe(targetDirection => {
                     faceDirection = targetDirection;
-                    orientation.transform.rotation = Quaternion.RotateTowards(
-                        orientation.transform.rotation,
-                        Quaternion.LookRotation(targetDirection),
-                        _rotationSpeed * Time.fixedDeltaTime
+                    orientation.TrackRotation(
+                        Quaternion.RotateTowards(
+                            orientation.transform.rotation,
+                            Quaternion.LookRotation(targetDirection),
+                            _rotationSpeed * Time.fixedDeltaTime
+                        )
                     );
                 })
                 .AddTo(this);
