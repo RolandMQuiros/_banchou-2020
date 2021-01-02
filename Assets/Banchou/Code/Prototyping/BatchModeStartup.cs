@@ -22,6 +22,8 @@ namespace Banchou.Prototype {
         private NetworkActions _networkActions;
         private PlayersActions _playerActions;
 
+        public bool RollbackEnabled { get; set; }
+
         public void Construct(
             IObservable<GameState> observeState,
             GetState getState,
@@ -36,21 +38,6 @@ namespace Banchou.Prototype {
             _boardActions = boardActions;
             _networkActions = networkActions;
             _playerActions = playerActions;
-
-            observeState
-                .Select(state => state.GetClients())
-                .DistinctUntilChanged()
-                .Pairwise()
-                .SelectMany(pair => pair.Current.Except(pair.Previous))
-                .Delay(TimeSpan.FromSeconds(2f))
-                .CatchIgnoreLog()
-                .Subscribe(clientId => {
-                    var playerId = getState().NextPlayerId();
-                    dispatch(playerActions.AddPlayer(playerId, "Local Player", $"Player {clientId}", clientId));
-
-                    var pawnId = getState().NextPawnId();
-                    dispatch(boardActions.AddPawn(pawnId, playerId, "Isaac", new Vector3(Random.Range(-5f, 5f), 3f, Random.Range(-5f, 5f))));
-                });
         }
 
         private void Start() {
@@ -59,7 +46,7 @@ namespace Banchou.Prototype {
                 _dispatch(_networkActions.SetMode(Mode.Server));
 
                 var playerId = _getState().NextPlayerId();
-                _dispatch(_playerActions.AddPlayer(playerId, "Local Player"));
+                _dispatch(_playerActions.AddPlayer(playerId, prefabKey: "Local Player", rollbackEnabled: RollbackEnabled));
                 _dispatch(_boardActions.SetScene("TestingGrounds"));
 
                 var pawnId = _getState().NextPawnId();

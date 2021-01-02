@@ -39,6 +39,7 @@ namespace Banchou.Player {
         public string Name = null;
         public Guid NetworkId = Guid.Empty;
         public PawnId Pawn = PawnId.Empty;
+        public bool RollbackEnabled = true;
 
         public PlayerState() { }
         public PlayerState(in PlayerState prev) {
@@ -46,6 +47,7 @@ namespace Banchou.Player {
             Name = prev.Name;
             NetworkId = prev.NetworkId;
             Pawn = prev.Pawn;
+            RollbackEnabled = prev.RollbackEnabled;
         }
     }
 

@@ -10,6 +10,11 @@ namespace Banchou.Network {
             public int SimulateMaxLatency;
         }
 
+        public struct SimulateLatency {
+            public int SimulateMinLatency;
+            public int SimulateMaxLatency;
+        }
+
         public struct NetworkAgentStarted {
             public int PeerId;
             public float When;
@@ -39,6 +44,10 @@ namespace Banchou.Network {
             Mode = mode,
             SimulateMinLatency = simulateMinLatency,
             SimulateMaxLatency = simulateMaxLatency
+        };
+        public StateAction.SimulateLatency SimulateLatency(int min, int max) => new StateAction.SimulateLatency {
+            SimulateMinLatency = min,
+            SimulateMaxLatency = max
         };
         public StateAction.NetworkAgentStarted Started(int peerId) => new StateAction.NetworkAgentStarted { PeerId = peerId, When = _getTime() };
         public StateAction.ConnectedToServer ConnectedToServer(Guid clientNetworkid, DateTime serverTime) => new StateAction.ConnectedToServer { ClientNetworkId = clientNetworkid, ServerTime = serverTime };

@@ -13,7 +13,9 @@ namespace Banchou.Player {
                     States = new Dictionary<PlayerId, PlayerState>(prev.States) {
                         [add.PlayerId] = new PlayerState() {
                             PrefabKey = add.PrefabKey,
-                            NetworkId = add.NetworkId == Guid.Empty ? network.Id : add.NetworkId
+                            NetworkId = add.NetworkId == Guid.Empty ? network.Id : add.NetworkId,
+                            Name = add.Name,
+                            RollbackEnabled = add.RollbackEnabled
                         }
                     }
                 };

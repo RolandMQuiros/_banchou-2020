@@ -11,6 +11,8 @@ using Banchou.Board;
 namespace Banchou.Prototype {
     public class ConnectButton : MonoBehaviour {
         public string IPAddress { get; set; }
+        public int MinPing { get; set; } = 0;
+        public int MaxPing { get; set; } = 0;
 
         private IObservable<GameState> _observeState;
         private Dispatcher _dispatch;
@@ -30,9 +32,17 @@ namespace Banchou.Prototype {
             _networkActions = networkActions;
         }
 
+        public void ParseMinPing(string ping) {
+            MinPing = int.Parse(ping);
+        }
+
+        public void ParseMaxPing(string ping) {
+            MaxPing = int.Parse(ping);
+        }
+
         public void Connect() {
             SceneManager.LoadScene("BanchouBoard");
-            _dispatch(_networkActions.SetMode(Mode.Client));
+            _dispatch(_networkActions.SetMode(Mode.Client, MinPing, MaxPing));
         }
     }
 }

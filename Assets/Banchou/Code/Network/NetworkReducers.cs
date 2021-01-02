@@ -13,6 +13,13 @@ namespace Banchou.Network {
                 };
             }
 
+            if (action is StateAction.SimulateLatency setPing && prev.Mode != Mode.Local) {
+                return new NetworkState {
+                    SimulateMinLatency = setPing.SimulateMinLatency,
+                    SimulateMaxLatency = setPing.SimulateMaxLatency
+                };
+            }
+
             if (action is StateAction.ConnectedToServer toServer && prev.Mode == Mode.Client) {
                 return new NetworkState(prev) {
                     Id = toServer.ClientNetworkId

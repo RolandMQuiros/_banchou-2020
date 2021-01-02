@@ -118,11 +118,20 @@ namespace Banchou.Pawn.Part {
                 return unit.Diff > _rollbackThreshold;
             }
 
-            var rollbackInputs = movesAndCommands
+            var observeCanRollback = observeState
+                .Select(state => state.GetPawnPlayer(pawnId))
+                .DistinctUntilChanged()
+                .Select(state => state.RollbackEnabled);
+
+            var rollbackInputs = observeCanRollback
+                .Where(canRollback => canRollback)
+                .SelectMany(_ => movesAndCommands)
                 .Where(IsUnitEligibleForRollback);
 
             var passthroughInputs = movesAndCommands
-                .Where(unit => !IsUnitEligibleForRollback(unit));
+                .WithLatestFrom(observeCanRollback, (Unit, CanRollback) => (Unit, CanRollback))
+                .Where(args => !args.CanRollback || !IsUnitEligibleForRollback(args.Unit))
+                .Select(args => args.Unit);
 
             // Record Animator's state every frame
             var history = new LinkedList<HistoryStep>();
@@ -145,7 +154,9 @@ namespace Banchou.Pawn.Part {
             }
 
             // Populate history list every frame
-            this.FixedUpdateAsObservable()
+            observeCanRollback
+                .Where(canRollback => canRollback)
+                .SelectMany(_ => this.FixedUpdateAsObservable())
                 .Select(xform => RecordStep(getServerTime()))
                 .Subscribe(step => {
                     var window = getServerTime() - _historyWindow;
@@ -268,8 +279,8 @@ namespace Banchou.Pawn.Part {
         private HistoryStep _gizmoStep;
 
         private void OnDrawGizmos() {
-            var ageBounds = _gizmoFrames.Last.Value.When - _gizmoFrames.First.Value.When;
             if (_gizmoFrames != null && _gizmoFrames.Count > 0) {
+                var ageBounds = _gizmoFrames.Last.Value.When - _gizmoFrames.First.Value.When;
                 var color = Color.green;
 
                 var iter = _gizmoFrames.First;
@@ -282,14 +293,16 @@ namespace Banchou.Pawn.Part {
                     Gizmos.DrawSphere(iter.Value.Position, 0.15f * age);
                     iter = iter.Next;
                 }
-            }
 
-            Gizmos.color = Color.magenta;
-            var ffIter = _gizmoFastForwardStart;
-            while (ffIter != null && ffIter != _gizmoFastForwardEnd) {
-                var age = (ffIter.Value.When - _gizmoFrames.First.Value.When) / ageBounds;
-                Gizmos.DrawWireSphere(ffIter.Value.Position, 0.2f * age);
-                ffIter = ffIter.Next;
+                if (_gizmoFastForwardStart != null && _gizmoFastForwardEnd != null) {
+                    Gizmos.color = Color.magenta;
+                    var ffIter = _gizmoFastForwardStart;
+                    while (ffIter != null && ffIter != _gizmoFastForwardEnd) {
+                        var age = (ffIter.Value.When - _gizmoFrames.First.Value.When) / ageBounds;
+                        Gizmos.DrawWireSphere(ffIter.Value.Position, 0.2f * age);
+                        ffIter = ffIter.Next;
+                    }
+                }
             }
 
             if (_gizmoStep.When != 0f) {
