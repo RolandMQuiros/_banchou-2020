@@ -48,18 +48,18 @@ namespace Banchou.Pawn {
         private PawnActions _pawnActions;
         private IObservable<GameState> _observeState;
         private PlayerInputStreams _playerInput;
+        private GetServerTime _getServerTime;
 
         private Subject<InputCommand> _commandSubject = new Subject<InputCommand>();
         private Subject<Vector3> _moveSubject = new Subject<Vector3>();
-
-        private float _deltaTime = 0f;
 
         public void Construct(
             PawnId pawnId,
             Dispatcher dispatch,
             GetState getState,
             IObservable<GameState> onStateUpdate,
-            PlayerInputStreams playerInput
+            PlayerInputStreams playerInput,
+            GetServerTime getServerTime
         ) {
             PawnId = pawnId;
             _dispatch = dispatch;
@@ -67,6 +67,7 @@ namespace Banchou.Pawn {
             _observeState = onStateUpdate;
             _pawnActions = new PawnActions(PawnId);
             _playerInput = playerInput;
+            _getServerTime = getServerTime;
 
             _animator = _animator == null ? GetComponentInChildren<Animator>(true) : _animator;
             _rigidbody =  _rigidbody == null ? GetComponentInChildren<Rigidbody>(true) : _rigidbody;
@@ -93,7 +94,12 @@ namespace Banchou.Pawn {
             container.Bind<Part.IMotor>(_motor);
             container.Bind<Part.Rollback>(_rollback);
             container.Bind<PawnActions>(_pawnActions);
-            container.Bind<GetDeltaTime>(() => _deltaTime);
+            container.Bind<GetServerTime>(() => {
+                if (_rollback?.State == Rollback.RollbackState.FastForward) {
+                    return _rollback.CorrectionTime;
+                }
+                return _getServerTime();
+            });
 
             // Short-circuit dispatcher for client facade pawns
             container.Bind<Redux.Dispatcher>(action => {

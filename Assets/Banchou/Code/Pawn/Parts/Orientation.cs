@@ -25,7 +25,7 @@ namespace Banchou.Pawn.Part {
         }
 
         public void TrackForward(Vector3 forward) {
-            TrackForward(forward);
+            TrackForward(forward, _getServerTime());
         }
         public void TrackForward(Vector3 forward, float when) {
             TrackRotation(Quaternion.LookRotation(forward), when);

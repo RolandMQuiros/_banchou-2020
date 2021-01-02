@@ -69,7 +69,9 @@ namespace Banchou.Pawn.Part {
             PlayerInputStreams playerInput,
             Subject<InputCommand> commandSubject,
             Subject<Vector3> moveSubject,
-            IMotor motor
+
+            IMotor motor,
+            Orientation orientation
         ) {
             var floatKeys = animator.parameters
                 .Where(p => p.type == AnimatorControllerParameterType.Float)
@@ -124,13 +126,9 @@ namespace Banchou.Pawn.Part {
 
             // Record Animator's state every frame
             var history = new LinkedList<HistoryStep>();
-
-            this.FixedUpdateAsObservable()
-                .CombineLatest(
-                    motor.History,
-                    (_, move) => move
-                )
-                .Select(move => new HistoryStep {
+            _gizmoFrames = history;
+            HistoryStep RecordStep(float when) {
+                return new HistoryStep {
                     StateHashes = Enumerable.Range(0, animator.layerCount)
                         .Select(layer => animator.GetCurrentAnimatorStateInfo(layer).fullPathHash)
                         .ToList(),
@@ -140,65 +138,53 @@ namespace Banchou.Pawn.Part {
                     Floats = floatKeys.ToDictionary(key => key, key => animator.GetFloat(key)),
                     Ints = intKeys.ToDictionary(key => key, key => animator.GetInteger(key)),
                     Bools = boolKeys.ToDictionary(key => key, key => animator.GetBool(key)),
-                    Position = move.Position,
-                    Forward = pawn.Forward,
-                    When = getServerTime(),
-                })
+                    Position = motor.TargetPosition,
+                    Forward = orientation.transform.forward,
+                    When = when,
+                };
+            }
+
+            // Populate history list every frame
+            this.FixedUpdateAsObservable()
+                .Select(xform => RecordStep(getServerTime()))
                 .Subscribe(step => {
                     var window = getServerTime() - _historyWindow;
+
+                    // Remove old frames
                     while (history.Count > 0 && history.First.Value.When < window) {
                         history.RemoveFirst();
                     }
 
                     history.AddLast(step);
-                    _gizmoFrames = history;
                 })
                 .AddTo(this);
 
             // Handle rollbacks
             rollbackInputs
                 .Subscribe(unit => {
-                    if (history.Count > 0) {
-                        Debug.Log(
-                            $"{history.Count} history frames available, from {history.First.Value.When} to {history.Last.Value.When}\n\t" +
-                            string.Join(
-                                "\n\t",
-                                history.Select(step => $"Position: {step.Position}, When: {step.When}")
-                            )
-                        );
-                    }
-
-                    Debug.Log(
-                        $"Rolling back for Input at {getServerTime()}:\n"+
-                        $"\tWhen: {unit.When}\n" +
-                        $"\tDiff: {unit.Diff}\n" +
-                        $"\tMove: {unit.Move}\n" +
-                        $"\tCommand: {unit.Command}"
-                    );
-
-                    var frame = history.First(step => unit.When <= step.When);
-                    _gizmoStep = frame;
-
-                    Debug.Log(
-                        $"Target frame at {frame.When}:\n"+
-                        $"\tFrom {pawn.Position} to {frame.Position}"
-                    );
-
-                    var now = getServerTime();
                     var deltaTime = Time.fixedUnscaledDeltaTime;
+                    var now = getServerTime();
 
-                    // Delete history after the target frame
-                    while (history.Last.Value.When > frame.When) {
+                    // Find the last recorded frame before the input's timestamp, while removing future frames
+                    while (unit.When < history.Last.Value.When) {
                         history.RemoveLast();
                     }
+
+                    // Go back one more frame, since we need to play the animator once for input to process
+                    var frame = history.Last.Previous.Value;
+                    history.RemoveLast();
+
+                    _gizmoStep = frame;
 
                     State = RollbackState.RollingBack;
 
                     // Set transform
+                    motor.Clear();
                     motor.Teleport(frame.Position);
-                    pawn.Forward = frame.Forward;
+                    orientation.TrackForward(frame.Forward);
 
                     // Set animator states
+                    animator.enabled = false;
                     for (int layer = 0; layer < animator.layerCount; layer++) {
                         animator.Play(frame.StateHashes[layer], layer, frame.NormalizedTimes[layer]);
                     }
@@ -221,18 +207,17 @@ namespace Banchou.Pawn.Part {
                         animator.ResetTrigger(param);
                     }
 
+                    State = RollbackState.FastForward;
+
+                    // Resimulate to present
                     CorrectionTime = now - unit.Diff;
 
-                    // I'd like to add to the xformHistory after every call to Animator.Update, but the positions are only updated
-                    // at the next FixedUpdate, and all at the same time.
-                        // We absolutely need this is we want to stack rollbacks. Subsequent rollbacks can't use the local history, since it's invalidated
-                        // by the preceding rollback.
-                            // Hopefully recording on animator.OnUpdateAsObservable does something for us
-                                // It doesn't
 
-                    // Need to call this once so triggers can be set, for some reason
-                    State = RollbackState.FastForward;
+                    // Need to run this first or else triggers aren't set, for some reason
                     animator.Update(deltaTime);
+                    var resimulatedStep = RecordStep(CorrectionTime);
+                    history.AddLast(resimulatedStep);
+                    _gizmoFastForwardStart = history.Last;
 
                     // Pump input into streams
                     if (unit.Command == InputCommand.None) {
@@ -241,13 +226,27 @@ namespace Banchou.Pawn.Part {
                         commandSubject.OnNext(unit.Command);
                     }
 
-                    // Resimulate to present
-                    var resimulationTime = deltaTime; // Skip first update
-                    while (resimulationTime < unit.Diff) {
-                        animator.Update(Mathf.Min(deltaTime, unit.Diff - resimulationTime));
-                        resimulationTime = resimulationTime + deltaTime;
+                    CorrectionTime += deltaTime;
+
+                    while (CorrectionTime < now) {
+                        animator.Update(deltaTime);
+                        // Record resimulated frame's new state
+                        resimulatedStep = RecordStep(CorrectionTime);
+                        history.AddLast(resimulatedStep);
+
+                        CorrectionTime += deltaTime;
                     }
-                    Debug.Log("Simulation ending");
+                    _gizmoFastForwardEnd = history.Last;
+                    animator.enabled = true;
+                })
+                .AddTo(this);
+
+            // Post-rollback afterglow
+            this.LateUpdateAsObservable()
+                .Where(_ => State == RollbackState.FastForward)
+                .Subscribe(_ => {
+                    State = RollbackState.Complete;
+                    Debug.Log($"Rollback complated at position {pawn.Position} at {getServerTime()}");
                 })
                 .AddTo(this);
 
@@ -264,18 +263,33 @@ namespace Banchou.Pawn.Part {
         }
 
         private LinkedList<HistoryStep> _gizmoFrames;
+        private LinkedListNode<HistoryStep> _gizmoFastForwardStart;
+        private LinkedListNode<HistoryStep> _gizmoFastForwardEnd;
         private HistoryStep _gizmoStep;
 
         private void OnDrawGizmos() {
+            var ageBounds = _gizmoFrames.Last.Value.When - _gizmoFrames.First.Value.When;
             if (_gizmoFrames != null && _gizmoFrames.Count > 0) {
-                Gizmos.color = Color.green;
+                var color = Color.green;
 
                 var iter = _gizmoFrames.First;
                 while (iter.Next != null) {
+                    var age = (iter.Value.When - _gizmoFrames.First.Value.When) / ageBounds;
+                    color.g = age;
+
+                    Gizmos.color = color;
                     Gizmos.DrawLine(iter.Value.Position, iter.Next.Value.Position);
-                    Gizmos.DrawSphere(iter.Value.Position, 0.15f);
+                    Gizmos.DrawSphere(iter.Value.Position, 0.15f * age);
                     iter = iter.Next;
                 }
+            }
+
+            Gizmos.color = Color.magenta;
+            var ffIter = _gizmoFastForwardStart;
+            while (ffIter != null && ffIter != _gizmoFastForwardEnd) {
+                var age = (ffIter.Value.When - _gizmoFrames.First.Value.When) / ageBounds;
+                Gizmos.DrawWireSphere(ffIter.Value.Position, 0.2f * age);
+                ffIter = ffIter.Next;
             }
 
             if (_gizmoStep.When != 0f) {

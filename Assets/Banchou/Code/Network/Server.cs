@@ -29,7 +29,7 @@ namespace Banchou.Network {
 
         public NetworkServer(
             Guid networkId,
-            IObservable<GameState> observeState,
+            IObservable<GameState> onStateUpdate,
             GetState getState,
             Dispatcher dispatch,
             NetworkActions networkActions,
@@ -45,14 +45,22 @@ namespace Banchou.Network {
             _dispatch = dispatch;
             _networkActions = networkActions;
 
-            _server.SimulateLatency = true;
-            _server.SimulationMinLatency = 300;
-            _server.SimulationMaxLatency = 300;
+            _subscriptions.Add(
+                onStateUpdate
+                    .Select(state => state.GetSimulatedLatency())
+                    .DistinctUntilChanged()
+                    .CatchIgnoreLog()
+                    .Subscribe(latency => {
+                        _server.SimulateLatency = latency.Min != 0 || latency.Max != 0;
+                        _server.SimulationMinLatency = latency.Min;
+                        _server.SimulationMaxLatency = latency.Max;
+                    })
+            );
 
             var clients = new Dictionary<IPEndPoint, ConnectClient>();
 
             float When(float ping) {
-                return Time.fixedUnscaledTime - (ping / 1000f);
+                return Snapping.Snap(GetTime() - (ping / 1000f), Time.fixedUnscaledDeltaTime);
             }
 
             _listener.ConnectionRequestEvent += request => {

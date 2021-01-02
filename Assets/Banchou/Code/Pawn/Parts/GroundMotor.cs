@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-using UniRx;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 using Banchou.Network;
@@ -10,16 +7,11 @@ namespace Banchou.Pawn.Part {
     [RequireComponent(typeof(Rigidbody))]
     public class GroundMotor : MonoBehaviour, IMotor {
         [SerializeField] private LayerMask _terrainMask;
-
-        public IObservable<(Vector3 Position, float When)> History => _history;
-        private ReactiveProperty<(Vector3 Position, float When)> _history = new ReactiveProperty<(Vector3 Position, float When)>();
+        public Vector3 TargetPosition => _rigidbody.position + _velocity;
 
         private Rigidbody _rigidbody = null;
         private GetServerTime _getServerTime = null;
         private List<Vector3> _contacts = new List<Vector3>();
-
-        private bool _didTeleport = false;
-        private Vector3 _start = Vector3.zero;
         private Vector3 _velocity = Vector3.zero;
 
         private class ContactSorter : IComparer<Vector3> {
@@ -35,6 +27,7 @@ namespace Banchou.Pawn.Part {
         private ContactSorter _sorter;
 
         #region MonoBehaviour
+
         public void Construct(
             Rigidbody rigidbody,
             GetServerTime getServerTime
@@ -57,36 +50,24 @@ namespace Banchou.Pawn.Part {
         }
 
         private void FixedUpdate() {
-            if (_didTeleport) {
-                _rigidbody.position = _start;
-            } else {
-                _start = _rigidbody.transform.position;
-            }
-            var newPosition = _start + _velocity;
+            var newPosition = _rigidbody.position + _velocity;
             _rigidbody.MovePosition(newPosition);
-
-            _didTeleport = false;
             _velocity = Vector3.zero;
             _contacts.Clear();
-        }
-
-        private void LateUpdate() {
-            _start = _rigidbody.position;
         }
 
         #endregion
 
         public void Teleport(Vector3 position) {
-            _didTeleport = true;
-            _start = position;
+            _rigidbody.position = position;
         }
 
         public void Move(Vector3 velocity) {
             _velocity += Project(velocity);
-            _history.Value = (
-                Position: _start + _velocity,
-                When: _getServerTime()
-            );
+        }
+
+        public void Clear() {
+            _velocity = Vector3.zero;
         }
 
         public Vector3 Project(Vector3 velocity) {

@@ -18,6 +18,9 @@ namespace Banchou.Network {
         public IPEndPoint IP = new IPEndPoint(127, 9050);
         public IEnumerable<Guid> Clients = Enumerable.Empty<Guid>();
 
+        public int SimulateMinLatency = 0;
+        public int SimulateMaxLatency = 0;
+
         public NetworkState() { }
         public NetworkState(in NetworkState prev) {
             Id = prev.Id;
@@ -26,6 +29,9 @@ namespace Banchou.Network {
             IsConnecting = prev.IsConnecting;
             IP = prev.IP;
             Clients = prev.Clients;
+
+            SimulateMinLatency = prev.SimulateMinLatency;
+            SimulateMaxLatency = prev.SimulateMaxLatency;
         }
     }
 

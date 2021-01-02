@@ -48,7 +48,7 @@ namespace Banchou.DependencyInjection {
             };
         }
 
-        public void Inject(object target) {
+        public T Inject<T>(T target) {
             if (target.GetType() == typeof(DiContainer)) {
                 throw new Exception("Cannot inject into a DiContainer");
             }
@@ -58,7 +58,7 @@ namespace Banchou.DependencyInjection {
                 .Select(pair => (Key: pair.Key, Value: pair.Value.Instance));
 
             if (!applicableBindings.Any()) {
-                return;
+                return target;
             }
 
             var targetType = target.GetType();
@@ -113,6 +113,8 @@ namespace Banchou.DependencyInjection {
                     );
                 }
             }
+
+            return target;
         }
 
         private GameObject Instantiate(GameObject original, Vector3 position, Quaternion rotation, Transform parent, params object[] additionalBindings) {
@@ -131,20 +133,14 @@ namespace Banchou.DependencyInjection {
     );
 
     public static class InjectionExtensions {
+        /// <summary>
+        /// Injects dependencies into every <see cref="Component"/> in this <see cref="Transform"/>'s hierarchy
+        /// </summary>
+        /// <param name="transform">The root Transform of the subtree</param>
+        /// <param name="additionalBindings">Bindings not necessarily included in the hierarchy contexts</param>
         public static void ApplyBindings(this Transform transform, params object[] additionalBindings) {
             foreach (var xform in transform.BreadthFirstTraversal()) {
-                var climb = xform;
-                var stack = new List<IContext>();
-                while (climb != null) {
-                    // Traverse the hierarchy from bottom to top, while traversing each gameObject's contexts from top to bottom
-                    // This lets multiple contexts on a single gameObject depend on each other in a predictable way
-                    var contexts = climb.GetComponents<IContext>().Reverse();
-                    foreach (var context in contexts) {
-                        stack.Add(context);
-                    }
-                    climb = climb.parent;
-                }
-
+                var contexts = transform.FindContexts();
                 var components = xform.gameObject
                     .GetComponents<Component>()
                     .SelectMany(c => Expand(c))
@@ -155,14 +151,9 @@ namespace Banchou.DependencyInjection {
 
                 foreach (var component in components) {
                     try {
-                        var container = new DiContainer(additionalBindings);
-                        for (int i = stack.Count - 1; i >= 0; i--) {
-                            var context = stack[i];
-                            if (component != context) {
-                                context.InstallBindings(container);
-                            }
-                        }
-                        container.Inject(component);
+                        contexts.Where(context => context != component)
+                            .ToDiContainer(additionalBindings)
+                            .Inject(component);
                     } catch (Exception error) {
                         Debug.LogException(error);
                     }
@@ -170,6 +161,45 @@ namespace Banchou.DependencyInjection {
             }
         }
 
+        /// <summary>
+        /// Retrieves the <see cref="IContext"/>s available to the current <see cref="Transform"/>, based on its position in
+        /// the scene hierarchy.
+        /// </summary>
+        /// <param name="transform">The target <see cref="Transform"/></param>
+        /// <returns>A collection of <see cref="IContext"/>s in order of closest in the scene tree, to the root</returns>
+        public static IList<IContext> FindContexts(this Transform transform) {
+            var climb = transform;
+            var stack = new Stack<IContext>();
+            while (climb != null) {
+                // Traverse the hierarchy from bottom to top, while traversing each gameObject's contexts from top to bottom
+                // This lets multiple contexts on a single gameObject depend on each other in a predictable way
+                var contexts = climb.GetComponents<IContext>().Reverse();
+                foreach (var context in contexts) {
+                    stack.Push(context);
+                }
+                climb = climb.parent;
+            }
+            return stack.ToList();
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="DiContainer"/> from an ordered collection of <see cref="IContexts"/>
+        /// </summary>
+        /// <param name="contexts">An ordered collection of <see cref="IContext"/>s</param>
+        /// <returns>A <see cref="DiContainer"/> build from contexts</returns>
+        public static DiContainer ToDiContainer(this IEnumerable<IContext> contexts, params object[] additionalBindings) {
+            var container = new DiContainer(additionalBindings);
+            foreach (var context in contexts) {
+                context.InstallBindings(container);
+            }
+            return container;
+        }
+
+        /// <summary>
+        /// Expands a <see cref="Component"/> into subobjects that can receive dependency injections
+        /// </summary>
+        /// <param name="component">The target <see cref="Component"/></param>
+        /// <returns>An unordered collection of subobjects</returns>
         public static IEnumerable<object> Expand(this Component component) {
             yield return component;
 

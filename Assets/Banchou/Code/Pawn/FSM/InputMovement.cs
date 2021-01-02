@@ -25,7 +25,9 @@ namespace Banchou.Pawn.FSM {
             ObservePlayerMove observePlayerMove,
             Part.IMotor motor,
             Part.Orientation orientation,
-            Animator animator
+            Animator animator,
+
+            Part.Rollback rollback
         ) {
             var speedOut = Animator.StringToHash(_movementSpeedOut);
             var rightSpeedOut = Animator.StringToHash(_velocityRightOut);
@@ -41,7 +43,8 @@ namespace Banchou.Pawn.FSM {
                 .Subscribe(
                     direction => {
                         var velocity = _movementSpeed * direction;
-                        motor.Move(velocity * Time.fixedDeltaTime);
+                        var offset = velocity * Time.fixedDeltaTime;
+                        motor.Move(offset);
 
                         // Write to output variables
                         if (!string.IsNullOrWhiteSpace(_movementSpeedOut)) {

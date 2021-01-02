@@ -7,7 +7,9 @@ namespace Banchou.Network {
             if (action is StateAction.SetNetworkMode setMode) {
                 return new NetworkState {
                     Mode = setMode.Mode,
-                    Id = setMode.Mode == Mode.Server ? Guid.NewGuid() : Guid.Empty
+                    Id = setMode.Mode == Mode.Server ? Guid.NewGuid() : Guid.Empty,
+                    SimulateMinLatency = setMode.Mode != Mode.Local ? setMode.SimulateMinLatency : 0,
+                    SimulateMaxLatency = setMode.Mode != Mode.Local ? setMode.SimulateMaxLatency : 0
                 };
             }
 

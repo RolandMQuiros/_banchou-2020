@@ -12,6 +12,13 @@ namespace Banchou.Network {
             return state.Network.Id;
         }
 
+        public static (int Min, int Max) GetSimulatedLatency(this GameState state) {
+            return (
+                Min: state.Network.SimulateMinLatency,
+                Max: state.Network.SimulateMaxLatency
+            );
+        }
+
         public static bool IsConnectedToServer(this GameState state) {
             return state.Network.Id != Guid.Empty;
         }
