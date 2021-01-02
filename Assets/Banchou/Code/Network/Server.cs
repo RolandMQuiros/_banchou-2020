@@ -211,7 +211,7 @@ namespace Banchou.Network {
         }
 
         public float GetTime() {
-            return Time.fixedUnscaledTime;
+            return Snapping.Snap(Time.fixedUnscaledTime, Time.fixedUnscaledDeltaTime);
         }
 
         public NetworkServer Start<T>(IObservable<T> pollInterval) {

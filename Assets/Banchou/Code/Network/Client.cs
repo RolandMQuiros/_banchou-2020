@@ -248,7 +248,7 @@ namespace Banchou.Network {
         /// </summary>
         /// <returns>The estimated server time</returns>
         public float GetTime() {
-            return _lastServerTime + Now - _lastLocalTime;
+            return Snapping.Snap(_lastServerTime + Now - _lastLocalTime, Time.fixedUnscaledDeltaTime);
         }
 
         public void Dispose() {

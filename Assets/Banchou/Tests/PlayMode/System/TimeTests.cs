@@ -68,6 +68,8 @@ namespace Banchou.Test {
         public IEnumerator DoesFixedDeltaTimeChangeWithFatFrames() {
             var finished = false;
 
+            var targetDelta = Time.fixedUnscaledDeltaTime;
+
             var subscriptions = new CompositeDisposable(
                 Observable.EveryFixedUpdate()
                     .Subscribe(frameCount => {
@@ -75,9 +77,8 @@ namespace Banchou.Test {
                     }),
                 Observable.EveryFixedUpdate()
                     .Select(_ => Time.fixedUnscaledDeltaTime)
-                    .Pairwise()
-                    .Subscribe(times => {
-                        Assert.Greater(times.Current, times.Previous);
+                    .Subscribe(delta => {
+                        Assert.AreEqual(targetDelta, delta);
                     }),
                 Observable.Timer(TimeSpan.FromSeconds(1f))
                     .Subscribe(_ => { finished = true; })
