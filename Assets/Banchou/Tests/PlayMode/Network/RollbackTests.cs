@@ -4,12 +4,15 @@ using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 
+using Redux;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
+using Banchou.DependencyInjection;
 using Banchou.Network;
 using Banchou.Pawn;
+using Banchou.Player;
 
 namespace Banchou.Test {
     [TestFixture]
@@ -19,9 +22,33 @@ namespace Banchou.Test {
 
         private Scene _scene;
         private GameObject _serverRoot;
-        private Redux.IStore<GameState> _serverStore;
         private GameObject _clientRoot;
-        private Redux.IStore<GameState> _clientStore;
+
+        private class BoardMembers {
+            public GetState GetState;
+            public Dispatcher Dispatch;
+            public GetServerTime GetTime;
+
+            public PlayerInputStreams Input;
+            public IPawnInstances Pawns;
+
+            public void Construct(
+                GetState getState,
+                Dispatcher dispatch,
+                GetServerTime getServerTime,
+                PlayerInputStreams playerInput,
+                IPawnInstances pawns
+            ) {
+                GetState = getState;
+                Dispatch = dispatch;
+                GetTime = getServerTime;
+                Input = playerInput;
+                Pawns = pawns;
+            }
+        }
+
+        private BoardMembers _serverBoard;
+        private BoardMembers _clientBoard;
 
 
         [SetUp]
@@ -35,25 +62,35 @@ namespace Banchou.Test {
                     _serverRoot = roots.First(obj => obj.name == "Server");
                     _clientRoot = roots.First(obj => obj.name == "Client");
 
-                    _serverStore = _serverRoot.GetComponentInChildren<StoreContext>().Store;
-                    _clientStore = _clientRoot.GetComponentInChildren<StoreContext>().Store;
+                    _serverBoard = _serverRoot.transform
+                        .FindContexts()
+                        .ToDiContainer()
+                        .Inject(new BoardMembers());
+                    _clientBoard = _clientRoot.transform
+                        .FindContexts()
+                        .ToDiContainer()
+                        .Inject(new BoardMembers());
                 }
             );
         }
 
-        private IEnumerator SetupServerAndClient() {
-            _serverStore.Dispatch(new Network.StateAction.SetNetworkMode {
-                Mode = Network.Mode.Server
+        private IEnumerator SetupServerAndClient(int minPing = 0, int maxPing = 0) {
+            _serverBoard.Dispatch(new Network.StateAction.SetNetworkMode {
+                Mode = Network.Mode.Server,
+                SimulateMinLatency = minPing,
+                SimulateMaxLatency = maxPing
             });
 
-            _clientStore.Dispatch(new Network.StateAction.SetNetworkMode {
-                Mode = Network.Mode.Client
+            _clientBoard.Dispatch(new Network.StateAction.SetNetworkMode {
+                Mode = Network.Mode.Client,
+                SimulateMinLatency = minPing,
+                SimulateMaxLatency = maxPing
             });
 
-            Assert.That(_serverStore.GetState().GetNetworkMode() == Network.Mode.Server, "Server's network mode was not correctly set");
-            Assert.That(_clientStore.GetState().GetNetworkMode() == Network.Mode.Client, "Client's network mode was not correctly set");
+            Assert.That(_serverBoard.GetState().GetNetworkMode() == Network.Mode.Server, "Server's network mode was not correctly set");
+            Assert.That(_clientBoard.GetState().GetNetworkMode() == Network.Mode.Client, "Client's network mode was not correctly set");
 
-            yield return new WaitUntil(() => _clientStore.GetState().IsConnectedToServer());
+            yield return new WaitUntil(() => _clientBoard.GetState().IsConnectedToServer());
         }
 
         [UnityTest]
@@ -68,14 +105,14 @@ namespace Banchou.Test {
             yield return SetupServerAndClient();
 
             var pawnId = new Pawn.PawnId(12345);
-            _serverStore.Dispatch(new Board.StateAction.AddPawn {
+            _serverBoard.Dispatch(new Board.StateAction.AddPawn {
                 PawnId = pawnId,
                 PrefabKey = "NetworkedPawn"
             });
 
             yield return new WaitForSecondsRealtime(1f);
 
-            Assert.That(_clientStore.GetState().HasPawn(pawnId), "Client did not receive AddPawn action");
+            Assert.That(_clientBoard.GetState().HasPawn(pawnId), "Client did not receive AddPawn action");
         }
 
         [UnityTest]
@@ -97,42 +134,45 @@ namespace Banchou.Test {
 
         [UnityTest]
         public IEnumerator ServerInputCommand() {
-            yield return SetupServerAndClient();
+            yield return SetupServerAndClient(300, 300);
 
             var playerId = new Player.PlayerId(1);
-            _serverStore.Dispatch(new Player.StateAction.AddPlayer {
+            _serverBoard.Dispatch(new Player.StateAction.AddPlayer {
                 PlayerId = playerId,
                 PrefabKey = "Local Player",
                 Name = "Server Player"
             });
 
             var pawnId = new Pawn.PawnId(1);
-            _serverStore.Dispatch(new Board.StateAction.AddPawn {
+            _serverBoard.Dispatch(new Board.StateAction.AddPawn {
                 PawnId = pawnId,
-                PrefabKey = "NetworkedPawn",
-                PlayerId = playerId
+                PrefabKey = "Isaac",
+                PlayerId = playerId,
+                SpawnPosition = new Vector3(0f, 1f, 0f)
             });
 
-            yield return new WaitForSeconds(1f);
+            yield return new WaitUntil(() => _clientBoard.GetState().HasPawn(pawnId));
 
-            Assert.That(_clientStore.GetState().HasPawn(pawnId), "Client did not receive AddPawn action");
-            Assert.AreEqual(_clientStore.GetState().GetPawnPlayerId(pawnId), playerId, "Client's copy of the pawn is not assigned to the correct Player");
+            Assert.That(_clientBoard.GetState().HasPawn(pawnId), "Client did not receive AddPawn action");
+            Assert.NotNull(_clientBoard.Pawns.Get(pawnId), "Client does not have an instance for Server-instantiated Pawn");
+            Assert.AreEqual(_clientBoard.GetState().GetPawnPlayerId(pawnId), playerId, "Client's copy of the pawn is not assigned to the correct Player");
 
-            var playerInput = _serverRoot.GetComponentInChildren<Player.PlayersContext>().InputStreams;
+            Assert.AreEqual(
+                _serverBoard.Pawns.Get(pawnId).Position,
+                _clientBoard.Pawns.Get(pawnId).Position,
+                "Client pawn instance not spawned in the same location"
+            );
 
-            Func<float> serverTime = _serverRoot.GetComponentInChildren<Network.NetworkAgent>().GetTime;
-            Func<float> clientTime = _clientRoot.GetComponentInChildren<Network.NetworkAgent>().GetTime;
+            _serverBoard.Input.PushMove(playerId, Vector3.forward, _serverBoard.GetTime());
+            yield return new WaitForSecondsRealtime(1f);
+            _serverBoard.Input.PushMove(playerId, Vector3.zero, _serverBoard.GetTime());
+            yield return new WaitForSecondsRealtime(1f);
 
-            playerInput.PushCommand(playerId, Player.InputCommand.LightAttack, serverTime());
-
-            yield return new WaitForSecondsRealtime(5f);
-
-            Assert.AreEqual(serverTime(), clientTime(), $"Server time and client time don't match");
-
-            var clientAnimator = _clientRoot.GetComponentInChildren<Animator>();
-            var clientStateInfo = clientAnimator.GetCurrentAnimatorStateInfo(0);
-
-            Assert.That(Mathf.Approximately(clientStateInfo.normalizedTime, 0.5f), "Client animator is not at the expected normalized time");
+            Assert.AreEqual(
+                _serverBoard.Pawns.Get(pawnId).Position,
+                _clientBoard.Pawns.Get(pawnId).Position,
+                "Client pawn instance not in same location after movement"
+            );
         }
     }
 }

@@ -16,3 +16,6 @@ MonoBehaviour:
   - Key: NetworkedPawn
     Prefab: {fileID: 2486418402485586660, guid: a6a3da339c1fda5409c39c6e5fbd880c,
       type: 3}
+  - Key: Isaac
+    Prefab: {fileID: 1048794789454655895, guid: d3ce816099f098a4181b39db57888b38,
+      type: 3}
