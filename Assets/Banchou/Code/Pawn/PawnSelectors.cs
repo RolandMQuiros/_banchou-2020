@@ -4,8 +4,12 @@ using Banchou.Player;
 
 namespace Banchou.Pawn {
     public static class PawnSelectors {
+        public static IDictionary<PawnId, PawnState> GetPawns(this GameState state) {
+            return state.Board.Pawns.States;
+        }
+
         public static PawnId NextPawnId(this GameState state) {
-            var existingIds = new HashSet<int>(state.Pawns.States.Keys.Select(p => p.Id));
+            var existingIds = new HashSet<int>(state.GetPawns().Keys.Select(p => p.Id));
 
             if (existingIds.Count == 0) {
                 return new PawnId(1);
@@ -22,20 +26,16 @@ namespace Banchou.Pawn {
         }
 
         public static bool HasPawn(this GameState state, PawnId pawnId) {
-            return state.Pawns.States.ContainsKey(pawnId);
-        }
-
-        public static IEnumerable<PawnState> GetPawns(this GameState state) {
-            return state.Pawns.States.Values;
+            return state.GetPawns().ContainsKey(pawnId);
         }
 
         public static IEnumerable<PawnId> GetPawnIds(this GameState state) {
-            return state.Pawns.States.Keys;
+            return state.GetPawns().Keys;
         }
 
         public static PawnState GetPawn(this GameState state, PawnId pawnId) {
             PawnState pawn;
-            if (state.Pawns.States.TryGetValue(pawnId, out pawn)) {
+            if (state.GetPawns().TryGetValue(pawnId, out pawn)) {
                 return pawn;
             }
             return null;
@@ -58,7 +58,7 @@ namespace Banchou.Pawn {
         }
 
         public static PawnFSMState GetLatestFSMChange(this GameState state) {
-            return state.Pawns.LatestFSMChange;
+            return state.Board.Pawns.LatestFSMChange;
         }
     }
 }

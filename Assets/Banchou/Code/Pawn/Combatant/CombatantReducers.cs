@@ -62,10 +62,6 @@ namespace Banchou.Combatant {
                 }
             }
 
-            if (action is Network.StateAction.SyncGameState sync) {
-                return sync.GameState.Combatants;
-            }
-
             return prev;
         }
 

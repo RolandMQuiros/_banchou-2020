@@ -95,10 +95,6 @@ namespace Banchou.Pawn {
                 }
             }
 
-            if (action is Network.StateAction.SyncGameState sync) {
-                return sync.GameState.Pawns;
-            }
-
             return prev;
         }
 

@@ -112,11 +112,11 @@ namespace Banchou.Test {
 
             var clientState = _clientStore.GetState();
 
-            Assert.IsNotEmpty(clientState.Pawns.States);
-            Assert.AreEqual(clientState.Pawns.States[new PawnId(12345)].PlayerId, PlayerId.Empty);
-            Assert.AreEqual(clientState.Pawns.States[new PawnId(12345)].PrefabKey, "NoPrefab");
-            Assert.AreEqual(clientState.Pawns.States[new PawnId(12345)].SpawnPosition, new Vector3(10f, 12f, 13f));
-            Assert.AreEqual(clientState.Pawns.States[new PawnId(12345)].SpawnRotation, Quaternion.identity);
+            Assert.IsNotEmpty(clientState.GetPawns());
+            Assert.AreEqual(clientState.GetPawns()[new PawnId(12345)].PlayerId, PlayerId.Empty);
+            Assert.AreEqual(clientState.GetPawns()[new PawnId(12345)].PrefabKey, "NoPrefab");
+            Assert.AreEqual(clientState.GetPawns()[new PawnId(12345)].SpawnPosition, new Vector3(10f, 12f, 13f));
+            Assert.AreEqual(clientState.GetPawns()[new PawnId(12345)].SpawnRotation, Quaternion.identity);
 
             Thread.Sleep(1000);
         }

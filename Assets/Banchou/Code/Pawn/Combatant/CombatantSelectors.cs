@@ -9,9 +9,13 @@ using Banchou.Pawn;
 
 namespace Banchou.Combatant {
     public static class CombatantSelectors {
+        public static Dictionary<PawnId, CombatantState> GetCombatants(this GameState state) {
+            return state.Board.Combatants.States;
+        }
+
         public static CombatantState GetCombatant(this GameState state, PawnId combatantId) {
             CombatantState combatant;
-            if (state.Combatants.States.TryGetValue(combatantId, out combatant)) {
+            if (state.GetCombatants().TryGetValue(combatantId, out combatant)) {
                 return combatant;
             }
             return null;
@@ -30,16 +34,12 @@ namespace Banchou.Combatant {
         }
 
         public static IEnumerable<PawnId> GetCombatantIds(this GameState state) {
-            return state.Combatants.States.Keys;
-        }
-
-        public static IEnumerable<CombatantState> GetCombatants(this GameState state) {
-            return state.Combatants.States.Values;
+            return state.GetCombatants().Keys;
         }
 
         public static int GetCombatantHealth(this GameState state, PawnId combatantId) {
             CombatantState combatantState;
-            if (state.Combatants.States.TryGetValue(combatantId, out combatantState)) {
+            if (state.GetCombatants().TryGetValue(combatantId, out combatantState)) {
                 return combatantState.Health;
             }
             return 0;

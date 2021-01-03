@@ -8,10 +8,7 @@ using Redux;
 using Redux.Reactive;
 
 using Banchou.Board;
-using Banchou.Combatant;
-using Banchou.Mob;
 using Banchou.Network;
-using Banchou.Pawn;
 using Banchou.Player;
 using Banchou.Stage;
 
@@ -84,9 +81,7 @@ namespace Banchou {
                 Network = NetworkReducers.Reduce(prev.Network, action),
                 Stage = StageReducers.Reduce(prev.Stage, action),
                 Players = PlayerReducers.Reduce(prev.Players, prev.Network, action),
-                Pawns = PawnsReducers.Reduce(prev.Pawns, action),
-                Mobs = MobsReducers.Reduce(prev.Mobs, action),
-                Combatants = CombatantsReducers.Reduce(prev.Combatants, action)
+                Board = BoardReducers.Reduce(prev.Board, action)
             };
         }
     }

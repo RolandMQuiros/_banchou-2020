@@ -1,11 +1,15 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
 using Banchou.Pawn;
 
 namespace Banchou.Mob {
     public static class MobSelectors {
+        public static IDictionary<PawnId, MobState> GetMobs(this GameState state) {
+            return state.Board.Mobs.States;
+        }
+
         public static MobState GetMob(this GameState state, PawnId pawnId) {
             MobState mob;
-            if (state.Mobs.States.TryGetValue(pawnId, out mob)) {
+            if (state.GetMobs().TryGetValue(pawnId, out mob)) {
                 return mob;
             }
             return null;
