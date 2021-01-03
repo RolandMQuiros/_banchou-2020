@@ -9,8 +9,6 @@ namespace Banchou.Player {
         private PlayersActions _playerActions = new PlayersActions();
         private PlayerInputStreams _playerInputStreams = new PlayerInputStreams();
 
-        public PlayerInputStreams InputStreams => _playerInputStreams;
-
         public void InstallBindings(DiContainer container) {
             container.Bind<IPlayerInstances>(_playerFactory);
             container.Bind<PlayersActions>(_playerActions);

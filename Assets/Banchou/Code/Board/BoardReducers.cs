@@ -9,6 +9,16 @@ namespace Banchou.Board {
                 return sync.GameState.Board;
             }
 
+            if (action is StateAction.SyncBoard syncBoard) {
+                return syncBoard.Board;
+            }
+
+            if (action is StateAction.RollbackBoard rollback) {
+                return new BoardState {
+                    RewindTime = rollback.Amount
+                };
+            }
+
             var next = new BoardState(prev);
             var didChange =
                 prev.Pawns != (next.Pawns = PawnsReducers.Reduce(prev.Pawns, action)) ||

@@ -53,16 +53,16 @@ namespace MessagePack.Resolvers
             {
                 { typeof(global::Banchou.Network.Message.PayloadType), 0 },
                 { typeof(global::Banchou.Player.InputCommand), 1 },
-                { typeof(global::Banchou.Network.Message.ConnectClient), 2 },
-                { typeof(global::Banchou.Network.Message.Envelope), 3 },
-                { typeof(global::Banchou.Network.Message.PlayerCommand), 4 },
-                { typeof(global::Banchou.Network.Message.PlayerMove), 5 },
-                { typeof(global::Banchou.Network.Message.ReduxAction), 6 },
-                { typeof(global::Banchou.Network.Message.ServerTimeRequest), 7 },
-                { typeof(global::Banchou.Network.Message.ServerTimeResponse), 8 },
-                { typeof(global::Banchou.Network.Message.SyncClient), 9 },
-                { typeof(global::Banchou.Network.Message.SyncPawn), 10 },
-                { typeof(global::Banchou.Pawn.PawnId), 11 },
+                { typeof(global::Banchou.Player.InputUnitType), 2 },
+                { typeof(global::Banchou.Network.Message.ConnectClient), 3 },
+                { typeof(global::Banchou.Network.Message.Envelope), 4 },
+                { typeof(global::Banchou.Network.Message.ReduxAction), 5 },
+                { typeof(global::Banchou.Network.Message.ServerTimeRequest), 6 },
+                { typeof(global::Banchou.Network.Message.ServerTimeResponse), 7 },
+                { typeof(global::Banchou.Network.Message.SyncClient), 8 },
+                { typeof(global::Banchou.Network.Message.SyncPawn), 9 },
+                { typeof(global::Banchou.Pawn.PawnId), 10 },
+                { typeof(global::Banchou.Player.InputUnit), 11 },
                 { typeof(global::Banchou.Player.PlayerId), 12 },
             };
         }
@@ -79,16 +79,16 @@ namespace MessagePack.Resolvers
             {
                 case 0: return new MessagePack.Formatters.Banchou.Network.Message.PayloadTypeFormatter();
                 case 1: return new MessagePack.Formatters.Banchou.Player.InputCommandFormatter();
-                case 2: return new MessagePack.Formatters.Banchou.Network.Message.ConnectClientFormatter();
-                case 3: return new MessagePack.Formatters.Banchou.Network.Message.EnvelopeFormatter();
-                case 4: return new MessagePack.Formatters.Banchou.Network.Message.PlayerCommandFormatter();
-                case 5: return new MessagePack.Formatters.Banchou.Network.Message.PlayerMoveFormatter();
-                case 6: return new MessagePack.Formatters.Banchou.Network.Message.ReduxActionFormatter();
-                case 7: return new MessagePack.Formatters.Banchou.Network.Message.ServerTimeRequestFormatter();
-                case 8: return new MessagePack.Formatters.Banchou.Network.Message.ServerTimeResponseFormatter();
-                case 9: return new MessagePack.Formatters.Banchou.Network.Message.SyncClientFormatter();
-                case 10: return new MessagePack.Formatters.Banchou.Network.Message.SyncPawnFormatter();
-                case 11: return new MessagePack.Formatters.Banchou.Pawn.PawnIdFormatter();
+                case 2: return new MessagePack.Formatters.Banchou.Player.InputUnitTypeFormatter();
+                case 3: return new MessagePack.Formatters.Banchou.Network.Message.ConnectClientFormatter();
+                case 4: return new MessagePack.Formatters.Banchou.Network.Message.EnvelopeFormatter();
+                case 5: return new MessagePack.Formatters.Banchou.Network.Message.ReduxActionFormatter();
+                case 6: return new MessagePack.Formatters.Banchou.Network.Message.ServerTimeRequestFormatter();
+                case 7: return new MessagePack.Formatters.Banchou.Network.Message.ServerTimeResponseFormatter();
+                case 8: return new MessagePack.Formatters.Banchou.Network.Message.SyncClientFormatter();
+                case 9: return new MessagePack.Formatters.Banchou.Network.Message.SyncPawnFormatter();
+                case 10: return new MessagePack.Formatters.Banchou.Pawn.PawnIdFormatter();
+                case 11: return new MessagePack.Formatters.Banchou.Player.InputUnitFormatter();
                 case 12: return new MessagePack.Formatters.Banchou.Player.PlayerIdFormatter();
                 default: return null;
             }

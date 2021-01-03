@@ -31,8 +31,8 @@ namespace Banchou.Player {
 
             container.Bind<ObservePlayerMove>(
                 () => _playerInputStreams
-                    .ObserveMove(PlayerId)
-                    .Select(moveUnit => moveUnit.Move)
+                    .ObserveMoves(PlayerId)
+                    .Select(moveUnit => moveUnit.Direction)
             );
         }
     }

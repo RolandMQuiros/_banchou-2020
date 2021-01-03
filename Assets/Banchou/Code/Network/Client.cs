@@ -34,7 +34,7 @@ namespace Banchou.Network {
         private CompositeDisposable _subscriptions = new CompositeDisposable();
 
         public NetworkClient(
-            IObservable<GameState> onStateUpdate,
+            IObservable<GameState> observeState,
             Dispatcher dispatch,
             NetworkActions networkActions,
             PlayerInputStreams playerInput,
@@ -47,7 +47,7 @@ namespace Banchou.Network {
             _client = new NetManager(_listener);
 
             _subscriptions.Add(
-                onStateUpdate
+                observeState
                     .Select(state => state.GetSimulatedLatency())
                     .DistinctUntilChanged()
                     .CatchIgnoreLog()
@@ -110,28 +110,16 @@ namespace Banchou.Network {
                         var pawnSync = MessagePackSerializer.Deserialize<SyncPawn>(envelope.Payload, messagePackOptions);
                         pullPawnSync(pawnSync);
                     break;
-                    case PayloadType.PlayerMove: {
-                        var playerMove = MessagePackSerializer.Deserialize<PlayerMove>(envelope.Payload, messagePackOptions);
-                        playerInput.PushMove(
-                            playerMove.PlayerId,
-                            playerMove.Direction,
-                            Snapping.Snap(playerMove.When, Time.fixedUnscaledDeltaTime)
-                        );
-                    } break;
-                    case PayloadType.PlayerCommand: {
-                        var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, messagePackOptions);
-                        playerInput.PushCommand(
-                            playerCommand.PlayerId,
-                            playerCommand.Command,
-                            Snapping.Snap(playerCommand.When, Time.fixedUnscaledDeltaTime)
-                        );
+                    case PayloadType.PlayerInput: {
+                        var inputUnit = MessagePackSerializer.Deserialize<InputUnit>(envelope.Payload, messagePackOptions);
+                        playerInput.Push(inputUnit);
                     } break;
                 }
 
                 dataReader.Recycle();
             };
 
-            var observeLocalPlayers = onStateUpdate
+            var observeLocalPlayers = observeState
                 .DistinctUntilChanged(state => state.GetPlayers())
                 .Select(
                     state => new HashSet<PlayerId>(
@@ -141,44 +129,18 @@ namespace Banchou.Network {
                     )
                 );
 
+            // Transmit input
             _subscriptions.Add(
                 observeLocalPlayers
                     .SelectMany(
                         localPlayers => playerInput
-                            .ObserveCommand()
                             .Where(unit => localPlayers.Contains(unit.PlayerId))
                     )
                     .CatchIgnoreLog()
                     .Subscribe(unit => {
                         var message = Envelope.CreateMessage(
-                            PayloadType.PlayerCommand,
-                            new PlayerCommand {
-                                PlayerId = unit.PlayerId,
-                                Command = unit.Command,
-                                When = unit.When
-                            },
-                            _messagePackOptions
-                        );
-                        _peer.Send(message, DeliveryMethod.Unreliable);
-                    })
-            );
-
-            _subscriptions.Add(
-                observeLocalPlayers
-                    .SelectMany(
-                        localPlayers => playerInput
-                            .ObserveMove()
-                            .Where(unit => localPlayers.Contains(unit.PlayerId))
-                    )
-                    .CatchIgnoreLog()
-                    .Subscribe(unit => {
-                        var message = Envelope.CreateMessage(
-                            PayloadType.PlayerMove,
-                            new PlayerMove {
-                                PlayerId = unit.PlayerId,
-                                Direction = unit.Move,
-                                When = unit.When
-                            },
+                            PayloadType.PlayerInput,
+                            unit,
                             _messagePackOptions
                         );
                         _peer.Send(message, DeliveryMethod.Unreliable);

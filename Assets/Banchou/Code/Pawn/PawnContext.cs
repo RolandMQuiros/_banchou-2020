@@ -22,7 +22,7 @@ namespace Banchou.Pawn {
         [SerializeField] private Rigidbody _rigidbody = null;
         [SerializeField] private Part.Orientation _orientation = null;
         [SerializeField] private NavMeshAgent _agent = null;
-        [SerializeField] private Part.Rollback _rollback = null;
+        [SerializeField] private Part.Rewind _rewind = null;
         private IMotor _motor = null;
 
         #region IPawnInstance
@@ -58,8 +58,7 @@ namespace Banchou.Pawn {
             Dispatcher dispatch,
             GetState getState,
             IObservable<GameState> onStateUpdate,
-            PlayerInputStreams playerInput,
-            GetServerTime getServerTime
+            PlayerInputStreams playerInput
         ) {
             PawnId = pawnId;
             _dispatch = dispatch;
@@ -67,14 +66,13 @@ namespace Banchou.Pawn {
             _observeState = onStateUpdate;
             _pawnActions = new PawnActions(PawnId);
             _playerInput = playerInput;
-            _getServerTime = getServerTime;
 
             _animator = _animator == null ? GetComponentInChildren<Animator>(true) : _animator;
             _rigidbody =  _rigidbody == null ? GetComponentInChildren<Rigidbody>(true) : _rigidbody;
             _orientation = _orientation == null ? GetComponentInChildren<Part.Orientation>(true) : _orientation;
             _agent = _agent == null ? GetComponentInChildren<NavMeshAgent>(true) : _agent;
             _motor = _motor == null ? GetComponentInChildren<Part.IMotor>(true) : _motor;
-            _rollback = _rollback == null ? GetComponentInChildren<Part.Rollback>(true) : _rollback;
+            _rewind = _rewind == null ? GetComponentInChildren<Part.Rewind>(true) : _rewind;
 
             if (_agent != null) {
                 _agent.updatePosition = false;
@@ -92,14 +90,8 @@ namespace Banchou.Pawn {
             container.Bind<Part.Orientation>(_orientation);
             container.Bind<NavMeshAgent>(_agent);
             container.Bind<Part.IMotor>(_motor);
-            container.Bind<Part.Rollback>(_rollback);
+            container.Bind<Part.Rewind>(_rewind);
             container.Bind<PawnActions>(_pawnActions);
-            container.Bind<GetServerTime>(() => {
-                if (_rollback?.State == Rollback.RollbackState.FastForward) {
-                    return _rollback.CorrectionTime;
-                }
-                return _getServerTime();
-            });
 
             // Short-circuit dispatcher for client facade pawns
             container.Bind<Redux.Dispatcher>(action => {
@@ -113,14 +105,28 @@ namespace Banchou.Pawn {
                 () => _observeState
                     .Select(state => state.GetPawnPlayerId(PawnId))
                     .DistinctUntilChanged()
-                    .SelectMany(playerId => _playerInput.ObserveLook(playerId).Select(unit => unit.Look))
+                    .SelectMany(
+                        playerId => _playerInput
+                            .ObserveLook(playerId)
+                            .Select(unit => unit.Look)
+                    )
             );
 
-            container.Bind<ObservePlayerMove>(() => _moveSubject);
-            container.Bind<Subject<Vector3>>(_moveSubject, t => t == typeof(Part.Rollback));
+            container.Bind<ObservePlayerMove>(() => _observeState
+                .Select(state => state.GetPawnPlayerId(PawnId))
+                .SelectMany(playerId => _playerInput.ObserveMoves(playerId))
+                .Select(unit => unit.Direction)
+                .DistinctUntilChanged()
+            );
+            container.Bind<Subject<Vector3>>(_moveSubject, t => t == typeof(Part.Rewind));
 
-            container.Bind<ObservePlayerCommand>(() => _commandSubject);
-            container.Bind<Subject<InputCommand>>(_commandSubject, t => t == typeof(Part.Rollback));
+            container.Bind<ObservePlayerCommand>(() => _observeState
+                .Select(state => state.GetPawnPlayerId(PawnId))
+                .SelectMany(playerId => _playerInput.ObserveCommands(playerId))
+                .Select(unit => unit.Command)
+            );
+
+            container.Bind<Subject<InputCommand>>(_commandSubject, t => t == typeof(Part.Rewind));
         }
 
         private void OnDrawGizmos() {

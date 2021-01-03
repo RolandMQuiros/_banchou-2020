@@ -10,8 +10,7 @@ namespace Banchou.Network.Message {
         ConnectClient,
         ReduxAction,
         SyncClient,
-        PlayerMove,
-        PlayerCommand,
+        PlayerInput,
         SyncPawn,
         ServerTimeRequest,
         ServerTimeResponse
@@ -50,20 +49,6 @@ namespace Banchou.Network.Message {
         [Key(1)] public byte[] GameStateBytes;
         [Key(2)] public float ClientTime;
         [Key(3)] public float ServerTime;
-    }
-
-    [MessagePackObject]
-    public struct PlayerMove {
-        [Key(0)] public PlayerId PlayerId;
-        [Key(1)] public Vector3 Direction;
-        [Key(2)] public float When;
-    }
-
-    [MessagePackObject]
-    public struct PlayerCommand {
-        [Key(0)] public PlayerId PlayerId;
-        [Key(1)] public InputCommand Command;
-        [Key(2)] public float When;
     }
 
     [MessagePackObject]

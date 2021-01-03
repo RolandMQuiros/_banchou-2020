@@ -7,76 +7,72 @@ namespace Banchou.Player {
     public delegate IObservable<Vector2> ObservePlayerLook();
     public delegate IObservable<InputCommand> ObservePlayerCommand();
 
-    public delegate void PushMove(Vector3 direction, float when);
-    public delegate void PushLook(Vector2 look, float when);
-    public delegate void PushCommand(InputCommand command, float when);
+    public class PlayerInputStreams : IObservable<InputUnit> {
+        private Subject<InputUnit> _inputSubject = new Subject<InputUnit>();
 
-    public class PlayerInputStreams {
-        public struct LookUnit {
-            public PlayerId PlayerId;
-            public Vector2 Look;
-            public float When;
-        }
-
-        public struct MoveUnit {
-            public PlayerId PlayerId;
-            public Vector3 Move;
-            public float When;
-        }
-
-        public struct CommandUnit {
-            public PlayerId PlayerId;
-            public InputCommand Command;
-            public float When;
-        }
-
-        private Subject<LookUnit> _lookSubject = new Subject<LookUnit>();
-        private Subject<MoveUnit> _moveSubject = new Subject<MoveUnit>();
-        private Subject<CommandUnit> _commandSubject = new Subject<CommandUnit>();
-
-        public IObservable<MoveUnit> ObserveMove() => _moveSubject;
-        public IObservable<MoveUnit> ObserveMove(PlayerId playerId) {
-            return _moveSubject
-                .Where(unit => unit.PlayerId == playerId);
-        }
-
-        public IObservable<LookUnit> ObserveLook() => _lookSubject;
-        public IObservable<LookUnit> ObserveLook(PlayerId playerId) {
-            return _lookSubject
-                .Where(unit => unit.PlayerId == playerId);
-        }
-
-        public IObservable<CommandUnit> ObserveCommand() => _commandSubject;
-        public IObservable<CommandUnit> ObserveCommand(PlayerId playerId) {
-            return _commandSubject
-                .Where(unit => unit.PlayerId == playerId && unit.Command != InputCommand.None);
+        public PlayerInputStreams Push(InputUnit inputUnit) {
+            _inputSubject.OnNext(inputUnit);
+            return this;
         }
 
         public PlayerInputStreams PushMove(PlayerId playerId, Vector3 move, float when) {
-            _moveSubject.OnNext(new MoveUnit {
+            _inputSubject.OnNext(new InputUnit {
+                Type = InputUnitType.Movement,
                 PlayerId = playerId,
-                Move = move,
+                Direction = move,
                 When = when
             });
             return this;
         }
 
         public PlayerInputStreams PushLook(PlayerId playerId, Vector3 look, float when) {
-            _lookSubject.OnNext(new LookUnit {
+            _inputSubject.OnNext(new InputUnit {
+                Type = InputUnitType.Look,
                 PlayerId = playerId,
-                Look = look,
+                Direction = look,
                 When = when
             });
             return this;
         }
 
         public PlayerInputStreams PushCommand(PlayerId playerId, InputCommand command, float when) {
-            _commandSubject.OnNext(new CommandUnit {
+            _inputSubject.OnNext(new InputUnit {
+                Type = InputUnitType.Command,
                 PlayerId = playerId,
                 Command = command,
                 When = when
             });
             return this;
+        }
+
+        public IDisposable Subscribe(IObserver<InputUnit> observer) {
+            return ((IObservable<InputUnit>)_inputSubject).Subscribe(observer);
+        }
+    }
+
+    public static class InputStreamExtensions {
+        public static IObservable<InputUnit> ObserveCommands(this IObservable<InputUnit> source) {
+            return source.Where(unit => unit.Type == InputUnitType.Command);
+        }
+
+        public static IObservable<InputUnit> ObserveCommands(this IObservable<InputUnit> source, PlayerId playerId) {
+            return source.ObserveCommands().Where(unit => unit.PlayerId == playerId);
+        }
+
+        public static IObservable<InputUnit> ObserveMoves(this IObservable<InputUnit> source) {
+            return source.Where(unit => unit.Type == InputUnitType.Movement);
+        }
+
+        public static IObservable<InputUnit> ObserveMoves(this IObservable<InputUnit> source, PlayerId playerId) {
+            return source.ObserveMoves().Where(unit => unit.PlayerId == playerId);
+        }
+
+        public static IObservable<InputUnit> ObserveLook(this IObservable<InputUnit> source) {
+            return source.Where(unit => unit.Type == InputUnitType.Look);
+        }
+
+        public static IObservable<InputUnit> ObserveLook(this IObservable<InputUnit> source, PlayerId playerId) {
+            return source.ObserveLook().Where(unit => unit.PlayerId == playerId);
         }
     }
 }

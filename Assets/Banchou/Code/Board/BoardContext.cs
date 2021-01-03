@@ -1,10 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using Redux;
-using UniRx;
-using UnityEngine;
-using UnityEngine.SceneManagement;
+﻿using UnityEngine;
 
 using Banchou.Combatant;
 using Banchou.DependencyInjection;

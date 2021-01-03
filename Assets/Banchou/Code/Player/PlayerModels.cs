@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Net;
 using System.Collections.Generic;
 using System.ComponentModel;
 
 using MessagePack;
+using UnityEngine;
 
 using Banchou.Pawn;
 using Banchou.Utility;
@@ -57,6 +57,30 @@ namespace Banchou.Player {
         public PlayersState() { }
         public PlayersState(in PlayersState prev) {
             States = prev.States;
+        }
+    }
+
+    public enum InputUnitType : byte {
+        Command,
+        Movement,
+        Look
+    }
+
+    [MessagePackObject]
+    public struct InputUnit {
+        [Key(0)] public InputUnitType Type;
+        [Key(1)] public PlayerId PlayerId;
+        [Key(2)] public InputCommand Command;
+        [Key(3)] public Vector3 Direction;
+        [Key(4)] public float When;
+        public Vector2 Look => new Vector2(Direction.x, Direction.y);
+
+        public InputUnit(in InputUnit prev) {
+            Type = prev.Type;
+            PlayerId = prev.PlayerId;
+            Command = prev.Command;
+            Direction = prev.Direction;
+            When = prev.When;
         }
     }
 }

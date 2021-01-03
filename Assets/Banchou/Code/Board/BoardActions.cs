@@ -19,6 +19,14 @@ namespace Banchou.Board {
         }
 
         public struct ClearPawns { }
+
+        public struct SyncBoard {
+            public BoardState Board;
+        }
+
+        public struct RollbackBoard {
+            public float Amount;
+        }
     }
 
     public class BoardActions {
@@ -65,10 +73,9 @@ namespace Banchou.Board {
             SpawnRotation = rotation
         };
 
-        public StateAction.RemovePawn RemovePawn(PawnId pawnId) => new StateAction.RemovePawn {
-            PawnId = pawnId
-        };
-
+        public StateAction.RemovePawn RemovePawn(PawnId pawnId) => new StateAction.RemovePawn { PawnId = pawnId };
         public StateAction.ClearPawns ClearPawns() => new StateAction.ClearPawns();
+        public StateAction.SyncBoard Sync(BoardState board) => new StateAction.SyncBoard { Board = board };
+        public StateAction.RollbackBoard Rollback(float amount) => new StateAction.RollbackBoard { Amount = amount };
     }
 }

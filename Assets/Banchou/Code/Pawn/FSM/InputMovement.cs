@@ -25,9 +25,7 @@ namespace Banchou.Pawn.FSM {
             ObservePlayerMove observePlayerMove,
             Part.IMotor motor,
             Part.Orientation orientation,
-            Animator animator,
-
-            Part.Rollback rollback
+            Animator animator
         ) {
             var speedOut = Animator.StringToHash(_movementSpeedOut);
             var rightSpeedOut = Animator.StringToHash(_velocityRightOut);

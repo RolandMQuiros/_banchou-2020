@@ -14,26 +14,28 @@
 #pragma warning disable SA1403 // File may only contain a single namespace
 #pragma warning disable SA1649 // File name should match first type name
 
-namespace MessagePack.Formatters.Banchou.Network.Message
+namespace MessagePack.Formatters.Banchou.Player
 {
     using System;
     using System.Buffers;
     using MessagePack;
 
-    public sealed class PlayerMoveFormatter : global::MessagePack.Formatters.IMessagePackFormatter<global::Banchou.Network.Message.PlayerMove>
+    public sealed class InputUnitFormatter : global::MessagePack.Formatters.IMessagePackFormatter<global::Banchou.Player.InputUnit>
     {
 
 
-        public void Serialize(ref MessagePackWriter writer, global::Banchou.Network.Message.PlayerMove value, global::MessagePack.MessagePackSerializerOptions options)
+        public void Serialize(ref MessagePackWriter writer, global::Banchou.Player.InputUnit value, global::MessagePack.MessagePackSerializerOptions options)
         {
             IFormatterResolver formatterResolver = options.Resolver;
-            writer.WriteArrayHeader(3);
+            writer.WriteArrayHeader(5);
+            formatterResolver.GetFormatterWithVerify<global::Banchou.Player.InputUnitType>().Serialize(ref writer, value.Type, options);
             formatterResolver.GetFormatterWithVerify<global::Banchou.Player.PlayerId>().Serialize(ref writer, value.PlayerId, options);
+            formatterResolver.GetFormatterWithVerify<global::Banchou.Player.InputCommand>().Serialize(ref writer, value.Command, options);
             formatterResolver.GetFormatterWithVerify<global::UnityEngine.Vector3>().Serialize(ref writer, value.Direction, options);
             writer.Write(value.When);
         }
 
-        public global::Banchou.Network.Message.PlayerMove Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
+        public global::Banchou.Player.InputUnit Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -43,7 +45,9 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             options.Security.DepthStep(ref reader);
             IFormatterResolver formatterResolver = options.Resolver;
             var length = reader.ReadArrayHeader();
+            var __Type__ = default(global::Banchou.Player.InputUnitType);
             var __PlayerId__ = default(global::Banchou.Player.PlayerId);
+            var __Command__ = default(global::Banchou.Player.InputCommand);
             var __Direction__ = default(global::UnityEngine.Vector3);
             var __When__ = default(float);
 
@@ -54,12 +58,18 @@ namespace MessagePack.Formatters.Banchou.Network.Message
                 switch (key)
                 {
                     case 0:
-                        __PlayerId__ = formatterResolver.GetFormatterWithVerify<global::Banchou.Player.PlayerId>().Deserialize(ref reader, options);
+                        __Type__ = formatterResolver.GetFormatterWithVerify<global::Banchou.Player.InputUnitType>().Deserialize(ref reader, options);
                         break;
                     case 1:
-                        __Direction__ = formatterResolver.GetFormatterWithVerify<global::UnityEngine.Vector3>().Deserialize(ref reader, options);
+                        __PlayerId__ = formatterResolver.GetFormatterWithVerify<global::Banchou.Player.PlayerId>().Deserialize(ref reader, options);
                         break;
                     case 2:
+                        __Command__ = formatterResolver.GetFormatterWithVerify<global::Banchou.Player.InputCommand>().Deserialize(ref reader, options);
+                        break;
+                    case 3:
+                        __Direction__ = formatterResolver.GetFormatterWithVerify<global::UnityEngine.Vector3>().Deserialize(ref reader, options);
+                        break;
+                    case 4:
                         __When__ = reader.ReadSingle();
                         break;
                     default:
@@ -68,8 +78,10 @@ namespace MessagePack.Formatters.Banchou.Network.Message
                 }
             }
 
-            var ____result = new global::Banchou.Network.Message.PlayerMove();
+            var ____result = new global::Banchou.Player.InputUnit();
+            ____result.Type = __Type__;
             ____result.PlayerId = __PlayerId__;
+            ____result.Command = __Command__;
             ____result.Direction = __Direction__;
             ____result.When = __When__;
             reader.Depth--;

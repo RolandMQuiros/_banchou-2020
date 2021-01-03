@@ -124,21 +124,9 @@ namespace Banchou.Network {
                         );
                         fromPeer.Send(response, DeliveryMethod.Unreliable);
                     } break;
-                    case PayloadType.PlayerCommand: {
-                        var playerCommand = MessagePackSerializer.Deserialize<PlayerCommand>(envelope.Payload, _messagePackOptions);
-                        playerInput.PushCommand(
-                            playerCommand.PlayerId,
-                            playerCommand.Command,
-                            playerCommand.When
-                        );
-                    } break;
-                    case PayloadType.PlayerMove: {
-                        var playerMove = MessagePackSerializer.Deserialize<PlayerMove>(envelope.Payload, _messagePackOptions);
-                        playerInput.PushMove(
-                            playerMove.PlayerId,
-                            playerMove.Direction,
-                            playerMove.When
-                        );
+                    case PayloadType.PlayerInput: {
+                        var inputUnit = MessagePackSerializer.Deserialize<InputUnit>(envelope.Payload, _messagePackOptions);
+                        playerInput.Push(inputUnit);
                     } break;
                 }
 
@@ -147,48 +135,20 @@ namespace Banchou.Network {
 
             // Send input to all peers, provided they're not the source
             _subscriptions.Add(
-                playerInput.ObserveMove()
+                playerInput
                     .DistinctUntilChanged()
-                    .Pairwise()
                     .CatchIgnoreLog()
-                    .Subscribe(pair => {
+                    .Subscribe(unit => {
                         foreach (var peer in _peers) {
-                            var playerNetworkId = getState().GetPlayerNetworkId(pair.Current.PlayerId);
+                            var playerNetworkId = getState().GetPlayerNetworkId(unit.PlayerId);
                             if (peer.Key != playerNetworkId) {
                                 var currentMessage = Envelope.CreateMessage(
-                                    PayloadType.PlayerMove,
-                                    new PlayerMove {
-                                        PlayerId = pair.Current.PlayerId,
-                                        Direction = pair.Current.Move,
-                                        When = pair.Current.When
-                                    },
+                                    PayloadType.PlayerInput,
+                                    unit,
                                     _messagePackOptions
                                 );
 
                                 peer.Value.Send(currentMessage, DeliveryMethod.ReliableUnordered);
-                            }
-                        }
-                    })
-            );
-
-            _subscriptions.Add(
-                playerInput.ObserveCommand()
-                    .CatchIgnoreLog()
-                    .Subscribe(command => {
-                        foreach (var peer in _peers) {
-                            var playerNetworkId = getState().GetPlayerNetworkId(command.PlayerId);
-                            // Don't send clients their own inputs
-                            if (peer.Key != playerNetworkId) {
-                                var message = Envelope.CreateMessage(
-                                    PayloadType.PlayerCommand,
-                                    new PlayerCommand {
-                                        PlayerId = command.PlayerId,
-                                        Command = command.Command,
-                                        When = command.When
-                                    },
-                                    _messagePackOptions
-                                );
-                                peer.Value.Send(message, DeliveryMethod.ReliableOrdered);
                             }
                         }
                     })
