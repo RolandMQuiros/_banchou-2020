@@ -10,6 +10,7 @@ using Banchou.Board;
 using Banchou.Network;
 using Banchou.Pawn;
 using Banchou.Player;
+using Banchou.Stage;
 
 using Random = UnityEngine.Random;
 
@@ -22,6 +23,7 @@ namespace Banchou.Prototype {
         private IObservable<GameState> _observeState;
         private GetState _getState;
         private Dispatcher _dispatch;
+        private StageActions _StageActions;
         private BoardActions _boardActions;
         private NetworkActions _networkActions;
         private PlayersActions _playerActions;
@@ -31,12 +33,14 @@ namespace Banchou.Prototype {
             GetState getState,
             Dispatcher dispatch,
             NetworkActions networkActions,
+            StageActions StageActions,
             BoardActions boardActions,
             PlayersActions playerActions
         ) {
             _observeState = observeState;
             _getState = getState;
             _dispatch = dispatch;
+            _StageActions = StageActions;
             _boardActions = boardActions;
             _networkActions = networkActions;
             _playerActions = playerActions;
@@ -71,7 +75,7 @@ namespace Banchou.Prototype {
 
             var playerId = _getState().NextPlayerId();
             _dispatch(_playerActions.AddPlayer(playerId, "Local Player", rollbackEnabled: RollbackEnabled));
-            _dispatch(_boardActions.SetScene("TestingGrounds"));
+            _dispatch(_StageActions.SetScene("TestingGrounds"));
 
             var pawnId = _getState().NextPawnId();
             _dispatch(_boardActions.AddPawn(pawnId, "Isaac", new Vector3(0f, 3f, 0f)));

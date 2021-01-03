@@ -19,20 +19,6 @@ namespace Banchou.Board {
         }
 
         public struct ClearPawns { }
-
-        public struct AddScene {
-            public string Scene;
-        }
-
-        public struct SetScene {
-            public string Scene;
-        }
-
-        public struct SceneLoaded {
-            public string Scene;
-        }
-
-        public struct InjectionsFinished { }
     }
 
     public class BoardActions {
@@ -84,19 +70,5 @@ namespace Banchou.Board {
         };
 
         public StateAction.ClearPawns ClearPawns() => new StateAction.ClearPawns();
-
-        public StateAction.AddScene AddScene(string sceneName) => new StateAction.AddScene {
-            Scene = sceneName
-        };
-
-        public StateAction.SetScene SetScene(string sceneName) => new StateAction.SetScene {
-            Scene = sceneName
-        };
-
-        public StateAction.SceneLoaded SceneLoaded(string sceneName) => new StateAction.SceneLoaded {
-            Scene = sceneName
-        };
-
-        public StateAction.InjectionsFinished InjectionsFinished() => new StateAction.InjectionsFinished();
     }
 }

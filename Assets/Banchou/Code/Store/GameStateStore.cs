@@ -13,6 +13,7 @@ using Banchou.Mob;
 using Banchou.Network;
 using Banchou.Pawn;
 using Banchou.Player;
+using Banchou.Stage;
 
 namespace Banchou {
     namespace StateAction {
@@ -81,7 +82,7 @@ namespace Banchou {
 
             return new GameState {
                 Network = NetworkReducers.Reduce(prev.Network, action),
-                Board = BoardReducers.Reduce(prev.Board, action),
+                Stage = StageReducers.Reduce(prev.Stage, action),
                 Players = PlayerReducers.Reduce(prev.Players, prev.Network, action),
                 Pawns = PawnsReducers.Reduce(prev.Pawns, action),
                 Mobs = MobsReducers.Reduce(prev.Mobs, action),

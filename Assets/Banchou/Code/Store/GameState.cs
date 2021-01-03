@@ -4,11 +4,12 @@ using Banchou.Network;
 using Banchou.Mob;
 using Banchou.Pawn;
 using Banchou.Player;
+using Banchou.Stage;
 
 namespace Banchou {
     public class GameState {
         public NetworkState Network = new NetworkState();
-        public BoardState Board = new BoardState();
+        public StageState Stage = new StageState();
         public PlayersState Players = new PlayersState();
         public PawnsState Pawns = new PawnsState();
         public MobsState Mobs = new MobsState();
@@ -16,7 +17,7 @@ namespace Banchou {
         public GameState() { }
         public GameState(in GameState prev) {
             Network = prev.Network;
-            Board = prev.Board;
+            Stage = prev.Stage;
             Players = prev.Players;
             Pawns = prev.Pawns;
             Mobs = prev.Mobs;

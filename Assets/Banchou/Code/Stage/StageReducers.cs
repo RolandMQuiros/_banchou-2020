@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 
-namespace Banchou.Board {
-    public static class BoardReducers {
-        public static BoardState Reduce(in BoardState prev, in object action) {
+namespace Banchou.Stage {
+    public static class StageReducers {
+        public static StageState Reduce(in StageState prev, in object action) {
             if (action is StateAction.AddScene add) {
                 if (!prev.LoadingScenes.Contains(add.Scene) && !prev.LoadedScenes.Contains(add.Scene)) {
                     var loading = new HashSet<string>(prev.LoadingScenes);
                     loading.Add(add.Scene);
-                    return new BoardState(prev) {
+                    return new StageState(prev) {
                         LatestScene = add.Scene,
                         LoadingScenes = loading
                     };
@@ -19,7 +19,7 @@ namespace Banchou.Board {
                     var loading = new HashSet<string>(prev.LoadingScenes);
                     loading.Add(set.Scene);
 
-                    return new BoardState(prev) {
+                    return new StageState(prev) {
                         LatestScene = set.Scene,
                         LoadingScenes = loading,
                         LoadedScenes = new HashSet<string>()
@@ -27,21 +27,21 @@ namespace Banchou.Board {
                 }
             }
 
-            if (action is StateAction.SceneLoaded done) {
+            if (action is StateAction.Stageed done) {
                 var loading = new HashSet<string>(prev.LoadingScenes);
                 loading.Remove(done.Scene);
 
                 var loaded = new HashSet<string>(prev.LoadedScenes);
                 loaded.Add(done.Scene);
 
-                return new BoardState(prev) {
+                return new StageState(prev) {
                     LoadedScenes = loaded,
                     LoadingScenes = loading
                 };
             }
 
             if (action is Network.StateAction.SyncGameState sync) {
-                return sync.GameState.Board;
+                return sync.GameState.Stage;
             }
 
             return prev;

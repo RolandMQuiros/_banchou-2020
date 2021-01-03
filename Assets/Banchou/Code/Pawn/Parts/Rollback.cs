@@ -24,6 +24,7 @@ namespace Banchou.Pawn.Part {
         public float CorrectionTime { get; private set; } = 0f;
 
         private struct InputUnit {
+            public PlayerId PlayerId;
             public InputCommand Command;
             public Vector3 Move;
             public float When;
@@ -93,25 +94,22 @@ namespace Banchou.Pawn.Part {
             // Merge movements and commands into one stream
                 // TODO: Add redux state changes to this. Need a timestamp on Pawn
                 // Pretend this was the idea the whole time
-            var movesAndCommands = observeState
-                .Select(state => state.GetPawnPlayerId(pawnId))
-                .DistinctUntilChanged()
-                .SelectMany(
-                    playerId => playerInput.ObserveCommand(playerId)
-                        .Scan((prev, unit) => unit.When > prev.When ? unit : prev)
-                        .Select(unit => new InputUnit {
-                            Command = unit.Command,
-                            When = unit.When,
-                            Diff = getServerTime() - unit.When
-                        })
-                        .Merge(playerInput.ObserveMove(playerId)
-                            .Scan((prev, unit) => unit.When > prev.When ? unit : prev)
-                            .Select(unit => new InputUnit {
-                                Move = unit.Move,
-                                When = unit.When,
-                                Diff = getServerTime() - unit.When
-                            })
-                        )
+            var movesAndCommands = playerInput.ObserveCommand()
+                .Scan((prev, unit) => unit.When > prev.When ? unit : prev)
+                .Select(unit => new InputUnit {
+                    PlayerId = unit.PlayerId,
+                    Command = unit.Command,
+                    When = unit.When,
+                    Diff = getServerTime() - unit.When
+                })
+                .Merge(playerInput.ObserveMove()
+                    .Scan((prev, unit) => unit.When > prev.When ? unit : prev)
+                    .Select(unit => new InputUnit {
+                        PlayerId = unit.PlayerId,
+                        Move = unit.Move,
+                        When = unit.When,
+                        Diff = getServerTime() - unit.When
+                    })
                 );
 
             bool IsUnitEligibleForRollback(InputUnit unit) {
@@ -171,8 +169,11 @@ namespace Banchou.Pawn.Part {
                 .AddTo(this);
 
             // Handle rollbacks
-            rollbackInputs
-                .Subscribe(unit => {
+            observeState
+                .Select(state => state.GetPawnPlayerId(pawnId))
+                .SelectMany(playerId => rollbackInputs.Select(unit => (unit, playerId)))
+                .Subscribe(args => {
+                    var (unit, playerId) = args;
                     var deltaTime = Time.fixedUnscaledDeltaTime;
                     var now = getServerTime();
 
@@ -196,6 +197,8 @@ namespace Banchou.Pawn.Part {
 
                     // Set animator states
                     animator.enabled = false;
+                    // Physics.autoSimulation = false;
+
                     for (int layer = 0; layer < animator.layerCount; layer++) {
                         animator.Play(frame.StateHashes[layer], layer, frame.NormalizedTimes[layer]);
                     }
@@ -223,18 +226,20 @@ namespace Banchou.Pawn.Part {
                     // Resimulate to present
                     CorrectionTime = now - unit.Diff;
 
-
                     // Need to run this first or else triggers aren't set, for some reason
                     animator.Update(deltaTime);
+                    // Physics.Simulate(deltaTime);
                     var resimulatedStep = RecordStep(CorrectionTime);
                     history.AddLast(resimulatedStep);
                     _gizmoFastForwardStart = history.Last;
 
                     // Pump input into streams
-                    if (unit.Command == InputCommand.None) {
-                        moveSubject.OnNext(unit.Move);
-                    } else {
-                        commandSubject.OnNext(unit.Command);
+                    if (unit.PlayerId == playerId) {
+                        if (unit.Command == InputCommand.None) {
+                            moveSubject.OnNext(unit.Move);
+                        } else {
+                            commandSubject.OnNext(unit.Command);
+                        }
                     }
 
                     CorrectionTime += deltaTime;
@@ -243,12 +248,14 @@ namespace Banchou.Pawn.Part {
                         animator.Update(deltaTime);
                         // Record resimulated frame's new state
                         resimulatedStep = RecordStep(CorrectionTime);
+                        // Physics.Simulate(deltaTime);
                         history.AddLast(resimulatedStep);
 
                         CorrectionTime += deltaTime;
                     }
                     _gizmoFastForwardEnd = history.Last;
                     animator.enabled = true;
+                    // Physics.autoSimulation = true;
                 })
                 .AddTo(this);
 

@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Linq;
 
 using Redux;
-using UniRx;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -10,14 +8,14 @@ using Banchou.Board;
 using Banchou.Network;
 using Banchou.Pawn;
 using Banchou.Player;
-
-using Random = UnityEngine.Random;
+using Banchou.Stage;
 
 namespace Banchou.Prototype {
     public class BatchModeStartup : MonoBehaviour {
         private IObservable<GameState> _observeState;
         private GetState _getState;
         private Dispatcher _dispatch;
+        private StageActions _stageActions;
         private BoardActions _boardActions;
         private NetworkActions _networkActions;
         private PlayersActions _playerActions;
@@ -28,6 +26,7 @@ namespace Banchou.Prototype {
             IObservable<GameState> observeState,
             GetState getState,
             Dispatcher dispatch,
+            StageActions stageActions,
             NetworkActions networkActions,
             BoardActions boardActions,
             PlayersActions playerActions
@@ -35,6 +34,7 @@ namespace Banchou.Prototype {
             _observeState = observeState;
             _getState = getState;
             _dispatch = dispatch;
+            _stageActions = stageActions;
             _boardActions = boardActions;
             _networkActions = networkActions;
             _playerActions = playerActions;
@@ -47,7 +47,7 @@ namespace Banchou.Prototype {
 
                 var playerId = _getState().NextPlayerId();
                 _dispatch(_playerActions.AddPlayer(playerId, prefabKey: "Local Player", rollbackEnabled: RollbackEnabled));
-                _dispatch(_boardActions.SetScene("TestingGrounds"));
+                _dispatch(_stageActions.SetScene("TestingGrounds"));
 
                 var pawnId = _getState().NextPawnId();
                 _dispatch(_boardActions.AddPawn(pawnId, "Isaac", new Vector3(0f, 3f, 0f)));
