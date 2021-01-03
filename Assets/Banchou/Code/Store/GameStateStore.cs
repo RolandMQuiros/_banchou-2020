@@ -81,7 +81,7 @@ namespace Banchou {
                 Network = NetworkReducers.Reduce(prev.Network, action),
                 Stage = StageReducers.Reduce(prev.Stage, action),
                 Players = PlayerReducers.Reduce(prev.Players, prev.Network, action),
-                Board = BoardReducers.Reduce(prev.Board, action)
+                Board = BoardReducers.Reduce(prev.Board, prev.Network, action)
             };
         }
     }

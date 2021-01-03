@@ -11,16 +11,6 @@ using Banchou.Network;
 
 namespace Banchou.Pawn.Part {
     public class Rewind : MonoBehaviour {
-        [SerializeField, Tooltip("How much state history to record, in seconds")]
-        private float _historyWindow = 2f;
-        [SerializeField, Tooltip("Minimum delay between the current time and an input's timestamp before kicking off a rollback")]
-        private float _rollbackThreshold = 0.15f;
-        public enum RollbackState : byte {
-            Complete,
-            RollingBack,
-            FastForward
-        }
-
         private struct HistoryStep {
             public List<int> StateHashes;
             public List<float> NormalizedTimes;
@@ -34,12 +24,14 @@ namespace Banchou.Pawn.Part {
 
         public void Construct(
             GetServerTime getServerTime,
+            GetRollbackPhase getRollbackPhase,
             Animator animator,
             PawnId pawnId,
             IPawnInstance pawn,
             IMotor motor,
             Orientation orientation,
             IObservable<GameState> observeState,
+            GetState getState,
             PlayerInputStreams playerInput
         ) {
             List<int> GetParameterKeys(AnimatorControllerParameterType parameterType) {
@@ -56,16 +48,12 @@ namespace Banchou.Pawn.Part {
             var movesAndCommands = playerInput
                 .Where(unit => unit.Type != InputUnitType.Look);
 
-            var observeCanRollback = observeState
-                .Select(state => state.GetPawnPlayer(pawnId))
-                .DistinctUntilChanged()
-                .Select(state => state.RollbackEnabled);
-
             // TODO: Add redux state changes to this. Need a timestamp on Pawn
             // Pretend this was the idea the whole time
             var rollbackInputs = playerInput
+                .Where(_ => getState().IsRollbackEnabled() && getRollbackPhase() == RollbackPhase.Complete)
                 .Where(unit => unit.Type != InputUnitType.Look)
-                .Where(unit => unit.When < getServerTime() - _rollbackThreshold)
+                .Where(unit => unit.When < getServerTime() - getState().GetRollbackDetectionThreshold())
                 .BatchFrame(0, FrameCountType.FixedUpdate);
 
             // Record Animator's state every frame
@@ -89,12 +77,10 @@ namespace Banchou.Pawn.Part {
             }
 
             // Populate history list every frame
-            observeCanRollback
-                .Where(canRollback => canRollback)
-                .SelectMany(_ => this.FixedUpdateAsObservable())
+            this.FixedUpdateAsObservable()
                 .Select(xform => RecordStep(getServerTime()))
                 .Subscribe(step => {
-                    var window = getServerTime() - _historyWindow;
+                    var window = getServerTime() - getState().GetRollbackHistoryDuration();
 
                     // Remove old frames
                     while (history.Count > 0 && history.First.Value.When < window) {
@@ -105,12 +91,21 @@ namespace Banchou.Pawn.Part {
                 })
                 .AddTo(this);
 
+            this.FixedUpdateAsObservable()
+                .Where(_ => getRollbackPhase() == RollbackPhase.Resimulate)
+                .Subscribe(_ => {
+                    Debug.Log($"Resimulate Fixed Update call, dt: {Time.fixedUnscaledDeltaTime}");
+                })
+                .AddTo(this);
+
             // Handle rollbacks
             rollbackInputs
                 .Subscribe(units => {
                     var deltaTime = Time.fixedUnscaledDeltaTime;
                     var now = getServerTime();
                     var correctionTime = units.Min(unit => unit.When);
+
+                    Debug.Log($"Rewinding animator from {now} to {correctionTime}");
 
                     // Find the last recorded frame before the input's timestamp, while removing future frames
                     var frame = history.Last.Value;
@@ -128,7 +123,6 @@ namespace Banchou.Pawn.Part {
 
                     // Set animator states
                     animator.enabled = false;
-                    // Physics.autoSimulation = false;
 
                     for (int layer = 0; layer < animator.layerCount; layer++) {
                         animator.Play(frame.StateHashes[layer], layer, frame.NormalizedTimes[layer]);

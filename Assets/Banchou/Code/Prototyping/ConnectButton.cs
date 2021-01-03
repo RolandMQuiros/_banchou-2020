@@ -13,6 +13,7 @@ namespace Banchou.Prototype {
         public string IPAddress { get; set; }
         public int MinPing { get; set; } = 0;
         public int MaxPing { get; set; } = 0;
+        public bool RollbackEnabled { get; set; } = true;
 
         private IObservable<GameState> _observeState;
         private Dispatcher _dispatch;
@@ -42,7 +43,12 @@ namespace Banchou.Prototype {
 
         public void Connect() {
             SceneManager.LoadScene("BanchouBoard");
-            _dispatch(_networkActions.SetMode(Mode.Client, MinPing, MaxPing));
+            _dispatch(_networkActions.SetMode(
+                Mode.Client,
+                enableRollback: RollbackEnabled,
+                simulateMinLatency: MinPing,
+                simulateMaxLatency: MaxPing
+            ));
         }
     }
 }

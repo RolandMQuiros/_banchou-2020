@@ -52,10 +52,6 @@ namespace Banchou.Player {
             return state.GetNetworkId() == state.GetPlayerNetworkId(playerId);
         }
 
-        public static bool CanPlayerRollback(this GameState state, PlayerId playerId) {
-            return state.GetPlayer(playerId).RollbackEnabled;
-        }
-
         public static IDictionary<PlayerId, PlayerState> GetPlayers(this GameState state) {
             return state.Players.States;
         }

@@ -87,5 +87,42 @@ namespace Banchou.Test {
             yield return new WaitUntil(() => finished);
             subscriptions.Dispose();
         }
+
+        [UnityTest]
+        public IEnumerator IsFixedUpdateCalledWithPhysicsAutoSimDisabled() {
+            Physics.autoSimulation = false;
+            var finished = false;
+            var targetDelta = Time.fixedUnscaledDeltaTime;
+            var subscriptions = new CompositeDisposable (
+                Observable.EveryFixedUpdate()
+                    .Subscribe(_ => {
+                        Assert.AreEqual(0f, Time.fixedUnscaledDeltaTime);
+                    }),
+                Observable.Timer(TimeSpan.FromSeconds(1))
+                    .Subscribe(_ => { finished = true; })
+            );
+            yield return new WaitUntil(() => finished);
+            Physics.autoSimulation = true;
+            subscriptions.Dispose();
+        }
+
+        [UnityTest]
+        public IEnumerator DoesPhysicsResimulateCallFixedUpdate() {
+            Physics.autoSimulation = false;
+            var finished = false;
+            var subscriptions = new CompositeDisposable (
+                Observable.Interval(TimeSpan.FromSeconds(0.03f))
+                    .Subscribe(_ => {
+                        Physics.Simulate(0.03f);
+                    }),
+                Observable.EveryFixedUpdate()
+                    .Subscribe(_ => {
+                        Assert.AreEqual(0.03f, Time.fixedUnscaledDeltaTime);
+                    })
+            );
+            yield return new WaitUntil(() => finished);
+            Physics.autoSimulation = true;
+            subscriptions.Dispose();
+        }
     }
 }

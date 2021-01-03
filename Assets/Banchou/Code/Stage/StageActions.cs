@@ -8,7 +8,7 @@
             public string Scene;
         }
 
-        public struct Stageed {
+        public struct SceneLoaded {
             public string Scene;
         }
     }
@@ -23,7 +23,7 @@
             Scene = sceneName
         };
 
-        public StateAction.Stageed SceneLoaded(string sceneName) => new StateAction.Stageed {
+        public StateAction.SceneLoaded SceneLoaded(string sceneName) => new StateAction.SceneLoaded {
             Scene = sceneName
         };
     }

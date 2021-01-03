@@ -8,6 +8,9 @@ namespace Banchou.Network {
             public Mode Mode;
             public int SimulateMinLatency;
             public int SimulateMaxLatency;
+            public bool EnableRollback;
+            public float RollbackHistoryDuration;
+            public float RollbackDetectionThreshold;
         }
 
         public struct SimulateLatency {
@@ -39,9 +42,18 @@ namespace Banchou.Network {
         public NetworkActions(GetServerTime getServerTime) {
             _getTime = getServerTime;
         }
-        public StateAction.SetNetworkMode SetMode(Mode mode) => new StateAction.SetNetworkMode { Mode = mode };
-        public StateAction.SetNetworkMode SetMode(Mode mode, int simulateMinLatency, int simulateMaxLatency) => new StateAction.SetNetworkMode {
+        public StateAction.SetNetworkMode SetMode(
+            Mode mode,
+            bool enableRollback = true,
+            float rollbackHistoryDuration = 1f,
+            float rollbackDetectionThreshold = 0.17f,
+            int simulateMinLatency = 0,
+            int simulateMaxLatency = 0
+        ) => new StateAction.SetNetworkMode {
             Mode = mode,
+            EnableRollback = enableRollback,
+            RollbackHistoryDuration = rollbackHistoryDuration,
+            RollbackDetectionThreshold = rollbackDetectionThreshold,
             SimulateMinLatency = simulateMinLatency,
             SimulateMaxLatency = simulateMaxLatency
         };

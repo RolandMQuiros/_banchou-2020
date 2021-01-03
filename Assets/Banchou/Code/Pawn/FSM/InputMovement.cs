@@ -2,6 +2,7 @@
 using UnityEngine;
 using UniRx;
 
+using Banchou.Network;
 using Banchou.Player;
 
 namespace Banchou.Pawn.FSM {
@@ -25,7 +26,9 @@ namespace Banchou.Pawn.FSM {
             ObservePlayerMove observePlayerMove,
             Part.IMotor motor,
             Part.Orientation orientation,
-            Animator animator
+            Animator animator,
+
+            GetRollbackPhase getRollbackPhase
         ) {
             var speedOut = Animator.StringToHash(_movementSpeedOut);
             var rightSpeedOut = Animator.StringToHash(_velocityRightOut);
@@ -34,6 +37,15 @@ namespace Banchou.Pawn.FSM {
             var speed = 0f;
             var forwardSpeed = 0f;
             var rightSpeed = 0f;
+
+            ObserveStateUpdate
+                .CatchIgnoreLog()
+                .Subscribe(_ => {
+                    if (getRollbackPhase() == RollbackPhase.Resimulate) {
+                        Debug.Log("FSMBehaviour Resimulation State Update");
+                    }
+                })
+                .AddTo(this);
 
             ObserveStateUpdate
                 .WithLatestFrom(observePlayerMove(), (_, direction) => direction)

@@ -15,6 +15,7 @@ namespace Banchou.Player {
 
             _playerFactory = _playerFactory ?? GetComponentInChildren<PlayerFactory>();
             container.Bind<PlayerInputStreams>(_playerInputStreams);
+            container.Bind<IObservable<InputUnit>>(_playerInputStreams);
         }
     }
 }

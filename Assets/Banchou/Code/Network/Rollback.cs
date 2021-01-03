@@ -11,16 +11,6 @@ using Banchou.Player;
 
 namespace Banchou.Network {
     public class Rollback : MonoBehaviour {
-        [SerializeField, Tooltip("How much state history to record, in seconds")]
-        private float _historyWindow = 2f;
-        [SerializeField, Tooltip("Minimum delay between the current time and an input's timestamp before kicking off a rollback")]
-        private float _rollbackThreshold = 0.15f;
-
-        public enum RollbackPhase {
-            Complete,
-            Rewind,
-            Resimulate
-        }
         public RollbackPhase Phase { get; private set; } = RollbackPhase.Complete;
         public float CorrectionTime { get; private set; } = 0f;
 
@@ -33,35 +23,47 @@ namespace Banchou.Network {
             IObservable<GameState> observeState,
             Dispatcher dispatch,
             GetServerTime getServerTime,
-            PlayerInputStreams playerInput
+            PlayerInputStreams playerInput,
+            BoardActions boardActions,
+            GetState getState
         ) {
             var history = new LinkedList<HistoryStep>();
             var deltaTime = Time.fixedUnscaledDeltaTime; // Find out where the target framerate is
 
             observeState
-                .Select(state => state.Board)
+                .Where(state => state.IsRollbackEnabled())
+                .Select(state => (HistoryDuration: state.GetRollbackHistoryDuration(), state.Board))
                 .DistinctUntilChanged()
-                .Subscribe(board => {
-                    while (history.Count > 0 && history.First.Value.When < getServerTime() - _historyWindow) {
+                .Subscribe(args => {
+                    while (history.Count > 1 && history.First.Value.When < getServerTime() - args.HistoryDuration) {
                         history.RemoveFirst();
                     }
 
                     history.AddLast(new HistoryStep {
-                        State = board,
+                        State = args.Board,
                         When = getServerTime()
                     });
                 })
                 .AddTo(this);
 
             var rollbackInputs = playerInput
+                .Where(_ => getState().IsRollbackEnabled() && Phase == RollbackPhase.Complete)
                 .Where(unit => unit.Type != InputUnitType.Look)
-                .Where(unit => unit.When < getServerTime() - _rollbackThreshold)
-                .BatchFrame(); // Batch at the end of frame, so the Pawns have time to rewind themselves
+                .Where(unit => unit.When < getServerTime() - getState().GetRollbackDetectionThreshold())
+                .BatchFrame();
 
             rollbackInputs
                 .Subscribe(units => {
                     var now = getServerTime();
                     CorrectionTime = units.Min(unit => unit.When);
+
+                    Debug.Log(
+                        $"Rolling back from {now} to {CorrectionTime}\n\t" +
+                        string.Join(
+                            "\n\t",
+                            units.Select(unit => $"{unit.Type} at {unit.When} - Player: {unit.PlayerId}, Command: {unit.Command}, Direction: {unit.Direction}")
+                        )
+                    );
 
                     // Disable physics tick
                     Physics.autoSimulation = false;
@@ -74,24 +76,28 @@ namespace Banchou.Network {
                         step = history.Last.Value;
                     }
 
+                    // Set the board state
+                    dispatch(boardActions.Rollback(step.State));
+
+                    // Run once so Animators can process input
+                    Phase = RollbackPhase.Resimulate;
+                    Physics.Simulate(deltaTime);
+                    CorrectionTime += deltaTime;
+
                     // Reapply inputs
                     for (int i = 0; i < units.Count; i++) {
-                        var unit = units[i];
-                        playerInput.Push(new InputUnit(unit) {
-                            When = CorrectionTime
-                        });
+                        playerInput.Push(units[i]);
                     }
 
                     // Resimulate physics to present
-                    Phase = RollbackPhase.Resimulate;
                     while (CorrectionTime < now) {
                         Physics.Simulate(deltaTime);
                         CorrectionTime += deltaTime;
                     }
 
                     // Enable physics tick
-                    Phase = RollbackPhase.Complete;
                     Physics.autoSimulation = true;
+                    Phase = RollbackPhase.Complete;
                 })
                 .AddTo(this);
         }

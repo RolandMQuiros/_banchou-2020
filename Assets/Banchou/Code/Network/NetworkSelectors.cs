@@ -42,5 +42,17 @@ namespace Banchou.Network {
         public static IEnumerable<Guid> GetClients(this GameState state) {
             return state.Network.Clients;
         }
+
+        public static bool IsRollbackEnabled(this GameState state) {
+            return state.Network.IsRollbackEnabled;
+        }
+
+        public static float GetRollbackHistoryDuration(this GameState state) {
+            return state.Network.RollbackHistoryDuration;
+        }
+
+        public static float GetRollbackDetectionThreshold(this GameState state) {
+            return state.Network.RollbackDetectionThreshold;
+        }
     }
 }

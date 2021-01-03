@@ -56,9 +56,5 @@ namespace Banchou.Pawn {
         public static PlayerState GetPawnPlayer(this GameState state, PawnId pawnId) {
             return state.GetPlayer(state.GetPawnPlayerId(pawnId));
         }
-
-        public static PawnFSMState GetLatestFSMChange(this GameState state) {
-            return state.Board.Pawns.LatestFSMChange;
-        }
     }
 }

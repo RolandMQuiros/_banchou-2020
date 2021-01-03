@@ -27,7 +27,7 @@ namespace Banchou.Stage {
                 }
             }
 
-            if (action is StateAction.Stageed done) {
+            if (action is StateAction.SceneLoaded done) {
                 var loading = new HashSet<string>(prev.LoadingScenes);
                 loading.Remove(done.Scene);
 

@@ -43,10 +43,10 @@ namespace Banchou.Prototype {
         private void Start() {
             if (Application.isBatchMode) {
                 SceneManager.LoadScene("BanchouBoard");
-                _dispatch(_networkActions.SetMode(Mode.Server));
+                _dispatch(_networkActions.SetMode(Mode.Server, enableRollback: RollbackEnabled));
 
                 var playerId = _getState().NextPlayerId();
-                _dispatch(_playerActions.AddPlayer(playerId, prefabKey: "Local Player", rollbackEnabled: RollbackEnabled));
+                _dispatch(_playerActions.AddPlayer(playerId, prefabKey: "Local Player"));
                 _dispatch(_stageActions.SetScene("TestingGrounds"));
 
                 var pawnId = _getState().NextPawnId();

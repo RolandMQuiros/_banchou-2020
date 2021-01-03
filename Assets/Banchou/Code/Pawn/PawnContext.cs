@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UniRx;
 
+using Banchou.Board;
 using Banchou.DependencyInjection;
 using Banchou.Network;
 using Banchou.Pawn.Part;
@@ -45,25 +46,24 @@ namespace Banchou.Pawn {
 
         private Dispatcher _dispatch;
         private GetState _getState;
+        private GetRollbackPhase _getRollbackPhase;
         private PawnActions _pawnActions;
         private IObservable<GameState> _observeState;
         private PlayerInputStreams _playerInput;
-        private GetServerTime _getServerTime;
-
-        private Subject<InputCommand> _commandSubject = new Subject<InputCommand>();
-        private Subject<Vector3> _moveSubject = new Subject<Vector3>();
 
         public void Construct(
             PawnId pawnId,
             Dispatcher dispatch,
             GetState getState,
-            IObservable<GameState> onStateUpdate,
+            GetRollbackPhase getRollbackPhase,
+            IObservable<GameState> observeState,
             PlayerInputStreams playerInput
         ) {
             PawnId = pawnId;
             _dispatch = dispatch;
             _getState = getState;
-            _observeState = onStateUpdate;
+            _getRollbackPhase = getRollbackPhase;
+            _observeState = observeState;
             _pawnActions = new PawnActions(PawnId);
             _playerInput = playerInput;
 
@@ -114,19 +114,16 @@ namespace Banchou.Pawn {
 
             container.Bind<ObservePlayerMove>(() => _observeState
                 .Select(state => state.GetPawnPlayerId(PawnId))
+                .DistinctUntilChanged()
                 .SelectMany(playerId => _playerInput.ObserveMoves(playerId))
                 .Select(unit => unit.Direction)
                 .DistinctUntilChanged()
             );
-            container.Bind<Subject<Vector3>>(_moveSubject, t => t == typeof(Part.Rewind));
-
             container.Bind<ObservePlayerCommand>(() => _observeState
                 .Select(state => state.GetPawnPlayerId(PawnId))
                 .SelectMany(playerId => _playerInput.ObserveCommands(playerId))
                 .Select(unit => unit.Command)
             );
-
-            container.Bind<Subject<InputCommand>>(_commandSubject, t => t == typeof(Part.Rewind));
         }
 
         private void OnDrawGizmos() {

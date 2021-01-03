@@ -25,8 +25,10 @@ namespace Banchou.Board {
         }
 
         public struct RollbackBoard {
-            public float Amount;
+            public BoardState Board;
         }
+        public struct ResimulateBoard { }
+        public struct CompleteBoardRollback { }
     }
 
     public class BoardActions {
@@ -76,6 +78,8 @@ namespace Banchou.Board {
         public StateAction.RemovePawn RemovePawn(PawnId pawnId) => new StateAction.RemovePawn { PawnId = pawnId };
         public StateAction.ClearPawns ClearPawns() => new StateAction.ClearPawns();
         public StateAction.SyncBoard Sync(BoardState board) => new StateAction.SyncBoard { Board = board };
-        public StateAction.RollbackBoard Rollback(float amount) => new StateAction.RollbackBoard { Amount = amount };
+        public StateAction.RollbackBoard Rollback(BoardState board) => new StateAction.RollbackBoard { Board = board };
+        public StateAction.ResimulateBoard Resimulate() => new StateAction.ResimulateBoard();
+        public StateAction.CompleteBoardRollback CompleteRollback() => new StateAction.CompleteBoardRollback();
     }
 }

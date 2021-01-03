@@ -34,27 +34,6 @@ namespace Banchou.Pawn {
         #endregion
     }
 
-    [Serializable]
-    public class PawnFSMState {
-        public PawnId PawnId;
-        public int StateHash;
-        public bool IsLoop;
-        public float ClipLength;
-        public float When;
-        public Vector3 Position;
-        public Vector3 Forward;
-        public PawnFSMState() { }
-        public PawnFSMState(in PawnFSMState prev) {
-            PawnId = prev.PawnId;
-            StateHash = prev.StateHash;
-            IsLoop = prev.IsLoop;
-            ClipLength = prev.ClipLength;
-            When = prev.When;
-            Position = prev.Position;
-            Forward = prev.Forward;
-        }
-    }
-
     public class PawnState {
         public PlayerId PlayerId;
         public string PrefabKey = string.Empty;
@@ -63,8 +42,6 @@ namespace Banchou.Pawn {
         public Vector3 SpawnPosition = Vector3.zero;
         public Quaternion SpawnRotation = Quaternion.identity;
 
-        public PawnFSMState FSMState = new PawnFSMState();
-
         public PawnState() { }
         public PawnState(in PawnState prev) {
             PlayerId = prev.PlayerId;
@@ -72,18 +49,15 @@ namespace Banchou.Pawn {
             TimeScale = prev.TimeScale;
             SpawnPosition = prev.SpawnPosition;
             SpawnRotation = prev.SpawnRotation;
-            FSMState = prev.FSMState;
         }
     }
 
     public class PawnsState {
         public Dictionary<PawnId, PawnState> States = new Dictionary<PawnId, PawnState>();
-        public PawnFSMState LatestFSMChange = new PawnFSMState();
 
         public PawnsState() { }
         public PawnsState(in PawnsState prev) {
             States = prev.States;
-            LatestFSMChange = prev.LatestFSMChange;
         }
     }
 }

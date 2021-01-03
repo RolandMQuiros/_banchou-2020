@@ -54,7 +54,7 @@ namespace Banchou.Prototype {
                 .CatchIgnoreLog()
                 .Subscribe(clientId => {
                     var playerId = getState().NextPlayerId();
-                    dispatch(playerActions.AddPlayer(playerId, "Local Player", $"Player {clientId}", clientId, RollbackEnabled));
+                    dispatch(playerActions.AddPlayer(playerId, "Local Player", $"Player {clientId}", clientId));
 
                     var pawnId = getState().NextPawnId();
                     dispatch(boardActions.AddPawn(pawnId, playerId, "Isaac", new Vector3(Random.Range(-5f, 5f), 3f, Random.Range(-5f, 5f))));
@@ -71,10 +71,15 @@ namespace Banchou.Prototype {
 
         public void Host() {
             SceneManager.LoadScene("BanchouBoard");
-            _dispatch(_networkActions.SetMode(Mode.Server, MinPing, MaxPing));
+            _dispatch(_networkActions.SetMode(
+                Mode.Server,
+                enableRollback: RollbackEnabled,
+                simulateMinLatency: MinPing,
+                simulateMaxLatency: MaxPing
+            ));
 
             var playerId = _getState().NextPlayerId();
-            _dispatch(_playerActions.AddPlayer(playerId, "Local Player", rollbackEnabled: RollbackEnabled));
+            _dispatch(_playerActions.AddPlayer(playerId, "Local Player"));
             _dispatch(_StageActions.SetScene("TestingGrounds"));
 
             var pawnId = _getState().NextPawnId();

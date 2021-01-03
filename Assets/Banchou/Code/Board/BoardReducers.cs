@@ -1,10 +1,11 @@
-﻿using Banchou.Pawn;
+﻿using Banchou.Combatant;
+using Banchou.Pawn;
 using Banchou.Mob;
-using Banchou.Combatant;
+using Banchou.Network;
 
 namespace Banchou.Board {
     public static class BoardReducers {
-        public static BoardState Reduce(in BoardState prev, in object action) {
+        public static BoardState Reduce(in BoardState prev, in NetworkState network, in object action) {
             if (action is Network.StateAction.SyncGameState sync) {
                 return sync.GameState.Board;
             }
@@ -13,9 +14,23 @@ namespace Banchou.Board {
                 return syncBoard.Board;
             }
 
-            if (action is StateAction.RollbackBoard rollback) {
-                return new BoardState {
-                    RewindTime = rollback.Amount
+            if (action is StateAction.RollbackBoard rollback && network.IsRollbackEnabled) {
+                return new BoardState(prev) {
+                    Pawns = rollback.Board.Pawns,
+                    Mobs = rollback.Board.Mobs,
+                    Combatants = rollback.Board.Combatants
+                };
+            }
+
+            if (action is StateAction.ResimulateBoard && network.IsRollbackEnabled) {
+                return new BoardState(prev) {
+                    RollbackPhase = RollbackPhase.Resimulate
+                };
+            }
+
+            if (action is StateAction.CompleteBoardRollback && network.IsRollbackEnabled) {
+                return new BoardState(prev) {
+                    RollbackPhase = RollbackPhase.Complete
                 };
             }
 

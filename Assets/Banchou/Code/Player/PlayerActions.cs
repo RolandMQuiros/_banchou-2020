@@ -13,7 +13,6 @@ namespace Banchou.Player {
             public string PrefabKey;
             public Guid NetworkId;
             public string Name;
-            public bool RollbackEnabled;
         }
 
         public struct RemovePlayer {
@@ -35,15 +34,13 @@ namespace Banchou.Player {
             PlayerId playerId,
             string prefabKey = null,
             string name = null,
-            Guid networkId = default(Guid),
-            bool rollbackEnabled = true
+            Guid networkId = default(Guid)
         ) {
             return new StateAction.AddPlayer {
                 PlayerId = playerId,
                 PrefabKey = prefabKey,
                 Name = name,
-                NetworkId = networkId,
-                RollbackEnabled = rollbackEnabled
+                NetworkId = networkId
             };
         }
 

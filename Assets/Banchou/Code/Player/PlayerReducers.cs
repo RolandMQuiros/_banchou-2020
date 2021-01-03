@@ -14,8 +14,7 @@ namespace Banchou.Player {
                         [add.PlayerId] = new PlayerState() {
                             PrefabKey = add.PrefabKey,
                             NetworkId = add.NetworkId == Guid.Empty ? network.Id : add.NetworkId,
-                            Name = add.Name,
-                            RollbackEnabled = add.RollbackEnabled
+                            Name = add.Name
                         }
                     }
                 };

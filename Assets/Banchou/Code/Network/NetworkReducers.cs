@@ -9,7 +9,10 @@ namespace Banchou.Network {
                     Mode = setMode.Mode,
                     Id = setMode.Mode == Mode.Server ? Guid.NewGuid() : Guid.Empty,
                     SimulateMinLatency = setMode.Mode != Mode.Local ? setMode.SimulateMinLatency : 0,
-                    SimulateMaxLatency = setMode.Mode != Mode.Local ? setMode.SimulateMaxLatency : 0
+                    SimulateMaxLatency = setMode.Mode != Mode.Local ? setMode.SimulateMaxLatency : 0,
+                    IsRollbackEnabled = setMode.Mode != Mode.Local && setMode.EnableRollback,
+                    RollbackHistoryDuration = setMode.RollbackHistoryDuration,
+                    RollbackDetectionThreshold = setMode.RollbackDetectionThreshold
                 };
             }
 
