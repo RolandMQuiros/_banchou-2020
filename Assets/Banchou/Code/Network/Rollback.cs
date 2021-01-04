@@ -67,7 +67,7 @@ namespace Banchou.Network {
             rollbackInputs
                 .Subscribe(units => {
                     var now = getServerTime();
-                    CorrectionTime = units.Min(unit => unit.When);
+                    CorrectionTime = Snapping.Snap(units.Min(unit => unit.When), Time.fixedUnscaledDeltaTime);
 
                     // Disable physics tick
                     Physics.autoSimulation = false;

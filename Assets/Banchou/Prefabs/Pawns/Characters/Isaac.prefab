@@ -609,7 +609,6 @@ GameObject:
   - component: {fileID: 6882438232159170975}
   - component: {fileID: 233779079041515701}
   - component: {fileID: 3989811475507675608}
-  - component: {fileID: 1244930718052740817}
   m_Layer: 0
   m_Name: Virtual Cameras/
   m_TagString: Untagged
@@ -656,7 +655,9 @@ MonoBehaviour:
   m_AnimatedTarget: {fileID: 3989811475507675608}
   m_LayerIndex: 0
   m_ShowDebugText: 0
-  m_ChildCameras: []
+  m_ChildCameras:
+  - {fileID: 1373917973189275895}
+  - {fileID: 3314888068841010620}
   m_Instructions:
   - m_FullHash: -1304015446
     m_VirtualCamera: {fileID: 1373917973189275895}
@@ -700,20 +701,6 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
---- !u!114 &1244930718052740817
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1423721038715568996}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe8f3492350da3c4d93bf6a17d82ed63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _areEnemiesInRangeParameter: AreEnemiesInRange
-  _isLockedOnParameter: IsLockedOn
 --- !u!1 &2404639918779518454
 GameObject:
   m_ObjectHideFlags: 0

@@ -60,7 +60,7 @@ namespace Banchou.Pawn.Part {
         }
 
         public void Move(Vector3 velocity) {
-            _velocity += Project(velocity);
+            _velocity += velocity;
         }
 
         public void Clear() {
@@ -68,7 +68,7 @@ namespace Banchou.Pawn.Part {
         }
 
         public void Apply() {
-             var newPosition = _rigidbody.position + _velocity;
+             var newPosition = _rigidbody.position + Project(_velocity);
             _rigidbody.MovePosition(newPosition);
             _velocity = Vector3.zero;
             _contacts.Clear();

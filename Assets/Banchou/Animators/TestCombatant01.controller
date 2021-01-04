@@ -931,7 +931,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 175a3331f17e3254bb18f990edc3aed4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _rotationSpeed: 1000
+  _rotationSpeed: 800
   _snapOnExit: 1
   _flipDelay: 0
   _startTime: 0
@@ -1481,7 +1481,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 899b0285b294d7b4480e22ee053ee6a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _rotationSpeed: 1000
+  _rotationSpeed: 800
   _startTime: 0
   _endTime: 1
 --- !u!1109 &4109666263609142346

@@ -117,19 +117,17 @@ namespace Banchou.Test {
 
         [UnityTest]
         public IEnumerator ServerAndClientTimeMatch() {
-            yield return SetupServerAndClient();
-            Func<float> serverTime = _serverRoot.GetComponentInChildren<Network.NetworkAgent>().GetTime;
-            Func<float> clientTime = _clientRoot.GetComponentInChildren<Network.NetworkAgent>().GetTime;
+            yield return SetupServerAndClient(300, 300);
 
-            var times = new List<(float, float)>();
+            var times = new List<(float Server, float Client)>();
             for (int i = 0; i <= 10; i++) {
-                var pair = (serverTime(), clientTime());
+                var pair = (Server: _serverBoard.GetTime(), Client: _clientBoard.GetTime());
                 times.Add(pair);
-                Debug.Log($"Server: {pair.Item1}, Client: {pair.Item2}, Diff: {pair.Item1 - pair.Item2}");
+                Debug.Log($"Server: {pair.Server}, Client: {pair.Client}, Diff: {pair.Server - pair.Client}");
                 yield return new WaitForSecondsRealtime(1f);
             }
 
-            Assert.That(!times.Any(t => t.Item1 != t.Item2), $"Server and client have mismatched timestamps");
+            Assert.That(!times.Any(t => t.Server != t.Client), $"Server and client have mismatched timestamps");
         }
 
         [UnityTest]
