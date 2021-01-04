@@ -42,9 +42,11 @@ namespace Banchou.Network {
             var history = new LinkedList<HistoryStep>();
             var deltaTime = Time.fixedUnscaledDeltaTime; // Find out where the target framerate is
 
+            // Build a history list from state changes that don't incur rollbacks
             observeState
                 .Where(state => state.IsRollbackEnabled())
-                .Select(state => (HistoryDuration: state.GetRollbackHistoryDuration(), state.Board))
+                .Where(state => getServerTime() - state.GetBoardLastUpdated() <= state.GetRollbackDetectionThreshold())
+                .Select(state => (HistoryDuration: state.GetRollbackHistoryDuration(), Board: state.GetBoard()))
                 .DistinctUntilChanged()
                 .Subscribe(args => {
                     while (history.Count > 1 && history.First.Value.When < getServerTime() - args.HistoryDuration) {
@@ -58,16 +60,38 @@ namespace Banchou.Network {
                 })
                 .AddTo(this);
 
+            // Find state changes that require rollbacks
+            var rollbackStateChanges = observeState
+                .Where(state => state.IsRollbackEnabled())
+                .Where(state => getServerTime() - state.GetBoardLastUpdated() > state.GetRollbackDetectionThreshold())
+                .DistinctUntilChanged()
+                .Select(state => new RollbackUnit {
+                    TargetState = state.GetBoard(),
+                    When = getServerTime(),
+                    CorrectionTime = state.GetBoardLastUpdated(),
+                    DeltaTime = deltaTime
+                });
+
+            // Find inputs that incur rollbacks
             var rollbackInputs = playerInput
                 .Where(_ => getState().IsRollbackEnabled() && Phase == RollbackPhase.Complete)
                 .Where(unit => unit.Type != InputUnitType.Look)
                 .Where(unit => unit.When < getServerTime())
-                .BatchFrame(0, FrameCountType.FixedUpdate);
+                .BatchFrame(0, FrameCountType.FixedUpdate)
+                .Select(units => new RollbackUnit {
+                    InputUnits = units,
+                    When = getServerTime(),
+                    CorrectionTime = Snapping.Snap(units.Min(unit => unit.When), deltaTime),
+                    DeltaTime = deltaTime
+                });
 
-            rollbackInputs
-                .Subscribe(units => {
+            var rollbacks = rollbackStateChanges.Merge(rollbackInputs);
+
+            rollbacks
+                .CatchIgnoreLog()
+                .Subscribe(unit => {
                     var now = getServerTime();
-                    CorrectionTime = Snapping.Snap(units.Min(unit => unit.When), Time.fixedUnscaledDeltaTime);
+                    CorrectionTime = unit.CorrectionTime;
 
                     // Disable physics tick
                     Physics.autoSimulation = false;
@@ -81,10 +105,11 @@ namespace Banchou.Network {
                     }
 
                     // Set the board state
-                    dispatch(boardActions.Rollback(step.State));
+                    dispatch(boardActions.Rollback(unit.TargetState ?? step.State));
 
                     RollbackUnit BuildRollbackUnit() => new RollbackUnit {
-                        InputUnits = units,
+                        InputUnits = unit.InputUnits,
+                        TargetState = getState().GetBoard(),
                         When = now,
                         CorrectionTime = CorrectionTime,
                         DeltaTime = deltaTime
@@ -92,7 +117,7 @@ namespace Banchou.Network {
 
                     void ResimulateStep() {
                         _beforeResimulate.OnNext(BuildRollbackUnit());
-                        Physics.Simulate(deltaTime);
+                        // Physics.Simulate(deltaTime);
                         _afterResimulate.OnNext(BuildRollbackUnit());
 
                         CorrectionTime += deltaTime;
@@ -104,8 +129,8 @@ namespace Banchou.Network {
                     ResimulateStep();
 
                     // Pump inputs back into the stream
-                    for (int i = 0; i < units.Count; i++) {
-                        playerInput.Push(units[i]);
+                    for (int i = 0; unit.InputUnits != null && i < unit.InputUnits.Count; i++) {
+                        playerInput.Push(unit.InputUnits[i]);
                     }
 
                     // Resimulate physics to present

@@ -9,14 +9,16 @@ namespace Banchou.Mob {
                     return new MobsState(prev) {
                         States = new Dictionary<Pawn.PawnId, MobState>(prev.States) {
                             [add.PawnId] = new MobState()
-                        }
+                        },
+                        LastUpdated = add.When
                     };
                 }
             }
 
             if (action is StateAction.RemoveMob remove) {
                 var next = new MobsState(prev) {
-                    States = new Dictionary<Pawn.PawnId, MobState>(prev.States)
+                    States = new Dictionary<Pawn.PawnId, MobState>(prev.States),
+                    LastUpdated = remove.When
                 };
                 next.States.Remove(remove.PawnId);
                 return next;
@@ -28,7 +30,8 @@ namespace Banchou.Mob {
                     return new MobsState(prev) {
                         States = new Dictionary<Pawn.PawnId, MobState>(prev.States) {
                             [mobAction.PawnId] = ReduceMob(prevMob, mobAction)
-                        }
+                        },
+                        LastUpdated = mobAction.When
                     };
                 }
             }

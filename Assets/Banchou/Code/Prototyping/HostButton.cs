@@ -62,11 +62,17 @@ namespace Banchou.Prototype {
         }
 
         public void ParseMinPing(string ping) {
-            MinPing = int.Parse(ping);
+            int parsed;
+            if (int.TryParse(ping, out parsed)) {
+                MinPing = parsed;
+            }
         }
 
         public void ParseMaxPing(string ping) {
-            MaxPing = int.Parse(ping);
+            int parsed;
+            if (int.TryParse(ping, out parsed)) {
+                MaxPing = parsed;
+            }
         }
 
         public void Host() {
@@ -83,8 +89,8 @@ namespace Banchou.Prototype {
             _dispatch(_StageActions.SetScene("TestingGrounds"));
 
             var pawnId = _getState().NextPawnId();
-            _dispatch(_boardActions.AddPawn(pawnId, "Isaac", new Vector3(0f, 3f, 0f)));
-            _dispatch(_boardActions.AddPawn("Dumpster", new Vector3(10f, 3f, 5f)));
+            _dispatch(_boardActions.AddPawn(pawnId, "Isaac", new Vector3(0f, 1f, 0f)));
+            _dispatch(_boardActions.AddPawn("Dumpster", new Vector3(10f, 1f, 5f)));
 
             _dispatch(_playerActions.Attach(playerId, pawnId));
         }

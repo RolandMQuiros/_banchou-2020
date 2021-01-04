@@ -28,7 +28,6 @@ namespace Banchou.Mob.FSM {
             MobActions pawnActions,
             NavMeshAgent agent,
             IMotor motor,
-            Rigidbody body,
             Animator animator,
             Orientation orientation,
             IPawnInstances pawnInstances
@@ -49,7 +48,7 @@ namespace Banchou.Mob.FSM {
                 .Where(targetPosition => targetPosition != null)
                 .CatchIgnoreLog()
                 .Subscribe(targetPosition => {
-                    agent.nextPosition = body.position;
+                    agent.nextPosition = motor.TargetPosition;
                     agent.speed = _movementSpeed;
                     agent.SetDestination(targetPosition.Value);
                 })

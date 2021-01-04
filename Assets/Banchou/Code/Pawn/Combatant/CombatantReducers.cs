@@ -13,14 +13,16 @@ namespace Banchou.Combatant {
                             [add.PawnId] = new CombatantState {
                                 Health = add.Health
                             }
-                        }
+                        },
+                        LastUpdated = add.When
                     };
                 }
             }
 
             if (action is Board.StateAction.RemovePawn remove) {
                 var next = new CombatantsState(prev) {
-                    States = new Dictionary<PawnId, CombatantState>(prev.States)
+                    States = new Dictionary<PawnId, CombatantState>(prev.States),
+                    LastUpdated = remove.When
                 };
                 next.States.Remove(remove.PawnId);
                 return next;
@@ -32,7 +34,8 @@ namespace Banchou.Combatant {
                     return new CombatantsState(prev) {
                         States = new Dictionary<PawnId, CombatantState>(prev.States) {
                             [combatantAction.CombatantId] = ReduceCombatant(prevCombatant, combatantAction)
-                        }
+                        },
+                        LastUpdated = combatantAction.When
                     };
                 }
             }
@@ -57,7 +60,8 @@ namespace Banchou.Combatant {
                             [hit.To] = new CombatantState(to) {
                                 HitTaken = listHit
                             }
-                        }
+                        },
+                        LastUpdated = hit.When
                     };
                 }
             }

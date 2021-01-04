@@ -1,7 +1,5 @@
 ﻿using UnityEngine;
-using Redux;
-
-using Banchou.Board;
+using Banchou.Network;
 using Banchou.Pawn;
 
 namespace Banchou.Combatant {
@@ -9,29 +7,35 @@ namespace Banchou.Combatant {
         public struct AddCombatant {
             public PawnId PawnId;
             public int Health;
+            public float When;
         }
 
         public interface ICombatantAction {
             PawnId CombatantId { get; }
+            float When { get; }
         }
 
         public struct AddTarget : ICombatantAction {
             public PawnId CombatantId { get; set; }
             public PawnId Target;
+            public float When { get; set; }
         }
 
         public struct RemoveTarget : ICombatantAction {
             public PawnId CombatantId { get; set; }
             public PawnId Target;
+            public float When { get; set; }
         }
 
         public struct LockOn : ICombatantAction {
             public PawnId CombatantId { get; set; }
             public PawnId To;
+            public float When { get; set; }
         }
 
         public struct LockOff : ICombatantAction {
             public PawnId CombatantId { get; set; }
+            public float When { get; set; }
         }
 
         public struct Hit {
@@ -45,41 +49,54 @@ namespace Banchou.Combatant {
     }
 
     public class CombatantActions {
-        public StateAction.AddCombatant Add(PawnId pawnId) => new StateAction.AddCombatant {
+        private GetServerTime _getServerTime;
+
+        public CombatantActions(GetServerTime getServerTime) {
+            _getServerTime = getServerTime;
+        }
+
+        public StateAction.AddCombatant Add(PawnId pawnId, float? when = null) => new StateAction.AddCombatant {
             PawnId = pawnId,
-            Health = 100
+            Health = 100,
+            When = when ?? _getServerTime()
         };
 
-        public StateAction.AddTarget AddTarget(PawnId combatantId, PawnId target) => new StateAction.AddTarget {
+        public StateAction.AddTarget AddTarget(PawnId combatantId, PawnId target, float? when = null) => new StateAction.AddTarget {
             CombatantId = combatantId,
-            Target = target
+            Target = target,
+            When = when ?? _getServerTime()
         };
 
-        public StateAction.RemoveTarget RemoveTarget(PawnId combatantId, PawnId target) => new StateAction.RemoveTarget {
-            CombatantId = combatantId,
-            Target = target
-        };
+        public StateAction.RemoveTarget RemoveTarget(PawnId combatantId, PawnId target, float? when = null) {
+            return new StateAction.RemoveTarget {
+                CombatantId = combatantId,
+                Target = target,
+                When = when ?? _getServerTime()
+            };
+        }
 
-        public StateAction.LockOn LockOn(PawnId combatantId, PawnId to) {
+        public StateAction.LockOn LockOn(PawnId combatantId, PawnId to, float? when = null) {
             return new StateAction.LockOn {
                 CombatantId = combatantId,
-                To = to
+                To = to,
+                When = when ?? _getServerTime()
             };
         }
 
-        public StateAction.LockOff LockOff(PawnId combatantId) {
+        public StateAction.LockOff LockOff(PawnId combatantId, float? when = null) {
             return new StateAction.LockOff {
-                CombatantId = combatantId
+                CombatantId = combatantId,
+                When = when ?? _getServerTime()
             };
         }
 
-        public StateAction.Hit Hit(PawnId from, PawnId to, HitMedium medium, int strength, Vector3 push = default(Vector3)) {
+        public StateAction.Hit Hit(PawnId from, PawnId to, HitMedium medium, int strength, Vector3 push = default(Vector3), float? when = null) {
             return new StateAction.Hit {
                 From = from,
                 To = to,
                 Medium = medium,
                 Push = push,
-                When = Time.unscaledTime
+                When = when ?? _getServerTime()
             };
         }
     }

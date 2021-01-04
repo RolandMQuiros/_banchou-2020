@@ -17,28 +17,31 @@ namespace Banchou.Prototype {
 
         private IObservable<GameState> _observeState;
         private Dispatcher _dispatch;
-        private BoardActions _boardActions = new BoardActions();
         private NetworkActions _networkActions;
 
         public void Construct(
             IObservable<GameState> observeState,
             Dispatcher dispatch,
             NetworkActions networkActions,
-            BoardActions boardActions,
             PlayersActions playerActions
         ) {
             _observeState = observeState;
             _dispatch = dispatch;
-            _boardActions = boardActions;
             _networkActions = networkActions;
         }
 
         public void ParseMinPing(string ping) {
-            MinPing = int.Parse(ping);
+            int parsed;
+            if (int.TryParse(ping, out parsed)) {
+                MinPing = parsed;
+            }
         }
 
         public void ParseMaxPing(string ping) {
-            MaxPing = int.Parse(ping);
+            int parsed;
+            if (int.TryParse(ping, out parsed)) {
+                MaxPing = parsed;
+            }
         }
 
         public void Connect() {

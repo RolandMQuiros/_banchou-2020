@@ -30,6 +30,8 @@ namespace Banchou.Network {
         public float RollbackHistoryDuration = 1f;
         public float RollbackDetectionThreshold = 0.2f;
 
+        public float LastUpdated = 0f;
+
         public NetworkState() { }
         public NetworkState(in NetworkState prev) {
             Id = prev.Id;
@@ -45,6 +47,8 @@ namespace Banchou.Network {
             IsRollbackEnabled = prev.IsRollbackEnabled;
             RollbackHistoryDuration = prev.RollbackHistoryDuration;
             RollbackDetectionThreshold = prev.RollbackDetectionThreshold;
+
+            LastUpdated = prev.LastUpdated;
         }
     }
 

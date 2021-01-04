@@ -16,13 +16,15 @@ namespace Banchou.Player {
                             NetworkId = add.NetworkId == Guid.Empty ? network.Id : add.NetworkId,
                             Name = add.Name
                         }
-                    }
+                    },
+                    LastUpdated = add.When
                 };
             }
 
             if (action is StateAction.RemovePlayer remove) {
                 var next = new PlayersState(prev) {
-                    States = new Dictionary<PlayerId, PlayerState>(prev.States)
+                    States = new Dictionary<PlayerId, PlayerState>(prev.States),
+                    LastUpdated = remove.When
                 };
                 next.States.Remove(remove.PlayerId);
                 return next;
@@ -34,7 +36,8 @@ namespace Banchou.Player {
                     return new PlayersState(prev) {
                         States = new Dictionary<PlayerId, PlayerState>(prev.States) {
                             [addPawn.PlayerId] = ReducePlayer(prevPlayer, action)
-                        }
+                        },
+                        LastUpdated = addPawn.When
                     };
                 }
             }
@@ -54,7 +57,8 @@ namespace Banchou.Player {
                     return new PlayersState(prev) {
                         States = new Dictionary<PlayerId, PlayerState>(prev.States) {
                             [playerAction.PlayerId] = ReducePlayer(prevPlayer, action)
-                        }
+                        },
+                        LastUpdated = playerAction.When
                     };
                 }
             }
@@ -82,7 +86,8 @@ namespace Banchou.Player {
                                 syncedPlayerId, prevPlayer
                             );
                         })
-                        .ToDictionary(p => p.Key, p => p.Value)
+                        .ToDictionary(p => p.Key, p => p.Value),
+                    LastUpdated = sync.GameState.Players.LastUpdated // is this what we want?
                 };
             }
 

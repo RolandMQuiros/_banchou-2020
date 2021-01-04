@@ -27,9 +27,11 @@ namespace Banchou.Mob {
 
     public class MobsState {
         public Dictionary<PawnId, MobState> States = new Dictionary<PawnId, MobState>();
+        public float LastUpdated = 0f;
         public MobsState() { }
         public MobsState(in MobsState prev) {
             States = prev.States;
+            LastUpdated = prev.LastUpdated;
         }
     }
 }

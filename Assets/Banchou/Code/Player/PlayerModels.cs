@@ -51,10 +51,11 @@ namespace Banchou.Player {
 
     public class PlayersState {
         public Dictionary<PlayerId, PlayerState> States = new Dictionary<PlayerId, PlayerState>();
-
+        public float LastUpdated = 0f;
         public PlayersState() { }
         public PlayersState(in PlayersState prev) {
             States = prev.States;
+            LastUpdated = prev.LastUpdated;
         }
     }
 

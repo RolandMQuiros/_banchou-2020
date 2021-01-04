@@ -17,20 +17,24 @@ namespace Banchou.Pawn {
                                 SpawnPosition = add.SpawnPosition,
                                 SpawnRotation = add.SpawnRotation
                             }
-                        }
+                        },
+                        LastUpdated = add.When
                     };
                 }
             }
 
             if (action is Board.StateAction.RemovePawn remove) {
-                var next = new PawnsState(prev);
+                var next = new PawnsState(prev) {
+                    LastUpdated = remove.When
+                };
                 next.States.Remove(remove.PawnId);
                 return next;
             }
 
             if (action is Board.StateAction.ClearPawns clear) {
                 var next = new PawnsState(prev) {
-                    States = new Dictionary<PawnId, PawnState>()
+                    States = new Dictionary<PawnId, PawnState>(),
+                    LastUpdated = clear.When
                 };
                 return next;
             }
@@ -40,7 +44,8 @@ namespace Banchou.Pawn {
                 if (affected.Any()) {
                     return new PawnsState(prev) {
                         States = prev.States.Select(pair => (Id: pair.Key, Pawn: ReducePawn(pair.Value, removePlayer)))
-                            .ToDictionary(pair => pair.Id, pair => pair.Pawn)
+                            .ToDictionary(pair => pair.Id, pair => pair.Pawn),
+                        LastUpdated = removePlayer.When
                     };
                 }
             }
@@ -51,7 +56,8 @@ namespace Banchou.Pawn {
                     return new PawnsState(prev) {
                         States = new Dictionary<PawnId, PawnState>(prev.States) {
                             [attach.PawnId] = ReducePawn(prevPawn, action)
-                        }
+                        },
+                        LastUpdated = attach.When
                     };
                 }
             }
@@ -66,7 +72,8 @@ namespace Banchou.Pawn {
                     }
                 }
                 return new PawnsState(prev) {
-                    States = next
+                    States = next,
+                    LastUpdated = detach.When
                 };
             }
 
@@ -76,7 +83,8 @@ namespace Banchou.Pawn {
                     return new PawnsState(prev) {
                         States = new Dictionary<PawnId, PawnState>(prev.States) {
                             [pawnAction.PawnId] = ReducePawn(prevPawn, pawnAction)
-                        }
+                        },
+                        LastUpdated = pawnAction.When
                     };
                 }
             }

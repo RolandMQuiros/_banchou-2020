@@ -12,26 +12,30 @@ namespace Banchou.Network {
                     SimulateMaxLatency = setMode.Mode != Mode.Local ? setMode.SimulateMaxLatency : 0,
                     IsRollbackEnabled = setMode.Mode != Mode.Local && setMode.EnableRollback,
                     RollbackHistoryDuration = setMode.RollbackHistoryDuration,
-                    RollbackDetectionThreshold = setMode.RollbackDetectionThreshold
+                    RollbackDetectionThreshold = setMode.RollbackDetectionThreshold,
+                    LastUpdated = setMode.When
                 };
             }
 
             if (action is StateAction.SimulateLatency setPing && prev.Mode != Mode.Local) {
                 return new NetworkState {
                     SimulateMinLatency = setPing.SimulateMinLatency,
-                    SimulateMaxLatency = setPing.SimulateMaxLatency
+                    SimulateMaxLatency = setPing.SimulateMaxLatency,
+                    LastUpdated = setPing.When
                 };
             }
 
             if (action is StateAction.ConnectedToServer toServer && prev.Mode == Mode.Client) {
                 return new NetworkState(prev) {
-                    Id = toServer.ClientNetworkId
+                    Id = toServer.ClientNetworkId,
+                    LastUpdated = toServer.When
                 };
             }
 
             if (action is StateAction.ConnectedToClient toClient && prev.Mode == Mode.Server) {
                 return new NetworkState(prev) {
-                    Clients = prev.Clients.Append(toClient.ClientNetworkId)
+                    Clients = prev.Clients.Append(toClient.ClientNetworkId),
+                    LastUpdated = toClient.When
                 };
             }
 

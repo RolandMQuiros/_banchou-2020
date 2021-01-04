@@ -83,10 +83,11 @@ namespace Banchou.Pawn.Part {
                     var correctionTime = unit.CorrectionTime;
 
                     // Find the last recorded frame before the input's timestamp, while removing future frames
-                    var frame = history.Last.Value;
-                    while (correctionTime < frame.When) {
+                    var frame = history.Last.Previous.Value;
+                    while (correctionTime < history.Last.Value.When) {
                         history.RemoveLast();
-                        frame = history.Last.Value;
+                        // Go back one additional frame, since we need to run animators at least once before they accept inputs
+                        frame = history.Last.Previous.Value;
                     }
 
                     _gizmoStep = frame;

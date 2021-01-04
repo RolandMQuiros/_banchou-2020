@@ -8,15 +8,14 @@ namespace Banchou.Board {
         public PawnsState Pawns = new PawnsState();
         public MobsState Mobs = new MobsState();
         public CombatantsState Combatants = new CombatantsState();
-
-        public RollbackPhase RollbackPhase = RollbackPhase.Complete;
+        public float LastUpdated = 0f;
 
         public BoardState() { }
         public BoardState(in BoardState prev) {
             Pawns = prev.Pawns;
             Mobs = prev.Mobs;
             Combatants = prev.Combatants;
-            RollbackPhase = prev.RollbackPhase;
+            LastUpdated = prev.LastUpdated;
         }
     }
 }

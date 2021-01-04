@@ -54,10 +54,12 @@ namespace Banchou.Pawn {
 
     public class PawnsState {
         public Dictionary<PawnId, PawnState> States = new Dictionary<PawnId, PawnState>();
+        public float LastUpdated = 0f;
 
         public PawnsState() { }
         public PawnsState(in PawnsState prev) {
             States = prev.States;
+            LastUpdated = prev.LastUpdated;
         }
     }
 }

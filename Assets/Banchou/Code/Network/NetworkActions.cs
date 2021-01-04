@@ -1,6 +1,4 @@
 ﻿using System;
-using UnityEngine;
-using Redux;
 
 namespace Banchou.Network {
     namespace StateAction {
@@ -11,11 +9,13 @@ namespace Banchou.Network {
             public bool EnableRollback;
             public float RollbackHistoryDuration;
             public float RollbackDetectionThreshold;
+            public float When;
         }
 
         public struct SimulateLatency {
             public int SimulateMinLatency;
             public int SimulateMaxLatency;
+            public float When;
         }
 
         public struct NetworkAgentStarted {
@@ -26,10 +26,12 @@ namespace Banchou.Network {
         public struct ConnectedToServer {
             public Guid ClientNetworkId;
             public DateTime ServerTime;
+            public float When;
         }
 
         public struct ConnectedToClient {
             public Guid ClientNetworkId;
+            public float When;
         }
 
         public struct SyncGameState {
@@ -38,9 +40,9 @@ namespace Banchou.Network {
     }
 
     public class NetworkActions {
-        private GetServerTime _getTime;
+        private GetServerTime _getServerTime;
         public NetworkActions(GetServerTime getServerTime) {
-            _getTime = getServerTime;
+            _getServerTime = getServerTime;
         }
         public StateAction.SetNetworkMode SetMode(
             Mode mode,
@@ -48,22 +50,25 @@ namespace Banchou.Network {
             float rollbackHistoryDuration = 0.5f,
             float rollbackDetectionThreshold = 0.17f,
             int simulateMinLatency = 0,
-            int simulateMaxLatency = 0
+            int simulateMaxLatency = 0,
+            float? when = null
         ) => new StateAction.SetNetworkMode {
             Mode = mode,
             EnableRollback = enableRollback,
             RollbackHistoryDuration = rollbackHistoryDuration,
             RollbackDetectionThreshold = rollbackDetectionThreshold,
             SimulateMinLatency = simulateMinLatency,
-            SimulateMaxLatency = simulateMaxLatency
+            SimulateMaxLatency = simulateMaxLatency,
+            When = when ?? _getServerTime()
         };
-        public StateAction.SimulateLatency SimulateLatency(int min, int max) => new StateAction.SimulateLatency {
+        public StateAction.SimulateLatency SimulateLatency(int min, int max, float? when = null) => new StateAction.SimulateLatency {
             SimulateMinLatency = min,
-            SimulateMaxLatency = max
+            SimulateMaxLatency = max,
+            When = when ?? _getServerTime()
         };
-        public StateAction.NetworkAgentStarted Started(int peerId) => new StateAction.NetworkAgentStarted { PeerId = peerId, When = _getTime() };
-        public StateAction.ConnectedToServer ConnectedToServer(Guid clientNetworkid, DateTime serverTime) => new StateAction.ConnectedToServer { ClientNetworkId = clientNetworkid, ServerTime = serverTime };
-        public StateAction.ConnectedToClient ConnectedToClient(Guid clientNetworkId) => new StateAction.ConnectedToClient { ClientNetworkId = clientNetworkId };
+        public StateAction.NetworkAgentStarted Started(int peerId, float? when = null) => new StateAction.NetworkAgentStarted { PeerId = peerId, When = when ?? _getServerTime() };
+        public StateAction.ConnectedToServer ConnectedToServer(Guid clientNetworkid, DateTime serverTime, float? when = null) => new StateAction.ConnectedToServer { ClientNetworkId = clientNetworkid, ServerTime = serverTime, When = when ?? _getServerTime() };
+        public StateAction.ConnectedToClient ConnectedToClient(Guid clientNetworkId, float? when = null) => new StateAction.ConnectedToClient { ClientNetworkId = clientNetworkId, When = when ?? _getServerTime() };
         public StateAction.SyncGameState SyncGameState(GameState gameState) => new StateAction.SyncGameState { GameState = gameState };
     }
 }

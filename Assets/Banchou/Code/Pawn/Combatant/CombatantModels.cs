@@ -57,9 +57,11 @@ namespace Banchou.Combatant {
 
     public class CombatantsState {
         public Dictionary<PawnId, CombatantState> States = new Dictionary<PawnId, CombatantState>();
+        public float LastUpdated = 0f;
         public CombatantsState() { }
         public CombatantsState(in CombatantsState prev) {
             States = prev.States;
+            LastUpdated = prev.LastUpdated;
         }
     }
 }

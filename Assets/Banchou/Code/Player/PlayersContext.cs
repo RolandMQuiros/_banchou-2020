@@ -2,12 +2,17 @@
 using UnityEngine;
 
 using Banchou.DependencyInjection;
+using Banchou.Network;
 
 namespace Banchou.Player {
     public class PlayersContext : MonoBehaviour, IContext {
         private PlayerFactory _playerFactory = null;
-        private PlayersActions _playerActions = new PlayersActions();
+        private PlayersActions _playerActions = null;
         private PlayerInputStreams _playerInputStreams = new PlayerInputStreams();
+
+        public void Construct(GetServerTime getServerTime) {
+            _playerActions = new PlayersActions(getServerTime);
+        }
 
         public void InstallBindings(DiContainer container) {
             container.Bind<IPlayerInstances>(_playerFactory);

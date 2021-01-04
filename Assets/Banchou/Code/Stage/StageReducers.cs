@@ -9,7 +9,8 @@ namespace Banchou.Stage {
                     loading.Add(add.Scene);
                     return new StageState(prev) {
                         LatestScene = add.Scene,
-                        LoadingScenes = loading
+                        LoadingScenes = loading,
+                        LastUpdated = add.When
                     };
                 }
             }
@@ -22,7 +23,8 @@ namespace Banchou.Stage {
                     return new StageState(prev) {
                         LatestScene = set.Scene,
                         LoadingScenes = loading,
-                        LoadedScenes = new HashSet<string>()
+                        LoadedScenes = new HashSet<string>(),
+                        LastUpdated = set.When
                     };
                 }
             }
@@ -36,7 +38,8 @@ namespace Banchou.Stage {
 
                 return new StageState(prev) {
                     LoadedScenes = loaded,
-                    LoadingScenes = loading
+                    LoadingScenes = loading,
+                    LastUpdated = done.When
                 };
             }
 

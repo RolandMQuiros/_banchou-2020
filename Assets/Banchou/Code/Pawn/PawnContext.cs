@@ -6,7 +6,6 @@ using UnityEngine;
 using UnityEngine.AI;
 using UniRx;
 
-using Banchou.Board;
 using Banchou.DependencyInjection;
 using Banchou.Network;
 using Banchou.Pawn.Part;
@@ -21,6 +20,7 @@ namespace Banchou.Pawn {
         [Header("Binding overrides")]
         [SerializeField] private Animator _animator = null;
         [SerializeField] private Rigidbody _rigidbody = null;
+        [SerializeField] private CharacterController _controller = null;
         [SerializeField] private Part.Orientation _orientation = null;
         [SerializeField] private NavMeshAgent _agent = null;
         [SerializeField] private Part.Rewind _rewind = null;
@@ -55,17 +55,19 @@ namespace Banchou.Pawn {
             Dispatcher dispatch,
             GetState getState,
             IObservable<GameState> observeState,
-            PlayerInputStreams playerInput
+            PlayerInputStreams playerInput,
+            GetServerTime getServerTime
         ) {
             PawnId = pawnId;
             _dispatch = dispatch;
             _getState = getState;
             _observeState = observeState;
-            _pawnActions = new PawnActions(PawnId);
+            _pawnActions = new PawnActions(PawnId, getServerTime);
             _playerInput = playerInput;
 
             _animator = _animator == null ? GetComponentInChildren<Animator>(true) : _animator;
             _rigidbody =  _rigidbody == null ? GetComponentInChildren<Rigidbody>(true) : _rigidbody;
+            _controller = _controller == null ? GetComponentInChildren<CharacterController>(true) : _controller;
             _orientation = _orientation == null ? GetComponentInChildren<Part.Orientation>(true) : _orientation;
             _agent = _agent == null ? GetComponentInChildren<NavMeshAgent>(true) : _agent;
             _motor = _motor == null ? GetComponentInChildren<Part.IMotor>(true) : _motor;
@@ -84,6 +86,7 @@ namespace Banchou.Pawn {
             container.Bind<IPawnInstance>(this);
             container.Bind<Animator>(_animator);
             container.Bind<Rigidbody>(_rigidbody);
+            container.Bind<CharacterController>(_controller);
             container.Bind<Part.Orientation>(_orientation);
             container.Bind<NavMeshAgent>(_agent);
             container.Bind<Part.IMotor>(_motor);

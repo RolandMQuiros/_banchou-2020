@@ -11,27 +11,13 @@ namespace Banchou.Board {
             }
 
             if (action is StateAction.SyncBoard syncBoard) {
-                return syncBoard.Board;
+                return new BoardState(syncBoard.Board) {
+                    LastUpdated = syncBoard.When
+                };
             }
 
             if (action is StateAction.RollbackBoard rollback && network.IsRollbackEnabled) {
-                return new BoardState(prev) {
-                    Pawns = rollback.Board.Pawns,
-                    Mobs = rollback.Board.Mobs,
-                    Combatants = rollback.Board.Combatants
-                };
-            }
-
-            if (action is StateAction.ResimulateBoard && network.IsRollbackEnabled) {
-                return new BoardState(prev) {
-                    RollbackPhase = RollbackPhase.Resimulate
-                };
-            }
-
-            if (action is StateAction.CompleteBoardRollback && network.IsRollbackEnabled) {
-                return new BoardState(prev) {
-                    RollbackPhase = RollbackPhase.Complete
-                };
+                return rollback.Board;
             }
 
             var next = new BoardState(prev);
@@ -39,6 +25,15 @@ namespace Banchou.Board {
                 prev.Pawns != (next.Pawns = PawnsReducers.Reduce(prev.Pawns, action)) ||
                 prev.Mobs != (next.Mobs = MobsReducers.Reduce(prev.Mobs, action)) ||
                 prev.Combatants != (next.Combatants = CombatantsReducers.Reduce(prev.Combatants, action));
+            if (didChange) {
+                if (prev.Pawns != next.Pawns) {
+                    next.LastUpdated = next.Pawns.LastUpdated;
+                } else if (prev.Mobs != next.Mobs) {
+                    next.LastUpdated = next.Mobs.LastUpdated;
+                } else if (prev.Combatants != next.Combatants) {
+                    next.LastUpdated = next.Combatants.LastUpdated;
+                }
+            }
 
             return didChange ? next : prev;
         }
