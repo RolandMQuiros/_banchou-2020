@@ -1,8 +1,6 @@
 ﻿using System;
 
 using UnityEngine;
-
-using Banchou.Board;
 using Banchou.DependencyInjection;
 using Banchou.Network.Message;
 
@@ -32,12 +30,11 @@ namespace Banchou.Network {
                 container.Bind<IObservable<SyncPawn>>(_agent?.PulledPawnSync);
                 container.Bind<PushPawnSync>(_agent.PushPawnSync);
                 container.Bind<GetServerTime>(GetServerTime);
-                container.Bind<GetRollbackPhase>(() => _rollback.Phase);
+                container.Bind<IRollbackEvents>(_rollback);
             } else {
                 float getLocalTime() { return Time.fixedUnscaledTime; }
                 container.Bind<NetworkActions>(new NetworkActions(getLocalTime));
                 container.Bind<GetServerTime>(getLocalTime);
-                container.Bind<GetRollbackPhase>(() => RollbackPhase.Complete);
             }
         }
     }

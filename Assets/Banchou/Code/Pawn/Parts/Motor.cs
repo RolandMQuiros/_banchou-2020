@@ -6,6 +6,7 @@ namespace Banchou.Pawn.Part {
         void Teleport(Vector3 position);
         void Move(Vector3 velocity);
         void Clear();
+        void Apply();
         Vector3 Project(Vector3 velocity);
     }
 }

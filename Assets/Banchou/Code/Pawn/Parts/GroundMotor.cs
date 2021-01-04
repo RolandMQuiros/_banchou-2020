@@ -50,10 +50,7 @@ namespace Banchou.Pawn.Part {
         }
 
         private void FixedUpdate() {
-            var newPosition = _rigidbody.position + _velocity;
-            _rigidbody.MovePosition(newPosition);
-            _velocity = Vector3.zero;
-            _contacts.Clear();
+            Apply();
         }
 
         #endregion
@@ -68,6 +65,13 @@ namespace Banchou.Pawn.Part {
 
         public void Clear() {
             _velocity = Vector3.zero;
+        }
+
+        public void Apply() {
+             var newPosition = _rigidbody.position + _velocity;
+            _rigidbody.MovePosition(newPosition);
+            _velocity = Vector3.zero;
+            _contacts.Clear();
         }
 
         public Vector3 Project(Vector3 velocity) {

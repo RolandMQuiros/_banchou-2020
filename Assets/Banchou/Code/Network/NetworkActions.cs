@@ -45,7 +45,7 @@ namespace Banchou.Network {
         public StateAction.SetNetworkMode SetMode(
             Mode mode,
             bool enableRollback = true,
-            float rollbackHistoryDuration = 1f,
+            float rollbackHistoryDuration = 0.5f,
             float rollbackDetectionThreshold = 0.17f,
             int simulateMinLatency = 0,
             int simulateMaxLatency = 0

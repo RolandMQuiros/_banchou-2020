@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 using UniRx;
 using UniRx.Triggers;
 using UnityEngine;
 
-using Banchou.Player;
 using Banchou.Network;
 
 namespace Banchou.Pawn.Part {
@@ -23,16 +21,12 @@ namespace Banchou.Pawn.Part {
         }
 
         public void Construct(
+            IRollbackEvents rollback,
             GetServerTime getServerTime,
-            GetRollbackPhase getRollbackPhase,
             Animator animator,
-            PawnId pawnId,
-            IPawnInstance pawn,
             IMotor motor,
             Orientation orientation,
-            IObservable<GameState> observeState,
-            GetState getState,
-            PlayerInputStreams playerInput
+            GetState getState
         ) {
             List<int> GetParameterKeys(AnimatorControllerParameterType parameterType) {
                 return animator.parameters
@@ -44,17 +38,6 @@ namespace Banchou.Pawn.Part {
             var intKeys = GetParameterKeys(AnimatorControllerParameterType.Int);
             var boolKeys = GetParameterKeys(AnimatorControllerParameterType.Bool);
             var triggerKeys = GetParameterKeys(AnimatorControllerParameterType.Trigger);
-
-            var movesAndCommands = playerInput
-                .Where(unit => unit.Type != InputUnitType.Look);
-
-            // TODO: Add redux state changes to this. Need a timestamp on Pawn
-            // Pretend this was the idea the whole time
-            var rollbackInputs = playerInput
-                .Where(_ => getState().IsRollbackEnabled() && getRollbackPhase() == RollbackPhase.Complete)
-                .Where(unit => unit.Type != InputUnitType.Look)
-                .Where(unit => unit.When < getServerTime() - getState().GetRollbackDetectionThreshold())
-                .BatchFrame(0, FrameCountType.FixedUpdate);
 
             // Record Animator's state every frame
             var history = new LinkedList<HistoryStep>();
@@ -78,12 +61,13 @@ namespace Banchou.Pawn.Part {
 
             // Populate history list every frame
             this.FixedUpdateAsObservable()
-                .Select(xform => RecordStep(getServerTime()))
+                .Select(_ => getServerTime())
+                .Select(when => RecordStep(when))
                 .Subscribe(step => {
                     var window = getServerTime() - getState().GetRollbackHistoryDuration();
 
                     // Remove old frames
-                    while (history.Count > 0 && history.First.Value.When < window) {
+                    while (history.Count > 1 && history.First.Value.When < window) {
                         history.RemoveFirst();
                     }
 
@@ -91,21 +75,12 @@ namespace Banchou.Pawn.Part {
                 })
                 .AddTo(this);
 
-            this.FixedUpdateAsObservable()
-                .Where(_ => getRollbackPhase() == RollbackPhase.Resimulate)
-                .Subscribe(_ => {
-                    Debug.Log($"Resimulate Fixed Update call, dt: {Time.fixedUnscaledDeltaTime}");
-                })
-                .AddTo(this);
-
             // Handle rollbacks
-            rollbackInputs
-                .Subscribe(units => {
-                    var deltaTime = Time.fixedUnscaledDeltaTime;
-                    var now = getServerTime();
-                    var correctionTime = units.Min(unit => unit.When);
-
-                    Debug.Log($"Rewinding animator from {now} to {correctionTime}");
+            rollback.OnResimulationStart
+                .Subscribe(unit => {
+                    var deltaTime = unit.DeltaTime;
+                    var now = unit.When;
+                    var correctionTime = unit.CorrectionTime;
 
                     // Find the last recorded frame before the input's timestamp, while removing future frames
                     var frame = history.Last.Value;
@@ -145,10 +120,30 @@ namespace Banchou.Pawn.Part {
                     foreach (var param in triggerKeys) {
                         animator.ResetTrigger(param);
                     }
-                    animator.enabled = true;
 
-                    // Rollback will take it from here
+                    _gizmoFastForwardStart = history.Last;
                 })
+                .AddTo(this);
+
+            rollback.BeforeResimulateStep
+                .CatchIgnoreLog()
+                .Subscribe(unit => {
+                    animator.Update(unit.DeltaTime);
+                    motor.Apply();
+                })
+                .AddTo(this);
+
+            rollback.AfterResimulateStep
+                .CatchIgnoreLog()
+                .Subscribe(unit => {
+                    history.AddLast(RecordStep(unit.CorrectionTime));
+                    _gizmoFastForwardEnd = history.Last;
+                })
+                .AddTo(this);
+
+            rollback.OnResimulationEnd
+                .CatchIgnoreLog()
+                .Subscribe(_ => { animator.enabled = true; })
                 .AddTo(this);
         }
 

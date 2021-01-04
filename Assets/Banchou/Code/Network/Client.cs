@@ -72,18 +72,6 @@ namespace Banchou.Network {
                             // Ping compensation happens on the server, and we only need a frame of reference
                             _lastLocalTime = response.ClientTime;
                             _lastServerTime = response.ServerTime;
-
-                            Debug.Log(
-                                "Time Request Response\n" +
-                                $"\tPing: {fromPeer.Ping}\n" +
-                                $"\tTime at request: {_timeRequestTime}\n" +
-                                $"\tTime at response: {Time.fixedUnscaledTime}\n" +
-                                $"\tResponse time: {Time.fixedUnscaledTime - _timeRequestTime}\n" +
-                                $"\t_lastLocalTime: {_lastLocalTime}\n" +
-                                $"\t_lastServerTime: {_lastServerTime}\n" +
-                                $"\t_lastServerTime - _lastLocalTime = {_lastServerTime - _lastLocalTime} ~ Ping / 2\n" +
-                                $"\t_lastServerTime - response time / 2 = {_lastServerTime - ((Time.fixedUnscaledTime - _timeRequestTime) / 2f)} ~ {_timeRequestTime}?"
-                            );
                         }
                     } break;
                     case PayloadType.SyncClient: {
@@ -134,6 +122,7 @@ namespace Banchou.Network {
                 observeLocalPlayers
                     .SelectMany(
                         localPlayers => playerInput
+                            .Where(unit => unit.Type != InputUnitType.Look)
                             .Where(unit => localPlayers.Contains(unit.PlayerId))
                     )
                     .CatchIgnoreLog()

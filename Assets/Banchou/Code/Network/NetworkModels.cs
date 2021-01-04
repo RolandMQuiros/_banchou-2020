@@ -49,5 +49,6 @@ namespace Banchou.Network {
     }
 
     public delegate float GetServerTime();
-    public delegate RollbackPhase GetRollbackPhase();
+    public delegate IObservable<float> ObserveBeforeResimulation();
+    public delegate IObservable<float> ObserveAfterResimulation();
 }

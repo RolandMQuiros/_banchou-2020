@@ -46,7 +46,6 @@ namespace Banchou.Pawn {
 
         private Dispatcher _dispatch;
         private GetState _getState;
-        private GetRollbackPhase _getRollbackPhase;
         private PawnActions _pawnActions;
         private IObservable<GameState> _observeState;
         private PlayerInputStreams _playerInput;
@@ -55,14 +54,12 @@ namespace Banchou.Pawn {
             PawnId pawnId,
             Dispatcher dispatch,
             GetState getState,
-            GetRollbackPhase getRollbackPhase,
             IObservable<GameState> observeState,
             PlayerInputStreams playerInput
         ) {
             PawnId = pawnId;
             _dispatch = dispatch;
             _getState = getState;
-            _getRollbackPhase = getRollbackPhase;
             _observeState = observeState;
             _pawnActions = new PawnActions(PawnId);
             _playerInput = playerInput;
