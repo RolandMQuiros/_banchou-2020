@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 
 using MessagePack;
@@ -34,6 +33,31 @@ namespace Banchou.Pawn {
         #endregion
     }
 
+    [MessagePackObject]
+    public struct PawnFrameData {
+        [Key(0)] public PawnId PawnId;
+        [Key(1)] public List<int> StateHashes;
+        [Key(2)] public List<float> NormalizedTimes;
+        [Key(3)] public Dictionary<int, float> Floats;
+        [Key(4)] public Dictionary<int, bool> Bools;
+        [Key(5)] public Dictionary<int, int> Ints;
+        [Key(6)] public Vector3 Position;
+        [Key(7)] public Vector3 Forward;
+        [Key(8)] public float When;
+
+        public PawnFrameData(in PawnFrameData prev) {
+            PawnId = prev.PawnId;
+            StateHashes = prev.StateHashes;
+            NormalizedTimes = prev.NormalizedTimes;
+            Floats = prev.Floats;
+            Bools = prev.Bools;
+            Ints = prev.Ints;
+            Position = prev.Position;
+            Forward = prev.Forward;
+            When = prev.When;
+        }
+    }
+
     public class PawnState {
         public PlayerId PlayerId;
         public string PrefabKey = string.Empty;
@@ -54,12 +78,14 @@ namespace Banchou.Pawn {
 
     public class PawnsState {
         public Dictionary<PawnId, PawnState> States = new Dictionary<PawnId, PawnState>();
+        public PawnFrameData? LatestPawnSyncFrame = null;
         public float LastUpdated = 0f;
 
         public PawnsState() { }
         public PawnsState(in PawnsState prev) {
             States = prev.States;
             LastUpdated = prev.LastUpdated;
+            LatestPawnSyncFrame = prev.LatestPawnSyncFrame;
         }
     }
 }

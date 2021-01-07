@@ -9,16 +9,17 @@ using Redux;
 using UniRx;
 using UnityEngine;
 
-using Banchou.Network.Message;
+using Banchou.Board;
 using Banchou.Player;
 
 namespace Banchou.Network {
     public class NetworkAgent : MonoBehaviour, INetLogger {
-        public IObservable<SyncPawn> PulledPawnSync => _pulledPawnSync;
+        public Rollback Rollback => _rollback;
+
         private IDisposable _agent;
         private NetworkClient _client;
         private NetworkServer _server;
-        private Subject<SyncPawn> _pulledPawnSync = new Subject<SyncPawn>();
+        private Rollback _rollback;
 
         public void Construct(
             IObservable<GameState> observeState,
@@ -26,7 +27,9 @@ namespace Banchou.Network {
             Dispatcher dispatch,
             PlayersActions playerActions,
             NetworkActions networkActions,
-            PlayerInputStreams playerInput
+            BoardActions boardActions,
+            PlayerInputStreams playerInput,
+            GetServerTime getServerTime
         ) {
             NetDebug.Logger = this;
             var messagePackOptions = MessagePackSerializerOptions
@@ -47,18 +50,18 @@ namespace Banchou.Network {
                 .StartWith(Mode.Local)
                 .DistinctUntilChanged()
                 .Subscribe(mode => {
-                    if (mode != Mode.Local && _agent != null) {
-                        _agent.Dispose();
+                    if (mode != Mode.Local) {
+                        _agent?.Dispose();
+                        _rollback?.Dispose();
                     }
 
                     switch (mode) {
                         case Mode.Client:
                             _client = new NetworkClient(
                                 observeState,
+                                playerInput,
                                 dispatch,
                                 networkActions,
-                                playerInput,
-                                sync => _pulledPawnSync.OnNext(sync),
                                 jsonSerializer,
                                 messagePackOptions
                             ).Start(
@@ -67,6 +70,15 @@ namespace Banchou.Network {
                                 timeInterval: Observable.Interval(TimeSpan.FromSeconds(5))
                             );
                             _agent = _client;
+                            _rollback = new Rollback(
+                                observeState,
+                                _client.ObserveRemoteActions,
+                                _client.ObserveRemoteInput,
+                                dispatch,
+                                getServerTime,
+                                playerInput,
+                                boardActions
+                            );
                             break;
                         case Mode.Server:
                             _server = new NetworkServer(
@@ -80,6 +92,15 @@ namespace Banchou.Network {
                                 messagePackOptions
                             ).Start(Observable.EveryFixedUpdate());
                             _agent = _server;
+                            _rollback = new Rollback(
+                                observeState,
+                                Observable.Empty<RemoteAction>(),
+                                _server.ObserveRemoteInput,
+                                dispatch,
+                                getServerTime,
+                                playerInput,
+                                boardActions
+                            );
                             break;
                     }
                 }).AddTo(this);
@@ -87,10 +108,6 @@ namespace Banchou.Network {
 
         public void OnDestroy() {
             _agent?.Dispose();
-        }
-
-        public void PushPawnSync(SyncPawn syncPawn) {
-            _server?.SyncPawn(syncPawn);
         }
 
         public float GetTime() {

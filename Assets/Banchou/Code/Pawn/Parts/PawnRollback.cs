@@ -1,32 +1,31 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
+using Redux;
 using UniRx;
 using UniRx.Triggers;
 using UnityEngine;
 
+using Banchou.Board;
 using Banchou.Network;
 
 namespace Banchou.Pawn.Part {
-    public class Rewind : MonoBehaviour {
-        private struct HistoryStep {
-            public List<int> StateHashes;
-            public List<float> NormalizedTimes;
-            public Dictionary<int, float> Floats;
-            public Dictionary<int, bool> Bools;
-            public Dictionary<int, int> Ints;
-            public Vector3 Position;
-            public Vector3 Forward;
-            public float When;
-        }
+    public class PawnRollback : MonoBehaviour {
+        [SerializeField, Tooltip("Server only. Amount of time, in seconds, between sending synchronization messages to clients")]
+        private float _syncInterval = 5f;
 
         public void Construct(
+            PawnId pawnId,
             IRollbackEvents rollback,
             GetServerTime getServerTime,
             Animator animator,
             IMotor motor,
             Orientation orientation,
-            GetState getState
+            IObservable<GameState> observeState,
+            GetState getState,
+            Dispatcher dispatch,
+            BoardActions boardActions
         ) {
             List<int> GetParameterKeys(AnimatorControllerParameterType parameterType) {
                 return animator.parameters
@@ -40,10 +39,11 @@ namespace Banchou.Pawn.Part {
             var triggerKeys = GetParameterKeys(AnimatorControllerParameterType.Trigger);
 
             // Record Animator's state every frame
-            var history = new LinkedList<HistoryStep>();
+            var history = new LinkedList<PawnFrameData>();
             _gizmoFrames = history;
-            HistoryStep RecordStep(float when) {
-                return new HistoryStep {
+            PawnFrameData RecordStep(float when) {
+                return new PawnFrameData {
+                    PawnId = pawnId,
                     StateHashes = Enumerable.Range(0, animator.layerCount)
                         .Select(layer => animator.GetCurrentAnimatorStateInfo(layer).fullPathHash)
                         .ToList(),
@@ -57,6 +57,38 @@ namespace Banchou.Pawn.Part {
                     Forward = orientation.transform.forward,
                     When = when,
                 };
+            }
+
+            void SetAnimatorFrame(in PawnFrameData frame) {
+                // Set transform
+                motor.Clear();
+                motor.Teleport(frame.Position);
+                orientation.TrackForward(frame.Forward);
+
+                // Set animator states
+                animator.enabled = false;
+
+                for (int layer = 0; layer < animator.layerCount; layer++) {
+                    animator.Play(frame.StateHashes[layer], layer, frame.NormalizedTimes[layer]);
+                }
+
+                // Set animator parameters
+                foreach (var param in frame.Floats) {
+                    animator.SetFloat(param.Key, param.Value);
+                }
+
+                foreach (var param in frame.Ints) {
+                    animator.SetInteger(param.Key, param.Value);
+                }
+
+                foreach (var param in frame.Bools) {
+                    animator.SetBool(param.Key, param.Value);
+                }
+
+                // Reset triggers
+                foreach (var param in triggerKeys) {
+                    animator.ResetTrigger(param);
+                }
             }
 
             // Populate history list every frame
@@ -76,14 +108,15 @@ namespace Banchou.Pawn.Part {
                 .AddTo(this);
 
             // Handle rollbacks
-            rollback.OnResimulationStart
+            rollback
+                .OnResimulationStart
                 .Subscribe(unit => {
                     var deltaTime = unit.DeltaTime;
                     var now = unit.When;
                     var correctionTime = unit.CorrectionTime;
 
                     // Find the last recorded frame before the input's timestamp, while removing future frames
-                    var frame = history.Last.Previous.Value;
+                    var frame = history.Last.Value;
                     while (correctionTime < history.Last.Value.When) {
                         history.RemoveLast();
                         // Go back one additional frame, since we need to run animators at least once before they accept inputs
@@ -91,37 +124,7 @@ namespace Banchou.Pawn.Part {
                     }
 
                     _gizmoStep = frame;
-
-                    // Set transform
-                    motor.Clear();
-                    motor.Teleport(frame.Position);
-                    orientation.TrackForward(frame.Forward);
-
-                    // Set animator states
-                    animator.enabled = false;
-
-                    for (int layer = 0; layer < animator.layerCount; layer++) {
-                        animator.Play(frame.StateHashes[layer], layer, frame.NormalizedTimes[layer]);
-                    }
-
-                    // Set animator parameters
-                    foreach (var param in frame.Floats) {
-                        animator.SetFloat(param.Key, param.Value);
-                    }
-
-                    foreach (var param in frame.Ints) {
-                        animator.SetInteger(param.Key, param.Value);
-                    }
-
-                    foreach (var param in frame.Bools) {
-                        animator.SetBool(param.Key, param.Value);
-                    }
-
-                    // Reset triggers
-                    foreach (var param in triggerKeys) {
-                        animator.ResetTrigger(param);
-                    }
-
+                    SetAnimatorFrame(frame);
                     _gizmoFastForwardStart = history.Last;
                 })
                 .AddTo(this);
@@ -146,12 +149,23 @@ namespace Banchou.Pawn.Part {
                 .CatchIgnoreLog()
                 .Subscribe(_ => { animator.enabled = true; })
                 .AddTo(this);
+
+            // Send pawn syncs
+            Observable.Interval(TimeSpan.FromSeconds(_syncInterval))
+                .ThrottleFrame(0, FrameCountType.FixedUpdate)
+                .CatchIgnore()
+                .Subscribe(_ => {
+                    dispatch(
+                        boardActions.SyncPawn(RecordStep(getServerTime()))
+                    );
+                })
+                .AddTo(this);
         }
 
-        private LinkedList<HistoryStep> _gizmoFrames;
-        private LinkedListNode<HistoryStep> _gizmoFastForwardStart;
-        private LinkedListNode<HistoryStep> _gizmoFastForwardEnd;
-        private HistoryStep _gizmoStep;
+        private LinkedList<PawnFrameData> _gizmoFrames;
+        private LinkedListNode<PawnFrameData> _gizmoFastForwardStart;
+        private LinkedListNode<PawnFrameData> _gizmoFastForwardEnd;
+        private PawnFrameData _gizmoStep;
 
         private void OnDrawGizmos() {
             if (_gizmoFrames != null && _gizmoFrames.Count > 0) {

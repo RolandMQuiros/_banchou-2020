@@ -23,7 +23,7 @@ namespace Banchou.Pawn {
         [SerializeField] private CharacterController _controller = null;
         [SerializeField] private Part.Orientation _orientation = null;
         [SerializeField] private NavMeshAgent _agent = null;
-        [SerializeField] private Part.Rewind _rewind = null;
+        [SerializeField] private Part.PawnRollback _pawnRollback = null;
         private IMotor _motor = null;
 
         #region IPawnInstance
@@ -71,7 +71,7 @@ namespace Banchou.Pawn {
             _orientation = _orientation == null ? GetComponentInChildren<Part.Orientation>(true) : _orientation;
             _agent = _agent == null ? GetComponentInChildren<NavMeshAgent>(true) : _agent;
             _motor = _motor == null ? GetComponentInChildren<Part.IMotor>(true) : _motor;
-            _rewind = _rewind == null ? GetComponentInChildren<Part.Rewind>(true) : _rewind;
+            _pawnRollback = _pawnRollback == null ? GetComponentInChildren<Part.PawnRollback>(true) : _pawnRollback;
 
             if (_agent != null) {
                 _agent.updatePosition = false;
@@ -90,7 +90,7 @@ namespace Banchou.Pawn {
             container.Bind<Part.Orientation>(_orientation);
             container.Bind<NavMeshAgent>(_agent);
             container.Bind<Part.IMotor>(_motor);
-            container.Bind<Part.Rewind>(_rewind);
+            container.Bind<Part.PawnRollback>(_pawnRollback);
             container.Bind<PawnActions>(_pawnActions);
 
             // Short-circuit dispatcher for client facade pawns

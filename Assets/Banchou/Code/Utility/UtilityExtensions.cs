@@ -37,7 +37,7 @@ namespace Banchou {
                 .Where(_ => component.isActiveAndEnabled);
         }
 
-        public static IObservable<T> OnActive<T>(this MonoBehaviour component, IObservable<T> source) {
+        public static IObservable<T> WhenBehaviourActive<T>(this IObservable<T> source, MonoBehaviour component) {
             return component.EnabledAsObservable()
                 .Merge(component.OnDisableAsObservable())
                 .Where(_ => component.isActiveAndEnabled)

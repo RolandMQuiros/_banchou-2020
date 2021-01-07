@@ -13,6 +13,7 @@ using Redux;
 using UnityEngine;
 using UniRx;
 
+using Banchou.Board;
 using Banchou.Player;
 using Banchou.Network.Message;
 
@@ -20,25 +21,29 @@ using Banchou.Network.Message;
 
 namespace Banchou.Network {
     public class NetworkClient : IDisposable {
+        public IObservable<InputUnit> ObserveRemoteInput { get; private set; }
+        public IObservable<RemoteAction> ObserveRemoteActions { get; private set; }
+
         private MessagePackSerializerOptions _messagePackOptions;
         private EventBasedNetListener _listener;
         private NetManager _client;
         private NetPeer _peer;
 
         private float Now => Time.fixedUnscaledTime;
+
         private float _lastServerTime = 0f;
         private float _lastLocalTime = 0f;
 
         private float _timeRequestTime = 0f;
 
-        private CompositeDisposable _subscriptions = new CompositeDisposable();
+        private CompositeDisposable _subscriptions;
 
         public NetworkClient(
             IObservable<GameState> observeState,
+            IObservable<InputUnit> observeLocalInput,
+
             Dispatcher dispatch,
             NetworkActions networkActions,
-            PlayerInputStreams playerInput,
-            Action<SyncPawn> pullPawnSync,
             JsonSerializer jsonSerializer,
             MessagePackSerializerOptions messagePackOptions
         ) {
@@ -46,25 +51,47 @@ namespace Banchou.Network {
             _listener = new EventBasedNetListener();
             _client = new NetManager(_listener);
 
-            _subscriptions.Add(
-                observeState
-                    .Select(state => state.GetSimulatedLatency())
-                    .DistinctUntilChanged()
-                    .CatchIgnoreLog()
-                    .Subscribe(latency => {
-                        _client.SimulateLatency = latency.Min != 0 || latency.Max != 0;
-                        _client.SimulationMinLatency = latency.Min;
-                        _client.SimulationMaxLatency = latency.Max;
-                    })
-            );
+            var remoteInputs = new Subject<InputUnit>();
+            var remoteActions = new Subject<RemoteAction>();
 
-            // Receiving data from server
+            ObserveRemoteInput = remoteInputs;
+            ObserveRemoteActions = remoteActions;
+
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
-                // Calculate when the event was sent
+                // Open envelope
                 var envelope = MessagePackSerializer.Deserialize<Envelope>(dataReader.GetRemainingBytes(), messagePackOptions);
+                dataReader.Recycle();
 
-                // Using the type flag, check what we need to deserialize message into
+                // Deserialize payload
                 switch (envelope.PayloadType) {
+                    case PayloadType.SyncClient: {
+                        var syncClient = MessagePackSerializer.Deserialize<SyncClient>(envelope.Payload, messagePackOptions);
+                        var bsonStream = new MemoryStream(syncClient.GameStateBytes);
+                        using (var reader = new BsonReader(bsonStream)) {
+                            var gameState = jsonSerializer.Deserialize<GameState>(reader);
+                            _lastLocalTime = syncClient.ClientTime;
+                            _lastServerTime = syncClient.ServerTime;
+
+                            dispatch(networkActions.SyncGameState(gameState));
+                            dispatch(networkActions.ConnectedToClient(syncClient.ClientNetworkId, GetTime()));
+                        }
+                    } break;
+                    case PayloadType.PlayerInput: {
+                        var inputUnit = MessagePackSerializer.Deserialize<InputUnit>(envelope.Payload, messagePackOptions);
+                        remoteInputs.OnNext(inputUnit);
+                    } break;
+                    case PayloadType.ReduxAction: {
+                        var reduxAction = MessagePackSerializer.Deserialize<ReduxAction>(envelope.Payload, messagePackOptions);
+                        var bsonStream = new MemoryStream(reduxAction.ActionBytes);
+                        using (var reader = new BsonReader(bsonStream)) {
+                            remoteActions.OnNext(
+                                new RemoteAction {
+                                    Action = jsonSerializer.Deserialize(reader),
+                                    When = reduxAction.When
+                                }
+                            );
+                        }
+                    } break;
                     case PayloadType.ServerTimeResponse: {
                         var response = MessagePackSerializer.Deserialize<ServerTimeResponse>(envelope.Payload, messagePackOptions);
                         // Requests are sent using unreliable delivery, so we should only care about the responses to the latest request
@@ -74,37 +101,7 @@ namespace Banchou.Network {
                             _lastServerTime = response.ServerTime;
                         }
                     } break;
-                    case PayloadType.SyncClient: {
-                        var syncClient = MessagePackSerializer.Deserialize<SyncClient>(envelope.Payload, messagePackOptions);
-                        var bsonStream = new MemoryStream(syncClient.GameStateBytes);
-                        using (var reader = new BsonReader(bsonStream)) {
-                            var gameState = jsonSerializer.Deserialize<GameState>(reader);
-                            dispatch(networkActions.SyncGameState(gameState));
-                            dispatch(networkActions.ConnectedToServer(syncClient.ClientNetworkId, DateTime.Now));
-
-                            _lastLocalTime = syncClient.ClientTime;
-                            _lastServerTime = syncClient.ServerTime;
-                        }
-                    } break;
-                    case PayloadType.ReduxAction: {
-                        var reduxAction = MessagePackSerializer.Deserialize<ReduxAction>(envelope.Payload, messagePackOptions);
-                        var bsonStream = new MemoryStream(reduxAction.ActionBytes);
-                        using (var reader = new BsonReader(bsonStream)) {
-                            var action = jsonSerializer.Deserialize(reader);
-                            dispatch(action);
-                        }
-                    } break;
-                    case PayloadType.SyncPawn:
-                        var pawnSync = MessagePackSerializer.Deserialize<SyncPawn>(envelope.Payload, messagePackOptions);
-                        pullPawnSync(pawnSync);
-                    break;
-                    case PayloadType.PlayerInput: {
-                        var inputUnit = MessagePackSerializer.Deserialize<InputUnit>(envelope.Payload, messagePackOptions);
-                        playerInput.Push(inputUnit);
-                    } break;
                 }
-
-                dataReader.Recycle();
             };
 
             var observeLocalPlayers = observeState
@@ -117,11 +114,21 @@ namespace Banchou.Network {
                     )
                 );
 
-            // Transmit input
-            _subscriptions.Add(
+            _subscriptions = new CompositeDisposable(
+                // Handle ping
+                observeState
+                    .Select(state => state.GetSimulatedLatency())
+                    .DistinctUntilChanged()
+                    .CatchIgnoreLog()
+                    .Subscribe(latency => {
+                        _client.SimulateLatency = latency.Min != 0 || latency.Max != 0;
+                        _client.SimulationMinLatency = latency.Min;
+                        _client.SimulationMaxLatency = latency.Max;
+                    }),
+                // Transmit input
                 observeLocalPlayers
                     .SelectMany(
-                        localPlayers => playerInput
+                        localPlayers => observeLocalInput
                             .Where(unit => unit.Type != InputUnitType.Look)
                             .Where(unit => localPlayers.Contains(unit.PlayerId))
                     )

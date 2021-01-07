@@ -52,6 +52,17 @@ namespace Banchou.Network {
         }
     }
 
+    public struct RemoteAction {
+        public object Action;
+        public float When;
+    }
+
+    public struct ClientConnection {
+        public Guid ClientNetworkId;
+        public GameState State;
+        public float When;
+    }
+
     public delegate float GetServerTime();
     public delegate IObservable<float> ObserveBeforeResimulation();
     public delegate IObservable<float> ObserveAfterResimulation();

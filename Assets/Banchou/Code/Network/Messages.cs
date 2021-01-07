@@ -1,9 +1,5 @@
 ﻿using System;
-using UnityEngine;
-
 using MessagePack;
-using Banchou.Player;
-using Banchou.Pawn;
 
 namespace Banchou.Network.Message {
     public enum PayloadType : byte {
@@ -11,7 +7,7 @@ namespace Banchou.Network.Message {
         ReduxAction,
         SyncClient,
         PlayerInput,
-        SyncPawn,
+        SyncPawn, // Associated with PawnFrameData
         ServerTimeRequest,
         ServerTimeResponse
     }
@@ -41,6 +37,7 @@ namespace Banchou.Network.Message {
     [MessagePackObject]
     public struct ReduxAction {
         [Key(0)] public byte[] ActionBytes;
+        [Key(1)] public float When;
     }
 
     [MessagePackObject]
@@ -49,14 +46,6 @@ namespace Banchou.Network.Message {
         [Key(1)] public byte[] GameStateBytes;
         [Key(2)] public float ClientTime;
         [Key(3)] public float ServerTime;
-    }
-
-    [MessagePackObject]
-    public struct SyncPawn {
-        [Key(0)] public PawnId PawnId;
-        [Key(1)] public Vector3 Position;
-        [Key(2)] public Vector3 Forward;
-        [Key(3)] public float When;
     }
 
     // https://gamedev.stackexchange.com/questions/93477/how-to-keep-server-client-clocks-in-sync-for-precision-networked-games-like-quak
@@ -70,7 +59,4 @@ namespace Banchou.Network.Message {
         [Key(0)] public float ClientTime;
         [Key(1)] public float ServerTime;
     }
-
-    public delegate void PullPawnSync(SyncPawn syncPawn);
-    public delegate void PushPawnSync(SyncPawn syncPawn);
 }

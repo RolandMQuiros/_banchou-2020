@@ -5,7 +5,7 @@ using Banchou.Network;
 
 namespace Banchou.Pawn.Part {
     [RequireComponent(typeof(Rigidbody))]
-    public class GroundMotor : MonoBehaviour, IMotor {
+    public class RigidbodyGroundMotor : MonoBehaviour, IMotor {
         [SerializeField] private LayerMask _terrainMask;
         public Vector3 TargetPosition => _rigidbody.position + _velocity;
 

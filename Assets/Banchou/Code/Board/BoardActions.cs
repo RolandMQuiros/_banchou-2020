@@ -33,6 +33,11 @@ namespace Banchou.Board {
         public struct RollbackBoard {
             public BoardState Board;
         }
+
+        public struct SyncPawn {
+            public PawnFrameData Frame;
+            public float When;
+        }
     }
 
     public class BoardActions {
@@ -94,5 +99,6 @@ namespace Banchou.Board {
         public StateAction.ClearPawns ClearPawns(float? when = null) => new StateAction.ClearPawns { When = when ?? _getServerTime() };
         public StateAction.SyncBoard Sync(BoardState board, float? when = null) => new StateAction.SyncBoard { Board = board, When = when ?? _getServerTime() };
         public StateAction.RollbackBoard Rollback(BoardState board) => new StateAction.RollbackBoard { Board = board };
+        public StateAction.SyncPawn SyncPawn(PawnFrameData frame, float? when = null) => new StateAction.SyncPawn { Frame = frame, When = when ?? _getServerTime() };
     }
 }

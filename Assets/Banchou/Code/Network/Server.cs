@@ -14,18 +14,21 @@ using UnityEngine;
 using Banchou.Player;
 using Banchou.Network.Message;
 
+using Stopwatch = System.Diagnostics.Stopwatch;
+
 #pragma warning disable 0618
 
 namespace Banchou.Network {
     public class NetworkServer : IDisposable {
+        public IObservable<InputUnit> ObserveRemoteInput { get; private set; }
+
         private Guid _networkId;
         private Dispatcher _dispatch;
-        private NetworkActions _networkActions;
         private MessagePackSerializerOptions _messagePackOptions;
         private EventBasedNetListener _listener;
         private NetManager _server;
         private Dictionary<Guid, NetPeer> _peers;
-        private CompositeDisposable _subscriptions = new CompositeDisposable();
+        private CompositeDisposable _subscriptions;
 
         public NetworkServer(
             Guid networkId,
@@ -33,7 +36,7 @@ namespace Banchou.Network {
             GetState getState,
             Dispatcher dispatch,
             NetworkActions networkActions,
-            PlayerInputStreams playerInput,
+            IObservable<InputUnit> localInput,
             JsonSerializer jsonSerializer,
             MessagePackSerializerOptions messagePackOptions
         ) {
@@ -43,21 +46,11 @@ namespace Banchou.Network {
             _peers = new Dictionary<Guid, NetPeer>();
             _messagePackOptions = messagePackOptions;
             _dispatch = dispatch;
-            _networkActions = networkActions;
 
-            _subscriptions.Add(
-                onStateUpdate
-                    .Select(state => state.GetSimulatedLatency())
-                    .DistinctUntilChanged()
-                    .CatchIgnoreLog()
-                    .Subscribe(latency => {
-                        _server.SimulateLatency = latency.Min != 0 || latency.Max != 0;
-                        _server.SimulationMinLatency = latency.Min;
-                        _server.SimulationMaxLatency = latency.Max;
-                    })
-            );
-
+            var remoteInput = new Subject<InputUnit>();
             var clients = new Dictionary<IPEndPoint, ConnectClient>();
+
+            ObserveRemoteInput = remoteInput;
 
             float When(float ping) {
                 return Snapping.Snap(GetTime() - (ping / 1000f), Time.fixedUnscaledDeltaTime);
@@ -109,6 +102,7 @@ namespace Banchou.Network {
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
                 // Open envelope
                 var envelope = MessagePackSerializer.Deserialize<Envelope>(dataReader.GetRemainingBytes(), _messagePackOptions);
+                dataReader.Recycle();
 
                 // Deserialize payload
                 switch (envelope.PayloadType) {
@@ -126,16 +120,23 @@ namespace Banchou.Network {
                     } break;
                     case PayloadType.PlayerInput: {
                         var inputUnit = MessagePackSerializer.Deserialize<InputUnit>(envelope.Payload, _messagePackOptions);
-                        playerInput.Push(inputUnit);
+                        remoteInput.OnNext(inputUnit);
                     } break;
                 }
-
-                dataReader.Recycle();
             };
 
             // Send input to all peers, provided they're not the source
-            _subscriptions.Add(
-                playerInput
+            _subscriptions = new CompositeDisposable(
+                onStateUpdate
+                    .Select(state => state.GetSimulatedLatency())
+                    .DistinctUntilChanged()
+                    .CatchIgnoreLog()
+                    .Subscribe(latency => {
+                        _server.SimulateLatency = latency.Min != 0 || latency.Max != 0;
+                        _server.SimulationMinLatency = latency.Min;
+                        _server.SimulationMaxLatency = latency.Max;
+                    }),
+                localInput
                     .DistinctUntilChanged()
                     .CatchIgnoreLog()
                     .Subscribe(unit => {
@@ -156,18 +157,6 @@ namespace Banchou.Network {
 
             _instances[networkId] = this;
             Debug.Log($"Network server constructed");
-        }
-
-        public void SyncPawn(SyncPawn syncPawn) {
-            var syncPawnMessage = Envelope.CreateMessage(
-                PayloadType.SyncPawn,
-                syncPawn,
-                _messagePackOptions
-            );
-
-            foreach (var peer in _peers.Values) {
-                peer.Send(syncPawnMessage, DeliveryMethod.Sequenced);
-            }
         }
 
         public float GetTime() {
@@ -196,6 +185,8 @@ namespace Banchou.Network {
 
         #region Redux Middleware
         private static Dictionary<Guid, NetworkServer> _instances = new Dictionary<Guid, NetworkServer>();
+        private static Stopwatch _serializationPerf = new Stopwatch();
+
         public static Middleware<TState> Install<TState>(JsonSerializer jsonSerializer, MessagePackSerializerOptions messagePackOptions) {
             return store => next => action => {
                 NetworkServer server;
@@ -205,6 +196,8 @@ namespace Banchou.Network {
                     foreach (var peer in server._peers.Values) {
                         // If the envelope hasn't been built, build it
                         if (actionBytes == null) {
+                            _serializationPerf.Restart();
+
                             // Convert action to BSON
                             var actionStream = new MemoryStream();
                             using (var writer = new BsonWriter(actionStream)) {
@@ -219,6 +212,9 @@ namespace Banchou.Network {
                                 },
                                 messagePackOptions
                             );
+
+                            _serializationPerf.Stop();
+                            UnityEngine.Debug.Log($"{action.GetType().Name} serialized to {actionBytes.Length} bytes in {_serializationPerf.ElapsedMilliseconds} ms");
                         }
 
                         // Send bytestream to peer

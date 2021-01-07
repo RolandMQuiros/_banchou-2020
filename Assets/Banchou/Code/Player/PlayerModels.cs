@@ -72,7 +72,7 @@ namespace Banchou.Player {
         [Key(2)] public InputCommand Command;
         [Key(3)] public Vector3 Direction;
         [Key(4)] public float When;
-        public Vector2 Look => new Vector2(Direction.x, Direction.y);
+        [IgnoreMember] public Vector2 Look => new Vector2(Direction.x, Direction.y);
 
         public InputUnit(in InputUnit prev) {
             Type = prev.Type;

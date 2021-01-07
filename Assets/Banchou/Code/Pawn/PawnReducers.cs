@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
+using Banchou.Network;
 using Banchou.Player;
 
 namespace Banchou.Pawn {
     public static class PawnsReducers {
-        public static PawnsState Reduce(in PawnsState prev, in object action) {
+        public static PawnsState Reduce(in PawnsState prev, in NetworkState network, in object action) {
             if (action is Board.StateAction.AddPawn add) {
                 PawnState pawn;
                 if (!prev.States.TryGetValue(add.PawnId, out pawn)) {
@@ -74,6 +75,13 @@ namespace Banchou.Pawn {
                 return new PawnsState(prev) {
                     States = next,
                     LastUpdated = detach.When
+                };
+            }
+
+            if (action is Board.StateAction.SyncPawn syncPawn && network.Mode == Mode.Client) {
+                return new PawnsState(prev) {
+                    LatestPawnSyncFrame = syncPawn.Frame,
+                    LastUpdated = syncPawn.When
                 };
             }
 

@@ -2,12 +2,10 @@
 
 using UnityEngine;
 using Banchou.DependencyInjection;
-using Banchou.Network.Message;
 
 namespace Banchou.Network {
     public class NetworkContext : MonoBehaviour, IContext {
         private NetworkAgent _agent = null;
-        private Rollback _rollback = null;
         private GetState _getState;
 
         public void Construct(GetState getState) {
@@ -15,22 +13,18 @@ namespace Banchou.Network {
         }
 
         private float GetServerTime() {
-            if (_rollback.Phase == RollbackPhase.Resimulate) {
-                return _rollback.CorrectionTime;
+            if (_agent.Rollback.Phase == RollbackPhase.Resimulate) {
+                return _agent.Rollback.CorrectionTime;
             }
             return _agent.GetTime();
         }
 
         public void InstallBindings(DiContainer container) {
             _agent = _agent ?? GetComponentInChildren<NetworkAgent>();
-            _rollback = _rollback ?? GetComponentInChildren<Rollback>();
-
-            if (_agent != null && _rollback != null) {
+            if (_agent != null) {
                 container.Bind<NetworkActions>(new NetworkActions(_agent.GetTime));
-                container.Bind<IObservable<SyncPawn>>(_agent?.PulledPawnSync);
-                container.Bind<PushPawnSync>(_agent.PushPawnSync);
                 container.Bind<GetServerTime>(GetServerTime);
-                container.Bind<IRollbackEvents>(_rollback);
+                container.Bind<IRollbackEvents>(_agent.Rollback);
             } else {
                 float getLocalTime() { return Time.fixedUnscaledTime; }
                 container.Bind<NetworkActions>(new NetworkActions(getLocalTime));

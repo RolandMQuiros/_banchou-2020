@@ -22,7 +22,7 @@ namespace Banchou.Board {
 
             var next = new BoardState(prev);
             var didChange =
-                prev.Pawns != (next.Pawns = PawnsReducers.Reduce(prev.Pawns, action)) ||
+                prev.Pawns != (next.Pawns = PawnsReducers.Reduce(prev.Pawns, network, action)) ||
                 prev.Mobs != (next.Mobs = MobsReducers.Reduce(prev.Mobs, action)) ||
                 prev.Combatants != (next.Combatants = CombatantsReducers.Reduce(prev.Combatants, action));
             if (didChange) {
