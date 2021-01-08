@@ -89,7 +89,6 @@ namespace Banchou.Network {
             var rollbackInputs = rollbackSettings
                 .Where(state => state.IsEnabled)
                 .SelectMany(state => observeRemoteInput
-                    .Do(input => Debug.Log($"Input received at {getServerTime()} with timestamp {input.When}, diff: {getServerTime() - input.When}"))
                     .Where(_ => history.Count > 0)
                     .Where(input => WithinRollbackThresholds(input.When, state.Thresholds))
                 )
@@ -137,6 +136,7 @@ namespace Banchou.Network {
                     }),
                 // Handle rollbacks
                 rollbacks
+                    .Do(unit => Debug.Log($"Rollback unit at {unit.When}"))
                     .CatchIgnoreLog()
                     .Subscribe(unit => {
                         var now = getServerTime();
@@ -162,11 +162,14 @@ namespace Banchou.Network {
                             _beforeResimulate.OnNext(unit);
                             // Physics.Simulate(deltaTime);
                             _afterResimulate.OnNext(unit);
-                            unit.CorrectionTime += CorrectionTime += deltaTime;
+                            CorrectionTime += deltaTime;
+                            unit.CorrectionTime = CorrectionTime;
                         }
+
                         _onResimulationStart.OnNext(unit);
 
                         // Run one frame so the animators can process inputs
+                        Phase = RollbackPhase.Resimulate;
                         ResimulateStep();
 
                         // Dispatch deferred action

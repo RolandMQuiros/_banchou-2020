@@ -44,6 +44,34 @@ namespace Banchou {
                 .SelectMany(_ => source);
         }
 
+        public static void UseFrame(this Animator animator, in Pawn.PawnFrameData frame) {
+            for (int layer = 0; layer < animator.layerCount; layer++) {
+                animator.Play(frame.StateHashes[layer], layer, frame.NormalizedTimes[layer]);
+            }
+
+            // Set animator parameters
+            foreach (var param in frame.Floats) {
+                animator.SetFloat(param.Key, param.Value);
+            }
+
+            foreach (var param in frame.Ints) {
+                animator.SetInteger(param.Key, param.Value);
+            }
+
+            foreach (var param in frame.Bools) {
+                animator.SetBool(param.Key, param.Value);
+            }
+
+            var triggerKeys = animator.parameters
+                .Where(p => p.type == AnimatorControllerParameterType.Trigger)
+                .Select(p => p.nameHash);
+
+            // Reset triggers
+            foreach (var param in triggerKeys) {
+                animator.ResetTrigger(param);
+            }
+        }
+
         public static byte[] ToByteArray<T>(this T obj) where T : struct {
             var size = Marshal.SizeOf(obj);
             var arr = new byte[size];

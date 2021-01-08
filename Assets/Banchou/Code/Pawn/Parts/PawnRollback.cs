@@ -36,7 +36,6 @@ namespace Banchou.Pawn.Part {
             var floatKeys = GetParameterKeys(AnimatorControllerParameterType.Float);
             var intKeys = GetParameterKeys(AnimatorControllerParameterType.Int);
             var boolKeys = GetParameterKeys(AnimatorControllerParameterType.Bool);
-            var triggerKeys = GetParameterKeys(AnimatorControllerParameterType.Trigger);
 
             // Record Animator's state every frame
             var history = new LinkedList<PawnFrameData>();
@@ -67,34 +66,12 @@ namespace Banchou.Pawn.Part {
 
                 // Set animator states
                 animator.enabled = false;
-
-                for (int layer = 0; layer < animator.layerCount; layer++) {
-                    animator.Play(frame.StateHashes[layer], layer, frame.NormalizedTimes[layer]);
-                }
-
-                // Set animator parameters
-                foreach (var param in frame.Floats) {
-                    animator.SetFloat(param.Key, param.Value);
-                }
-
-                foreach (var param in frame.Ints) {
-                    animator.SetInteger(param.Key, param.Value);
-                }
-
-                foreach (var param in frame.Bools) {
-                    animator.SetBool(param.Key, param.Value);
-                }
-
-                // Reset triggers
-                foreach (var param in triggerKeys) {
-                    animator.ResetTrigger(param);
-                }
+                animator.UseFrame(frame);
             }
 
             // Populate history list every frame
             this.FixedUpdateAsObservable()
-                .Select(_ => getServerTime())
-                .Select(when => RecordStep(when))
+                .Select(_ => RecordStep(getServerTime()))
                 .Subscribe(step => {
                     var window = getServerTime() - getState().GetRollbackHistoryDuration();
 
@@ -119,9 +96,10 @@ namespace Banchou.Pawn.Part {
                     var frame = history.Last.Value;
                     while (correctionTime < history.Last.Value.When) {
                         history.RemoveLast();
-                        // Go back one additional frame, since we need to run animators at least once before they accept inputs
-                        frame = history.Last.Previous.Value;
+                        frame = history.Last.Value;
                     }
+
+                    Debug.Log($"Rolling back to frame at {frame.When}, at {getServerTime()}");
 
                     _gizmoStep = frame;
                     SetAnimatorFrame(frame);
@@ -147,7 +125,9 @@ namespace Banchou.Pawn.Part {
 
             rollback.OnResimulationEnd
                 .CatchIgnoreLog()
-                .Subscribe(_ => { animator.enabled = true; })
+                .Subscribe(_ => {
+                    animator.enabled = true;
+                })
                 .AddTo(this);
 
             // Send pawn syncs

@@ -219,7 +219,6 @@ namespace Banchou.Network {
                             );
 
                             _serializationPerf.Stop();
-                            UnityEngine.Debug.Log($"{action.GetType().Name} serialized to {actionBytes.Length} bytes in {_serializationPerf.ElapsedMilliseconds} ms");
                         }
 
                         // Send bytestream to peer

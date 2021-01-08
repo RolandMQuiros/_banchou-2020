@@ -79,9 +79,10 @@ namespace Banchou.Prototype {
             SceneManager.LoadScene("BanchouBoard");
             _dispatch(_networkActions.SetMode(
                 Mode.Server,
-                enableRollback: RollbackEnabled,
                 simulateMinLatency: MinPing,
-                simulateMaxLatency: MaxPing
+                simulateMaxLatency: MaxPing,
+                enableRollback: RollbackEnabled,
+                rollbackDetectionMaxThreshold: 0.5f
             ));
 
             var playerId = _getState().NextPlayerId();
