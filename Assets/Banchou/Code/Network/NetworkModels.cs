@@ -27,8 +27,10 @@ namespace Banchou.Network {
         public int SimulateMaxLatency = 0;
 
         public bool IsRollbackEnabled = true;
+        public bool IsPhysicsRollbackEnabled = true;
         public float RollbackHistoryDuration = 1f;
-        public float RollbackDetectionThreshold = 0.2f;
+        public float RollbackDetectionMinThreshold = 0.017f;
+        public float RollbackDetectionMaxThreshold = 0.17f;
 
         public float LastUpdated = 0f;
 
@@ -45,8 +47,10 @@ namespace Banchou.Network {
             SimulateMaxLatency = prev.SimulateMaxLatency;
 
             IsRollbackEnabled = prev.IsRollbackEnabled;
+            IsPhysicsRollbackEnabled = prev.IsPhysicsRollbackEnabled;
             RollbackHistoryDuration = prev.RollbackHistoryDuration;
-            RollbackDetectionThreshold = prev.RollbackDetectionThreshold;
+            RollbackDetectionMinThreshold = prev.RollbackDetectionMinThreshold;
+            RollbackDetectionMaxThreshold = prev.RollbackDetectionMaxThreshold;
 
             LastUpdated = prev.LastUpdated;
         }

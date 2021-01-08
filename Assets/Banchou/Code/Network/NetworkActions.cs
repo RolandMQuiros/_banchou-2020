@@ -7,8 +7,10 @@ namespace Banchou.Network {
             public int SimulateMinLatency;
             public int SimulateMaxLatency;
             public bool EnableRollback;
+            public bool EnablePhysicsRollback;
             public float RollbackHistoryDuration;
-            public float RollbackDetectionThreshold;
+            public float RollbackDetectionMinThreshold;
+            public float RollbackDetectionMaxThreshold;
             public float When;
         }
 
@@ -29,6 +31,7 @@ namespace Banchou.Network {
             public float When;
         }
 
+        [LocalAction]
         public struct ConnectedToClient {
             public Guid ClientNetworkId;
             public float When;
@@ -46,19 +49,23 @@ namespace Banchou.Network {
         }
         public StateAction.SetNetworkMode SetMode(
             Mode mode,
-            bool enableRollback = true,
-            float rollbackHistoryDuration = 0.5f,
-            float rollbackDetectionThreshold = 0.17f,
             int simulateMinLatency = 0,
             int simulateMaxLatency = 0,
+            bool enableRollback = true,
+            bool enablePhysicsRollback = true,
+            float rollbackHistoryDuration = 0.5f,
+            float rollbackDetectionMinThreshold = 0.017f,
+            float rollbackDetectionMaxThreshold = 0.17f,
             float? when = null
         ) => new StateAction.SetNetworkMode {
             Mode = mode,
-            EnableRollback = enableRollback,
-            RollbackHistoryDuration = rollbackHistoryDuration,
-            RollbackDetectionThreshold = rollbackDetectionThreshold,
             SimulateMinLatency = simulateMinLatency,
             SimulateMaxLatency = simulateMaxLatency,
+            EnableRollback = enableRollback,
+            EnablePhysicsRollback = enablePhysicsRollback,
+            RollbackHistoryDuration = rollbackHistoryDuration,
+            RollbackDetectionMinThreshold = rollbackDetectionMinThreshold,
+            RollbackDetectionMaxThreshold = rollbackDetectionMaxThreshold,
             When = when ?? _getServerTime()
         };
         public StateAction.SimulateLatency SimulateLatency(int min, int max, float? when = null) => new StateAction.SimulateLatency {

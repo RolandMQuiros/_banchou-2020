@@ -129,7 +129,8 @@ namespace Banchou.Network {
                 observeLocalPlayers
                     .SelectMany(
                         localPlayers => observeLocalInput
-                            .Where(unit => unit.Type != InputUnitType.Look)
+                            .ObserveCommands()
+                            .Merge(observeLocalInput.ObserveMoves())
                             .Where(unit => localPlayers.Contains(unit.PlayerId))
                     )
                     .CatchIgnoreLog()

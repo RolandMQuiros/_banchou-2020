@@ -60,7 +60,8 @@ namespace Banchou.Player {
         }
 
         public static IObservable<InputUnit> ObserveMoves(this IObservable<InputUnit> source) {
-            return source.Where(unit => unit.Type == InputUnitType.Movement);
+            return source.Where(unit => unit.Type == InputUnitType.Movement)
+                .DistinctUntilChanged();
         }
 
         public static IObservable<InputUnit> ObserveMoves(this IObservable<InputUnit> source, PlayerId playerId) {
@@ -68,7 +69,8 @@ namespace Banchou.Player {
         }
 
         public static IObservable<InputUnit> ObserveLook(this IObservable<InputUnit> source) {
-            return source.Where(unit => unit.Type == InputUnitType.Look);
+            return source.Where(unit => unit.Type == InputUnitType.Look)
+                .DistinctUntilChanged();
         }
 
         public static IObservable<InputUnit> ObserveLook(this IObservable<InputUnit> source, PlayerId playerId) {

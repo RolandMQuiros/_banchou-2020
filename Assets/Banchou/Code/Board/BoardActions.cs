@@ -30,6 +30,7 @@ namespace Banchou.Board {
             public float When;
         }
 
+        [LocalAction]
         public struct RollbackBoard {
             public BoardState Board;
         }

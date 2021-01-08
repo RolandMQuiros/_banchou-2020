@@ -51,8 +51,8 @@ namespace Banchou.Network {
             return state.Network.RollbackHistoryDuration;
         }
 
-        public static float GetRollbackDetectionThreshold(this GameState state) {
-            return state.Network.RollbackDetectionThreshold;
+        public static (float Min, float Max) GetRollbackDetectionThresholds(this GameState state) {
+            return (Min: state.Network.RollbackDetectionMinThreshold, Max: state.Network.RollbackDetectionMaxThreshold);
         }
     }
 }

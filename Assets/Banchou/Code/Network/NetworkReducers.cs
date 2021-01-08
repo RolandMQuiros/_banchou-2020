@@ -12,7 +12,7 @@ namespace Banchou.Network {
                     SimulateMaxLatency = setMode.Mode != Mode.Local ? setMode.SimulateMaxLatency : 0,
                     IsRollbackEnabled = setMode.Mode != Mode.Local && setMode.EnableRollback,
                     RollbackHistoryDuration = setMode.RollbackHistoryDuration,
-                    RollbackDetectionThreshold = setMode.RollbackDetectionThreshold,
+                    RollbackDetectionMaxThreshold = setMode.RollbackDetectionMaxThreshold,
                     LastUpdated = setMode.When
                 };
             }

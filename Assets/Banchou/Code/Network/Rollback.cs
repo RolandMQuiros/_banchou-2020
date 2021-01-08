@@ -43,13 +43,18 @@ namespace Banchou.Network {
             PlayerInputStreams playerInput,
             BoardActions boardActions
         ) {
+            bool WithinRollbackThresholds(float when, in (float Min, float Max) thresholds) {
+                var delay = getServerTime() - when;
+                return delay >= thresholds.Min && delay < thresholds.Max;
+            }
+
             var history = new LinkedList<HistoryStep>();
             var deltaTime = Time.fixedUnscaledDeltaTime; // Find out where the target framerate is
 
             var rollbackSettings = observeState
                 .Select(state => (
                     IsEnabled: state.IsRollbackEnabled(),
-                    Threshold: state.GetRollbackDetectionThreshold()
+                    Thresholds: state.GetRollbackDetectionThresholds()
                 ))
                 .DistinctUntilChanged();
 
@@ -59,7 +64,7 @@ namespace Banchou.Network {
                 .SelectMany(
                     state => observeRemoteActions
                         .Where(_ => history.Count > 0)
-                        .Where(action => getServerTime() - action.When > state.Threshold)
+                        .Where(action => WithinRollbackThresholds(action.When, state.Thresholds))
                 )
                 .Select(
                     remoteAction => new RollbackUnit {
@@ -76,15 +81,17 @@ namespace Banchou.Network {
                     state => observeRemoteActions
                         .Where(action => !state.IsEnabled ||
                             history.Count <= 0 ||
-                            getServerTime() - action.When <= state.Threshold)
+                            !WithinRollbackThresholds(action.When, state.Thresholds)
+                        )
                 );
 
             // Find inputs that incur rollbacks
             var rollbackInputs = rollbackSettings
                 .Where(state => state.IsEnabled)
                 .SelectMany(state => observeRemoteInput
+                    .Do(input => Debug.Log($"Input received at {getServerTime()} with timestamp {input.When}, diff: {getServerTime() - input.When}"))
                     .Where(_ => history.Count > 0)
-                    .Where(unit => getServerTime() - unit.When < state.Threshold)
+                    .Where(input => WithinRollbackThresholds(input.When, state.Thresholds))
                 )
                 .Where(_ => Phase == RollbackPhase.Complete)
                 .BatchFrame(0, FrameCountType.FixedUpdate)
@@ -100,9 +107,8 @@ namespace Banchou.Network {
                 .SelectMany(state => observeRemoteInput
                     .Where(unit => !state.IsEnabled ||
                         history.Count <= 0 ||
-                        getServerTime() - unit.When >= state.Threshold)
-                )
-                .Do(unit => Debug.Log($"Passthrough input: {unit.Direction}"));
+                        !WithinRollbackThresholds(unit.When, state.Thresholds))
+                );
 
             // All rollback events
             var rollbacks = rollbackActions.Merge(rollbackInputs);
@@ -113,13 +119,12 @@ namespace Banchou.Network {
                     .Select(state => (
                         IsEnabled: state.IsRollbackEnabled(),
                         LastUpdated: state.GetBoardLastUpdated(),
-                        Threshold: state.GetRollbackDetectionThreshold(),
+                        Thresholds: state.GetRollbackDetectionThresholds(),
                         HistoryDuration: state.GetRollbackHistoryDuration(),
                         Board: state.GetBoard()
                     ))
                     .DistinctUntilChanged()
                     .Where(state => state.IsEnabled)
-                    .Where(state => getServerTime() - state.LastUpdated <= state.Threshold)
                     .Subscribe(args => {
                         while (history.Count > 1 && history.First.Value.When < getServerTime() - args.HistoryDuration) {
                             history.RemoveFirst();

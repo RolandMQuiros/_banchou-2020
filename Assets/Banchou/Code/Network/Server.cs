@@ -36,7 +36,7 @@ namespace Banchou.Network {
             GetState getState,
             Dispatcher dispatch,
             NetworkActions networkActions,
-            IObservable<InputUnit> localInput,
+            IObservable<InputUnit> observeLocalInput,
             JsonSerializer jsonSerializer,
             MessagePackSerializerOptions messagePackOptions
         ) {
@@ -136,8 +136,9 @@ namespace Banchou.Network {
                         _server.SimulationMinLatency = latency.Min;
                         _server.SimulationMaxLatency = latency.Max;
                     }),
-                localInput
-                    .DistinctUntilChanged()
+                observeLocalInput
+                    .ObserveCommands()
+                    .Merge(observeLocalInput.ObserveMoves())
                     .CatchIgnoreLog()
                     .Subscribe(unit => {
                         foreach (var peer in _peers) {
@@ -190,7 +191,11 @@ namespace Banchou.Network {
         public static Middleware<TState> Install<TState>(JsonSerializer jsonSerializer, MessagePackSerializerOptions messagePackOptions) {
             return store => next => action => {
                 NetworkServer server;
-                if (store.GetState() is GameState state && state.IsServer() && _instances.TryGetValue(state.GetNetworkId(), out server)) {
+                var state = store.GetState() as GameState;
+                var isServer = state != null && state.IsServer();
+                var isLocalAction = Attribute.GetCustomAttribute(action.GetType(), typeof(LocalActionAttribute)) != null;
+
+                if (isServer && !isLocalAction && _instances.TryGetValue(state.GetNetworkId(), out server)) {
                     byte[] actionBytes = null;
                     // Send the action to all peers
                     foreach (var peer in server._peers.Values) {

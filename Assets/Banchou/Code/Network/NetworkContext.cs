@@ -13,7 +13,7 @@ namespace Banchou.Network {
         }
 
         private float GetServerTime() {
-            if (_agent.Rollback.Phase == RollbackPhase.Resimulate) {
+            if (_agent.Rollback?.Phase == RollbackPhase.Resimulate) {
                 return _agent.Rollback.CorrectionTime;
             }
             return _agent.GetTime();
