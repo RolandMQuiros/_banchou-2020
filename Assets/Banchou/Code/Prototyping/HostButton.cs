@@ -90,7 +90,7 @@ namespace Banchou.Prototype {
 
             var pawnId = _getState().NextPawnId();
             _dispatch(_boardActions.AddPawn(pawnId, "Isaac", new Vector3(0f, 3f, 0f)));
-            _dispatch(_boardActions.AddPawn("Dumpster", new Vector3(10f, 3f, 5f)));
+            _dispatch(_boardActions.AddPawn("Dumpster", new Vector3(10f, 5f, 5f)));
 
             _dispatch(_playerActions.Attach(playerId, pawnId));
         }

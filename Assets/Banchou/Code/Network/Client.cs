@@ -73,7 +73,7 @@ namespace Banchou.Network {
                             _lastServerTime = syncClient.ServerTime;
 
                             dispatch(networkActions.SyncGameState(gameState));
-                            dispatch(networkActions.ConnectedToClient(syncClient.ClientNetworkId, GetTime()));
+                            dispatch(networkActions.ConnectedToServer(syncClient.ClientNetworkId, DateTime.Now));
                         }
                     } break;
                     case PayloadType.PlayerInput: {

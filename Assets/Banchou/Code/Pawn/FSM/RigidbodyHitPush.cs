@@ -10,16 +10,18 @@ namespace Banchou.Combatant.FSM {
         public void Construct(
             PawnId pawnId,
             IObservable<GameState> observeState,
-            Rigidbody body
+            Rigidbody body = null
         ) {
-            observeState
-                .Select(state => state.GetCombatantHitTaken(pawnId))
-                .DistinctUntilChanged()
-                .Where(_ => IsStateActive)
-                .Subscribe(hit => {
-                    body.AddForce(hit.Push, ForceMode.Force);
-                })
-                .AddTo(this);
+            if (body != null) {
+                observeState
+                    .Select(state => state.GetCombatantHitTaken(pawnId))
+                    .DistinctUntilChanged()
+                    .Where(_ => IsStateActive)
+                    .Subscribe(hit => {
+                        body.AddForce(hit.Push, ForceMode.Force);
+                    })
+                    .AddTo(this);
+            }
         }
     }
 }

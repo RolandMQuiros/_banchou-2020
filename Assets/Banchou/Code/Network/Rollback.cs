@@ -58,6 +58,7 @@ namespace Banchou.Network {
                 .Where(state => state.IsEnabled)
                 .SelectMany(
                     state => observeRemoteActions
+                        .Where(_ => history.Count > 0)
                         .Where(action => getServerTime() - action.When > state.Threshold)
                 )
                 .Select(
@@ -73,13 +74,16 @@ namespace Banchou.Network {
             var passthroughActions = rollbackSettings
                 .SelectMany(
                     state => observeRemoteActions
-                        .Where(action => !state.IsEnabled || getServerTime() - action.When <= state.Threshold)
+                        .Where(action => !state.IsEnabled ||
+                            history.Count <= 0 ||
+                            getServerTime() - action.When <= state.Threshold)
                 );
 
             // Find inputs that incur rollbacks
             var rollbackInputs = rollbackSettings
                 .Where(state => state.IsEnabled)
                 .SelectMany(state => observeRemoteInput
+                    .Where(_ => history.Count > 0)
                     .Where(unit => getServerTime() - unit.When < state.Threshold)
                 )
                 .Where(_ => Phase == RollbackPhase.Complete)
@@ -94,8 +98,11 @@ namespace Banchou.Network {
             // Inputs that don't require rollback
             var passthroughInputs = rollbackSettings
                 .SelectMany(state => observeRemoteInput
-                    .Where(unit => !state.IsEnabled || getServerTime() - unit.When >= state.Threshold)
-                );
+                    .Where(unit => !state.IsEnabled ||
+                        history.Count <= 0 ||
+                        getServerTime() - unit.When >= state.Threshold)
+                )
+                .Do(unit => Debug.Log($"Passthrough input: {unit.Direction}"));
 
             // All rollback events
             var rollbacks = rollbackActions.Merge(rollbackInputs);

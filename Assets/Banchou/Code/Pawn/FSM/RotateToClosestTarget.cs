@@ -31,7 +31,7 @@ namespace Banchou.Pawn.FSM {
             PawnId pawnId,
             IObservable<GameState> observeState,
             ObservePlayerMove observePlayerMove,
-            Rigidbody body,
+            IMotor motor,
             IPawnInstances pawnInstances,
             Orientation orientation = null
         ) {
@@ -53,7 +53,7 @@ namespace Banchou.Pawn.FSM {
                         .Where(
                             instance => {
                                 if (instance != null) {
-                                    var diff = instance.Position - body.transform.position;
+                                    var diff = instance.Position - motor.TargetPosition;
 
                                     Vector3 basis = Vector3.zero;
                                     switch (_guide) {
@@ -71,7 +71,7 @@ namespace Banchou.Pawn.FSM {
                                 return false;
                             }
                         )
-                        .OrderBy(t => (t.Position - body.transform.position).sqrMagnitude)
+                        .OrderBy(t => (t.Position - motor.TargetPosition).sqrMagnitude)
                         .FirstOrDefault()
                 );
 
@@ -82,8 +82,8 @@ namespace Banchou.Pawn.FSM {
                 .Where(target => target != null)
                 .Select(
                     t => Vector3.ProjectOnPlane(
-                        t.Position - body.transform.position,
-                        body.transform.up
+                        t.Position - motor.TargetPosition,
+                        orientation.transform.up
                     ).normalized
                 )
                 .CatchIgnoreLog()
