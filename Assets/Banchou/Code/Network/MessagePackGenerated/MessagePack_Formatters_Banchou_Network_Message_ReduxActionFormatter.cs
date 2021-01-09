@@ -27,8 +27,9 @@ namespace MessagePack.Formatters.Banchou.Network.Message
         public void Serialize(ref MessagePackWriter writer, global::Banchou.Network.Message.ReduxAction value, global::MessagePack.MessagePackSerializerOptions options)
         {
             IFormatterResolver formatterResolver = options.Resolver;
-            writer.WriteArrayHeader(1);
+            writer.WriteArrayHeader(2);
             formatterResolver.GetFormatterWithVerify<byte[]>().Serialize(ref writer, value.ActionBytes, options);
+            writer.Write(value.When);
         }
 
         public global::Banchou.Network.Message.ReduxAction Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
@@ -42,6 +43,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
             IFormatterResolver formatterResolver = options.Resolver;
             var length = reader.ReadArrayHeader();
             var __ActionBytes__ = default(byte[]);
+            var __When__ = default(float);
 
             for (int i = 0; i < length; i++)
             {
@@ -52,6 +54,9 @@ namespace MessagePack.Formatters.Banchou.Network.Message
                     case 0:
                         __ActionBytes__ = formatterResolver.GetFormatterWithVerify<byte[]>().Deserialize(ref reader, options);
                         break;
+                    case 1:
+                        __When__ = reader.ReadSingle();
+                        break;
                     default:
                         reader.Skip();
                         break;
@@ -60,6 +65,7 @@ namespace MessagePack.Formatters.Banchou.Network.Message
 
             var ____result = new global::Banchou.Network.Message.ReduxAction();
             ____result.ActionBytes = __ActionBytes__;
+            ____result.When = __When__;
             reader.Depth--;
             return ____result;
         }
