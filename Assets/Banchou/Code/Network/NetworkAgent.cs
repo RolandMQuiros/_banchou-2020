@@ -65,7 +65,7 @@ namespace Banchou.Network {
                                 jsonSerializer,
                                 messagePackOptions
                             ).Start(
-                                host: new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9050),
+                                host: getState().GetIP(),
                                 pollInterval: Observable.EveryFixedUpdate(),
                                 timeInterval: Observable.Interval(TimeSpan.FromSeconds(5))
                             );

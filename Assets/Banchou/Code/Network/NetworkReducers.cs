@@ -7,6 +7,7 @@ namespace Banchou.Network {
             if (action is StateAction.SetNetworkMode setMode) {
                 return new NetworkState {
                     Mode = setMode.Mode,
+                    IP = setMode.IP != null ? setMode.IP : prev.IP,
                     Id = setMode.Mode == Mode.Server ? Guid.NewGuid() : Guid.Empty,
                     SimulateMinLatency = setMode.Mode != Mode.Local ? setMode.SimulateMinLatency : 0,
                     SimulateMaxLatency = setMode.Mode != Mode.Local ? setMode.SimulateMaxLatency : 0,

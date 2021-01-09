@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Net;
 
 namespace Banchou.Network {
     namespace StateAction {
         public struct SetNetworkMode {
             public Mode Mode;
+            public IPEndPoint IP;
             public int SimulateMinLatency;
             public int SimulateMaxLatency;
             public bool EnableRollback;
@@ -49,6 +51,7 @@ namespace Banchou.Network {
         }
         public StateAction.SetNetworkMode SetMode(
             Mode mode,
+            IPEndPoint ip = null,
             int simulateMinLatency = 0,
             int simulateMaxLatency = 0,
             bool enableRollback = true,
@@ -59,6 +62,7 @@ namespace Banchou.Network {
             float? when = null
         ) => new StateAction.SetNetworkMode {
             Mode = mode,
+            IP = ip,
             SimulateMinLatency = simulateMinLatency,
             SimulateMaxLatency = simulateMaxLatency,
             EnableRollback = enableRollback,
