@@ -23,7 +23,7 @@ namespace Banchou.AI {
             CombatantActions combatantActions,
             IPawnInstances pawnInstances,
             PlayerInputStreams playerInput,
-            GetServerTime getServerTime
+            GetTime getTime
         ) {
             var trees = new List<IBehaviourTreeNode<GameState>>();
 
@@ -43,7 +43,7 @@ namespace Banchou.AI {
                                 if (state.GetCombatantLockOnTarget(pawnId) != PawnId.Empty) {
                                     return BehaviourTreeStatus.Success;
                                 } else {
-                                    playerInput.PushCommand(playerId, InputCommand.LockOn, getServerTime());
+                                    playerInput.PushCommand(playerId, InputCommand.LockOn, getTime());
                                     return BehaviourTreeStatus.Running;
                                 }
                             })
@@ -64,7 +64,7 @@ namespace Banchou.AI {
                             })
                             .Do("Poke", state => {
                                 if (!poked) {
-                                    playerInput.PushCommand(playerId, InputCommand.LightAttack, getServerTime());
+                                    playerInput.PushCommand(playerId, InputCommand.LightAttack, getTime());
                                     poked = true;
                                     return BehaviourTreeStatus.Running;
                                 }
@@ -91,7 +91,7 @@ namespace Banchou.AI {
                             })
                             .Do("Disengage", state => {
                                 if (state.GetCombatantLockOnTarget(pawn.PawnId) != PawnId.Empty) {
-                                    playerInput.PushCommand(playerId, InputCommand.LockOff, getServerTime());
+                                    playerInput.PushCommand(playerId, InputCommand.LockOff, getTime());
                                     return BehaviourTreeStatus.Running;
                                 }
                                 poked = false;

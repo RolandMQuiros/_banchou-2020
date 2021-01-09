@@ -12,8 +12,6 @@ using Banchou.Pawn.Part;
 using Banchou.Player;
 
 namespace Banchou.Pawn {
-    public delegate float GetDeltaTime();
-
     public class PawnContext : MonoBehaviour, IContext, IPawnInstance {
         [SerializeField] private string _pawnId = string.Empty;
 
@@ -56,13 +54,13 @@ namespace Banchou.Pawn {
             GetState getState,
             IObservable<GameState> observeState,
             PlayerInputStreams playerInput,
-            GetServerTime getServerTime
+            GetTime getTime
         ) {
             PawnId = pawnId;
             _dispatch = dispatch;
             _getState = getState;
             _observeState = observeState;
-            _pawnActions = new PawnActions(PawnId, getServerTime);
+            _pawnActions = new PawnActions(PawnId, getTime);
             _playerInput = playerInput;
 
             _animator = _animator == null ? GetComponentInChildren<Animator>(true) : _animator;

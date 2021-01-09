@@ -46,23 +46,23 @@ namespace Banchou.Mob {
     }
 
     public class MobActions {
-        private GetServerTime _getServerTime;
+        private GetTime _getTime;
 
-        public MobActions(GetServerTime getServerTime) {
-            _getServerTime = getServerTime;
+        public MobActions(GetTime getTime) {
+            _getTime = getTime;
         }
 
         public StateAction.AddMob Add(PawnId pawnId, float? when = null) {
             return new StateAction.AddMob {
                 PawnId = pawnId,
-                When = when ?? _getServerTime()
+                When = when ?? _getTime()
             };
         }
 
         public StateAction.RemoveMob Remove(PawnId pawnId, float? when = null) {
             return new StateAction.RemoveMob {
                 PawnId = pawnId,
-                When = when ?? _getServerTime()
+                When = when ?? _getTime()
             };
         }
 
@@ -71,7 +71,7 @@ namespace Banchou.Mob {
                 PawnId = pawnId,
                 TargetId = targetId,
                 StoppingDistance = stoppingDistance,
-                When = when ?? _getServerTime()
+                When = when ?? _getTime()
             };
         }
 
@@ -79,21 +79,21 @@ namespace Banchou.Mob {
             return new StateAction.MobApproachPosition {
                 PawnId = pawnId,
                 Position = position,
-                When = when ?? _getServerTime()
+                When = when ?? _getTime()
             };
         }
 
         public StateAction.MobApproachInterrupted ApproachInterrupted(PawnId pawnId, float? when = null) {
             return new StateAction.MobApproachInterrupted {
                 PawnId = pawnId,
-                When = when ?? _getServerTime()
+                When = when ?? _getTime()
             };
         }
 
         public StateAction.MobApproachCompleted ApproachCompleted(PawnId pawnId, float? when = null) {
             return new StateAction.MobApproachCompleted {
                 PawnId = pawnId,
-                When = when ?? _getServerTime()
+                When = when ?? _getTime()
             };
         }
     }

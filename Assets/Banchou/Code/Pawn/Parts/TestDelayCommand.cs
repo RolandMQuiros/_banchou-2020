@@ -13,14 +13,14 @@ public class TestDelayCommand : MonoBehaviour
     private PlayerInputStreams _playerInput;
 
     // Start is called before the first frame update
-    public void Construct(GetState getState, PlayerInputStreams playerInput, PawnId pawnId, GetServerTime getServerTime) {
+    public void Construct(GetState getState, PlayerInputStreams playerInput, PawnId pawnId, GetTime getTime) {
         _playerInput = playerInput;
 
         this.UpdateAsObservable()
             .Subscribe(_ => {
                 if (Input.GetKeyDown(KeyCode.Backslash)) {
                     _playerId = getState().GetPawnPlayerId(pawnId);
-                    _playerInput.PushCommand(_playerId, InputCommand.LightAttack, getServerTime() - 0.2f);
+                    _playerInput.PushCommand(_playerId, InputCommand.LightAttack, getTime() - 0.2f);
                 }
 
                 Vector3 move = new Vector3(
@@ -30,7 +30,7 @@ public class TestDelayCommand : MonoBehaviour
                 );
 
                 if (move != Vector3.zero) {
-                    _playerInput.PushMove(getState().GetPawnPlayerId(pawnId), move, getServerTime() - 0.2f);
+                    _playerInput.PushMove(getState().GetPawnPlayerId(pawnId), move, getTime() - 0.2f);
                 }
             })
             .AddTo(this);

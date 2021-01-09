@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 
 using MessagePack;
 using MessagePack.Resolvers;
@@ -15,6 +14,7 @@ using Banchou.Player;
 namespace Banchou.Network {
     public class NetworkAgent : MonoBehaviour, INetLogger {
         public Rollback Rollback => _rollback;
+        private GetState _getState;
 
         private IDisposable _agent;
         private NetworkClient _client;
@@ -29,8 +29,10 @@ namespace Banchou.Network {
             NetworkActions networkActions,
             BoardActions boardActions,
             PlayerInputStreams playerInput,
-            GetServerTime getServerTime
+            GetTime getTime
         ) {
+            _getState = getState;
+
             NetDebug.Logger = this;
             var messagePackOptions = MessagePackSerializerOptions
                 .Standard
@@ -75,7 +77,7 @@ namespace Banchou.Network {
                                 _client.ObserveRemoteActions,
                                 _client.ObserveRemoteInput,
                                 dispatch,
-                                getServerTime,
+                                getTime,
                                 playerInput,
                                 boardActions
                             );
@@ -97,7 +99,7 @@ namespace Banchou.Network {
                                 Observable.Empty<RemoteAction>(),
                                 _server.ObserveRemoteInput,
                                 dispatch,
-                                getServerTime,
+                                getTime,
                                 playerInput,
                                 boardActions
                             );
@@ -106,12 +108,22 @@ namespace Banchou.Network {
                 }).AddTo(this);
         }
 
-        public void OnDestroy() {
-            _agent?.Dispose();
+        public float GetTime() {
+            if (_rollback != null && _rollback.Phase == RollbackPhase.Resimulate) {
+                return _rollback.CorrectionTime;
+            }
+            return _client?.GetTime() ?? _server?.GetTime() ?? Time.fixedUnscaledTime;
         }
 
-        public float GetTime() {
-            return _client?.GetTime() ?? _server?.GetTime() ?? Time.fixedUnscaledTime;
+        public float GetDeltaTime() {
+            if (_rollback != null && _rollback.Phase == RollbackPhase.Resimulate) {
+                return _rollback.DeltaTime;
+            }
+            return _getState().GetBoardTimescale() * Time.fixedUnscaledDeltaTime;
+        }
+
+        public void OnDestroy() {
+            _agent?.Dispose();
         }
 
         public void WriteNet(NetLogLevel level, string str, params object[] args) {

@@ -6,29 +6,24 @@ using Banchou.DependencyInjection;
 namespace Banchou.Network {
     public class NetworkContext : MonoBehaviour, IContext {
         private NetworkAgent _agent = null;
-        private GetState _getState;
+        private NetworkActions _networkActions;
 
-        public void Construct(GetState getState) {
-            _getState = getState;
-        }
-
-        private float GetServerTime() {
-            if (_agent.Rollback?.Phase == RollbackPhase.Resimulate) {
-                return _agent.Rollback.CorrectionTime;
+        public void Construct(GetTime getLocalTime) {
+            _agent = _agent ?? GetComponentInChildren<NetworkAgent>();
+            if (_agent == null) {
+                _networkActions = new NetworkActions(getLocalTime);
+            } else {
+                _networkActions = new NetworkActions((GetTime)_agent.GetTime);
             }
-            return _agent.GetTime();
         }
 
         public void InstallBindings(DiContainer container) {
-            _agent = _agent ?? GetComponentInChildren<NetworkAgent>();
+            container.Bind<NetworkActions>(_networkActions);
             if (_agent != null) {
-                container.Bind<NetworkActions>(new NetworkActions(_agent.GetTime));
-                container.Bind<GetServerTime>(GetServerTime);
+                container.Bind<NetworkActions>(_networkActions);
+                container.Bind<GetTime>((GetTime)_agent.GetTime);
+                container.Bind<GetDeltaTime>((GetDeltaTime)_agent.GetDeltaTime);
                 container.Bind<IRollbackEvents>(_agent.Rollback);
-            } else {
-                float getLocalTime() { return Time.fixedUnscaledTime; }
-                container.Bind<NetworkActions>(new NetworkActions(getLocalTime));
-                container.Bind<GetServerTime>(getLocalTime);
             }
         }
     }

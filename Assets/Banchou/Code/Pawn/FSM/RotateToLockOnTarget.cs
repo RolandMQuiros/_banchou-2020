@@ -19,7 +19,8 @@ namespace Banchou.Pawn.FSM {
             PawnId pawnId,
             IObservable<GameState> observeState,
             Orientation orientation,
-            IPawnInstances pawnInstance
+            IPawnInstances pawnInstance,
+            GetDeltaTime getDeltaTime
         ) {
             var observeTarget = observeState
                 .Select(state => state.GetCombatantLockOnTarget(pawnId))
@@ -41,7 +42,7 @@ namespace Banchou.Pawn.FSM {
                         Quaternion.RotateTowards(
                             orientation.transform.rotation,
                             Quaternion.LookRotation(direction),
-                            _rotationSpeed * Time.fixedDeltaTime
+                            _rotationSpeed * getDeltaTime()
                         )
                     );
                 })

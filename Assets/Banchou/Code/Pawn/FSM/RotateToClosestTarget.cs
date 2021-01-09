@@ -33,6 +33,7 @@ namespace Banchou.Pawn.FSM {
             ObservePlayerMove observePlayerMove,
             IMotor motor,
             IPawnInstances pawnInstances,
+            GetDeltaTime getDeltaTime,
             Orientation orientation = null
         ) {
             Vector3 faceDirection = Vector3.zero;
@@ -93,7 +94,7 @@ namespace Banchou.Pawn.FSM {
                         Quaternion.RotateTowards(
                             orientation.transform.rotation,
                             Quaternion.LookRotation(targetDirection),
-                            _rotationSpeed * Time.fixedDeltaTime
+                            _rotationSpeed * getDeltaTime()
                         )
                     );
                 })

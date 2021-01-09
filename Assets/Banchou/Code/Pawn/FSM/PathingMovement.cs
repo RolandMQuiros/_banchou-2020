@@ -30,7 +30,8 @@ namespace Banchou.Mob.FSM {
             IMotor motor,
             Animator animator,
             Orientation orientation,
-            IPawnInstances pawnInstances
+            IPawnInstances pawnInstances,
+            GetDeltaTime getDeltaTime
         ) {
             observeState
                 .Select(state => state.GetMob(pawnId))
@@ -83,7 +84,7 @@ namespace Banchou.Mob.FSM {
                 .Where(isApproaching => isApproaching)
                 .CatchIgnoreLog()
                 .Subscribe(_ => {
-                    motor.Move(agent.desiredVelocity * Time.fixedDeltaTime);
+                    motor.Move(agent.desiredVelocity * getDeltaTime());
 
                     // Write to output variables
                     if (!string.IsNullOrWhiteSpace(_movementSpeedOut)) {

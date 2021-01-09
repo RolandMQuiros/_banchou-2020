@@ -8,6 +8,7 @@ namespace Banchou.Board {
         public PawnsState Pawns = new PawnsState();
         public MobsState Mobs = new MobsState();
         public CombatantsState Combatants = new CombatantsState();
+        public float Timescale = 1f;
         public float LastUpdated = 0f;
 
         public BoardState() { }
@@ -15,6 +16,7 @@ namespace Banchou.Board {
             Pawns = prev.Pawns;
             Mobs = prev.Mobs;
             Combatants = prev.Combatants;
+            Timescale = prev.Timescale;
             LastUpdated = prev.LastUpdated;
         }
     }

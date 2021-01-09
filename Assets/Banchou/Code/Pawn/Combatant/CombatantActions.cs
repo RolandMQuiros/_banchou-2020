@@ -49,29 +49,29 @@ namespace Banchou.Combatant {
     }
 
     public class CombatantActions {
-        private GetServerTime _getServerTime;
+        private GetTime _getTime;
 
-        public CombatantActions(GetServerTime getServerTime) {
-            _getServerTime = getServerTime;
+        public CombatantActions(GetTime getTime) {
+            _getTime = getTime;
         }
 
         public StateAction.AddCombatant Add(PawnId pawnId, float? when = null) => new StateAction.AddCombatant {
             PawnId = pawnId,
             Health = 100,
-            When = when ?? _getServerTime()
+            When = when ?? _getTime()
         };
 
         public StateAction.AddTarget AddTarget(PawnId combatantId, PawnId target, float? when = null) => new StateAction.AddTarget {
             CombatantId = combatantId,
             Target = target,
-            When = when ?? _getServerTime()
+            When = when ?? _getTime()
         };
 
         public StateAction.RemoveTarget RemoveTarget(PawnId combatantId, PawnId target, float? when = null) {
             return new StateAction.RemoveTarget {
                 CombatantId = combatantId,
                 Target = target,
-                When = when ?? _getServerTime()
+                When = when ?? _getTime()
             };
         }
 
@@ -79,14 +79,14 @@ namespace Banchou.Combatant {
             return new StateAction.LockOn {
                 CombatantId = combatantId,
                 To = to,
-                When = when ?? _getServerTime()
+                When = when ?? _getTime()
             };
         }
 
         public StateAction.LockOff LockOff(PawnId combatantId, float? when = null) {
             return new StateAction.LockOff {
                 CombatantId = combatantId,
-                When = when ?? _getServerTime()
+                When = when ?? _getTime()
             };
         }
 
@@ -96,7 +96,7 @@ namespace Banchou.Combatant {
                 To = to,
                 Medium = medium,
                 Push = push,
-                When = when ?? _getServerTime()
+                When = when ?? _getTime()
             };
         }
     }

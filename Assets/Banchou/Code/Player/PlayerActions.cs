@@ -36,10 +36,10 @@ namespace Banchou.Player {
     }
 
     public class PlayersActions {
-        private GetServerTime _getServerTime;
+        private GetTime _getTime;
 
-        public PlayersActions(GetServerTime getServerTime) {
-            _getServerTime = getServerTime;
+        public PlayersActions(GetTime getTime) {
+            _getTime = getTime;
         }
 
         public StateAction.AddPlayer AddPlayer(
@@ -54,14 +54,14 @@ namespace Banchou.Player {
                 PrefabKey = prefabKey,
                 Name = name,
                 NetworkId = networkId,
-                When = when ?? _getServerTime()
+                When = when ?? _getTime()
             };
         }
 
         public StateAction.RemovePlayer Remove(PlayerId playerId, float? when = null) {
             return new StateAction.RemovePlayer {
                 PlayerId = playerId,
-                When = when ?? _getServerTime()
+                When = when ?? _getTime()
             };
         }
 
@@ -69,14 +69,14 @@ namespace Banchou.Player {
             return new StateAction.AttachPlayerToPawn {
                 PlayerId = playerId,
                 PawnId = pawnId,
-                When = when ?? _getServerTime()
+                When = when ?? _getTime()
             };
         }
 
         public StateAction.DetachPlayerFromPawn Detach(PlayerId playerId, float? when = null) {
             return new StateAction.DetachPlayerFromPawn {
                 PlayerId = playerId,
-                When = when ?? _getServerTime()
+                When = when ?? _getTime()
             };
         }
     }

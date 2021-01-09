@@ -42,9 +42,9 @@ namespace Banchou.Board {
     }
 
     public class BoardActions {
-        private GetServerTime _getServerTime;
-        public BoardActions(GetServerTime getServerTime) {
-            _getServerTime = getServerTime;
+        private GetTime _getTime;
+        public BoardActions(GetTime getTime) {
+            _getTime = getTime;
         }
 
         public ActionsCreator<GameState> AddPawn(
@@ -60,7 +60,7 @@ namespace Banchou.Board {
                     PrefabKey = prefabKey,
                     SpawnPosition = position,
                     SpawnRotation = rotation,
-                    When = when ?? _getServerTime()
+                    When = when ?? _getTime()
                 }
             );
         };
@@ -77,7 +77,7 @@ namespace Banchou.Board {
             PrefabKey = prefabKey,
             SpawnPosition = position,
             SpawnRotation = rotation,
-            When = when ?? _getServerTime()
+            When = when ?? _getTime()
         };
 
         public StateAction.AddPawn AddPawn(
@@ -93,13 +93,13 @@ namespace Banchou.Board {
             PrefabKey = prefabKey,
             SpawnPosition = position,
             SpawnRotation = rotation,
-            When = when ?? _getServerTime()
+            When = when ?? _getTime()
         };
 
-        public StateAction.RemovePawn RemovePawn(PawnId pawnId, float? when = null) => new StateAction.RemovePawn { PawnId = pawnId, When = when ?? _getServerTime() };
-        public StateAction.ClearPawns ClearPawns(float? when = null) => new StateAction.ClearPawns { When = when ?? _getServerTime() };
-        public StateAction.SyncBoard Sync(BoardState board, float? when = null) => new StateAction.SyncBoard { Board = board, When = when ?? _getServerTime() };
+        public StateAction.RemovePawn RemovePawn(PawnId pawnId, float? when = null) => new StateAction.RemovePawn { PawnId = pawnId, When = when ?? _getTime() };
+        public StateAction.ClearPawns ClearPawns(float? when = null) => new StateAction.ClearPawns { When = when ?? _getTime() };
+        public StateAction.SyncBoard Sync(BoardState board, float? when = null) => new StateAction.SyncBoard { Board = board, When = when ?? _getTime() };
         public StateAction.RollbackBoard Rollback(BoardState board) => new StateAction.RollbackBoard { Board = board };
-        public StateAction.SyncPawn SyncPawn(PawnFrameData frame, float? when = null) => new StateAction.SyncPawn { Frame = frame, When = when ?? _getServerTime() };
+        public StateAction.SyncPawn SyncPawn(PawnFrameData frame, float? when = null) => new StateAction.SyncPawn { Frame = frame, When = when ?? _getTime() };
     }
 }

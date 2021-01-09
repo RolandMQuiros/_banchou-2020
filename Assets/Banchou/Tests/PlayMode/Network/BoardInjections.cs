@@ -5,14 +5,14 @@ using Banchou.Player;
 
 namespace Banchou.Test {
     public class BoardInjections : MonoBehaviour {
-        public GetServerTime GetTime { get; private set; }
+        public GetTime GetTime { get; private set; }
         public PlayerInputStreams PlayerInput { get; private set; }
 
         public void Construct(
-            GetServerTime getServerTime,
+            GetTime getTime,
             PlayerInputStreams playerInputStreams
         ) {
-            GetTime = getServerTime;
+            GetTime = getTime;
             PlayerInput = playerInputStreams;
         }
     }

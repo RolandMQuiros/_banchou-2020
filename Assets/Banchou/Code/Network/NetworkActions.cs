@@ -45,9 +45,9 @@ namespace Banchou.Network {
     }
 
     public class NetworkActions {
-        private GetServerTime _getServerTime;
-        public NetworkActions(GetServerTime getServerTime) {
-            _getServerTime = getServerTime;
+        private GetTime _getTime;
+        public NetworkActions(GetTime getTime) {
+            _getTime = getTime;
         }
         public StateAction.SetNetworkMode SetMode(
             Mode mode,
@@ -70,16 +70,16 @@ namespace Banchou.Network {
             RollbackHistoryDuration = rollbackHistoryDuration,
             RollbackDetectionMinThreshold = rollbackDetectionMinThreshold,
             RollbackDetectionMaxThreshold = rollbackDetectionMaxThreshold,
-            When = when ?? _getServerTime()
+            When = when ?? _getTime()
         };
         public StateAction.SimulateLatency SimulateLatency(int min, int max, float? when = null) => new StateAction.SimulateLatency {
             SimulateMinLatency = min,
             SimulateMaxLatency = max,
-            When = when ?? _getServerTime()
+            When = when ?? _getTime()
         };
-        public StateAction.NetworkAgentStarted Started(int peerId, float? when = null) => new StateAction.NetworkAgentStarted { PeerId = peerId, When = when ?? _getServerTime() };
-        public StateAction.ConnectedToServer ConnectedToServer(Guid clientNetworkid, DateTime serverTime, float? when = null) => new StateAction.ConnectedToServer { ClientNetworkId = clientNetworkid, ServerTime = serverTime, When = when ?? _getServerTime() };
-        public StateAction.ConnectedToClient ConnectedToClient(Guid clientNetworkId, float? when = null) => new StateAction.ConnectedToClient { ClientNetworkId = clientNetworkId, When = when ?? _getServerTime() };
+        public StateAction.NetworkAgentStarted Started(int peerId, float? when = null) => new StateAction.NetworkAgentStarted { PeerId = peerId, When = when ?? _getTime() };
+        public StateAction.ConnectedToServer ConnectedToServer(Guid clientNetworkid, DateTime serverTime, float? when = null) => new StateAction.ConnectedToServer { ClientNetworkId = clientNetworkid, ServerTime = serverTime, When = when ?? _getTime() };
+        public StateAction.ConnectedToClient ConnectedToClient(Guid clientNetworkId, float? when = null) => new StateAction.ConnectedToClient { ClientNetworkId = clientNetworkId, When = when ?? _getTime() };
         public StateAction.SyncGameState SyncGameState(GameState gameState) => new StateAction.SyncGameState { GameState = gameState };
     }
 }

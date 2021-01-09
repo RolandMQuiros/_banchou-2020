@@ -10,8 +10,8 @@ namespace Banchou.Player {
         private PlayersActions _playerActions = null;
         private PlayerInputStreams _playerInputStreams = new PlayerInputStreams();
 
-        public void Construct(GetServerTime getServerTime) {
-            _playerActions = new PlayersActions(getServerTime);
+        public void Construct(GetTime getTime) {
+            _playerActions = new PlayersActions(getTime);
         }
 
         public void InstallBindings(DiContainer container) {

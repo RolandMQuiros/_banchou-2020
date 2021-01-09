@@ -24,7 +24,8 @@ namespace Banchou.Pawn.FSM {
             ObservePlayerMove observePlayerMove,
             Part.IMotor motor,
             Part.Orientation orientation,
-            Animator animator
+            Animator animator,
+            GetDeltaTime getDeltaTime
         ) {
             // The object's final facing unit vector angle
             var faceDirection = Vector3.zero;
@@ -48,7 +49,7 @@ namespace Banchou.Pawn.FSM {
                         // more easily execute Pull Attacks
                         var faceMotionDot = Vector3.Dot(direction, faceDirection);
                         if (faceMotionDot <= -0.01f && flipTimer < _flipDelay) {
-                            flipTimer += Time.fixedDeltaTime;
+                            flipTimer += getDeltaTime();
                         } else {
                             faceDirection = motor.Project(direction.normalized);
                             flipTimer = 0f;
@@ -60,7 +61,7 @@ namespace Banchou.Pawn.FSM {
                             Quaternion.RotateTowards(
                                 orientation.transform.rotation,
                                 Quaternion.LookRotation(faceDirection.normalized),
-                                _rotationSpeed * Time.fixedDeltaTime
+                                _rotationSpeed * getDeltaTime()
                             )
                         );
                     }

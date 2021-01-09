@@ -27,7 +27,7 @@
 //         private NetworkClient _client;
 //         private Subject<Unit> _pollClient;
 //         private Subject<Unit> _timeInterval;
-//         private GetServerTime _getServerTime;
+//         private GetTime _getTime;
 
 //         [SetUp]
 //         public void Setup() {
@@ -48,14 +48,14 @@
 //                 .WithCompression(MessagePackCompression.Lz4BlockArray);
 
 //             _serverStore = new Store<GameState>(GameStateStore.Reducer, new GameState(), NetworkServer.Install<GameState>(serializer, messagePackOptions));
-//             _getServerTime = () => _client?.GetTime() ?? _server?.GetTime() ?? Time.fixedUnscaledTime;
+//             _getTime = () => _client?.GetTime() ?? _server?.GetTime() ?? Time.fixedUnscaledTime;
 
 //             _server = new NetworkServer(
 //                 _serverStore.GetState().GetNetworkId(),
 //                 _serverStore.ObserveState(),
 //                 _serverStore.GetState,
 //                 _serverStore.Dispatch,
-//                 new NetworkActions(_getServerTime),
+//                 new NetworkActions(_getTime),
 //                 new PlayerInputStreams().
 //                 serializer,
 //                 messagePackOptions
@@ -65,7 +65,7 @@
 //             _client = new NetworkClient(
 //                 _clientStore.ObserveState(),
 //                 _clientStore.Dispatch,
-//                 new NetworkActions(_getServerTime),
+//                 new NetworkActions(_getTime),
 //                 new PlayerInputStreams(),
 //                 serializer,
 //                 messagePackOptions

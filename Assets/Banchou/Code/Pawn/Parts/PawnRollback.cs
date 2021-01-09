@@ -18,7 +18,7 @@ namespace Banchou.Pawn.Part {
         public void Construct(
             PawnId pawnId,
             IRollbackEvents rollback,
-            GetServerTime getServerTime,
+            GetTime getTime,
             Animator animator,
             IMotor motor,
             Orientation orientation,
@@ -71,9 +71,9 @@ namespace Banchou.Pawn.Part {
 
             // Populate history list every frame
             this.FixedUpdateAsObservable()
-                .Select(_ => RecordStep(getServerTime()))
+                .Select(_ => RecordStep(getTime()))
                 .Subscribe(step => {
-                    var window = getServerTime() - getState().GetRollbackHistoryDuration();
+                    var window = getTime() - getState().GetRollbackHistoryDuration();
 
                     // Remove old frames
                     while (history.Count > 1 && history.First.Value.When < window) {
@@ -99,7 +99,7 @@ namespace Banchou.Pawn.Part {
                         frame = history.Last.Value;
                     }
 
-                    Debug.Log($"Rolling back to frame at {frame.When}, at {getServerTime()}");
+                    Debug.Log($"Rolling back to frame at {frame.When}, at {getTime()}");
 
                     _gizmoStep = frame;
                     SetAnimatorFrame(frame);
@@ -136,7 +136,7 @@ namespace Banchou.Pawn.Part {
                 .CatchIgnore()
                 .Subscribe(_ => {
                     dispatch(
-                        boardActions.SyncPawn(RecordStep(getServerTime()))
+                        boardActions.SyncPawn(RecordStep(getTime()))
                     );
                 })
                 .AddTo(this);

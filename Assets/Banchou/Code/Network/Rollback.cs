@@ -13,6 +13,7 @@ namespace Banchou.Network {
     public class Rollback : IDisposable, IRollbackEvents {
         public RollbackPhase Phase { get; private set; } = RollbackPhase.Complete;
         public float CorrectionTime { get; private set; } = 0f;
+        public float DeltaTime { get; private set; } = 0f;
 
         public IObservable<RollbackUnit> OnResimulationStart => _onResimulationStart;
         public Subject<RollbackUnit> _onResimulationStart = new Subject<RollbackUnit>();
@@ -39,12 +40,12 @@ namespace Banchou.Network {
             IObservable<InputUnit> observeRemoteInput,
 
             Dispatcher dispatch,
-            GetServerTime getServerTime,
+            GetTime getTime,
             PlayerInputStreams playerInput,
             BoardActions boardActions
         ) {
             bool WithinRollbackThresholds(float when, in (float Min, float Max) thresholds) {
-                var delay = getServerTime() - when;
+                var delay = getTime() - when;
                 return delay >= thresholds.Min && delay < thresholds.Max;
             }
 
@@ -69,7 +70,7 @@ namespace Banchou.Network {
                 .Select(
                     remoteAction => new RollbackUnit {
                         Action = remoteAction.Action,
-                        When = getServerTime(),
+                        When = getTime(),
                         CorrectionTime = remoteAction.When,
                         DeltaTime = deltaTime
                     }
@@ -96,7 +97,7 @@ namespace Banchou.Network {
                 .BatchFrame(0, FrameCountType.FixedUpdate)
                 .Select(units => new RollbackUnit {
                     InputUnits = units,
-                    When = getServerTime(),
+                    When = getTime(),
                     CorrectionTime = Snapping.Snap(units.Min(unit => unit.When), deltaTime),
                     DeltaTime = deltaTime
                 });
@@ -125,13 +126,13 @@ namespace Banchou.Network {
                     .DistinctUntilChanged()
                     .Where(state => state.IsEnabled)
                     .Subscribe(args => {
-                        while (history.Count > 1 && history.First.Value.When < getServerTime() - args.HistoryDuration) {
+                        while (history.Count > 1 && history.First.Value.When < getTime() - args.HistoryDuration) {
                             history.RemoveFirst();
                         }
 
                         history.AddLast(new HistoryStep {
                             State = args.Board,
-                            When = getServerTime()
+                            When = getTime()
                         });
                     }),
                 // Handle rollbacks
@@ -139,7 +140,7 @@ namespace Banchou.Network {
                     .Do(unit => Debug.Log($"Rollback unit at {unit.When}"))
                     .CatchIgnoreLog()
                     .Subscribe(unit => {
-                        var now = getServerTime();
+                        var now = getTime();
                         CorrectionTime = unit.CorrectionTime;
 
                         // Disable physics tick
@@ -159,10 +160,14 @@ namespace Banchou.Network {
                         dispatch(boardActions.Rollback(step.State));
 
                         void ResimulateStep() {
+                            DeltaTime = Mathf.Min(Time.fixedUnscaledDeltaTime, now - CorrectionTime);
+
+                            unit.DeltaTime = DeltaTime;
                             _beforeResimulate.OnNext(unit);
                             // Physics.Simulate(deltaTime);
                             _afterResimulate.OnNext(unit);
-                            CorrectionTime += deltaTime;
+
+                            CorrectionTime += unit.DeltaTime;
                             unit.CorrectionTime = CorrectionTime;
                         }
 

@@ -11,10 +11,10 @@ namespace Banchou.Pawn {
 
     public class PawnActions {
         private PawnId _pawnId;
-        private GetServerTime _getServerTime;
-        public PawnActions(PawnId pawnId, GetServerTime getServerTime) {
+        private GetTime _getTime;
+        public PawnActions(PawnId pawnId, GetTime getTime) {
             _pawnId = pawnId;
-            _getServerTime = getServerTime;
+            _getTime = getTime;
         }
     }
 }

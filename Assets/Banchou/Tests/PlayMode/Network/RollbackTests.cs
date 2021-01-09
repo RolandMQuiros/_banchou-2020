@@ -27,7 +27,7 @@ namespace Banchou.Test {
         private class BoardMembers {
             public GetState GetState;
             public Dispatcher Dispatch;
-            public GetServerTime GetTime;
+            public GetTime GetTime;
 
             public PlayerInputStreams Input;
             public IPawnInstances Pawns;
@@ -35,13 +35,13 @@ namespace Banchou.Test {
             public void Construct(
                 GetState getState,
                 Dispatcher dispatch,
-                GetServerTime getServerTime,
+                GetTime getTime,
                 PlayerInputStreams playerInput,
                 IPawnInstances pawns
             ) {
                 GetState = getState;
                 Dispatch = dispatch;
-                GetTime = getServerTime;
+                GetTime = getTime;
                 Input = playerInput;
                 Pawns = pawns;
             }

@@ -10,7 +10,7 @@ namespace Banchou.Pawn.Part {
         public Vector3 TargetPosition => _controller.transform.position + _velocity;
 
         private CharacterController _controller = null;
-        private GetServerTime _getServerTime = null;
+        private GetTime _getTime = null;
         private List<Vector3> _contacts = new List<Vector3>();
         private Vector3 _velocity = Vector3.zero;
 
@@ -30,10 +30,10 @@ namespace Banchou.Pawn.Part {
 
         public void Construct(
             CharacterController controller,
-            GetServerTime getServerTime
+            GetTime getTime
         ) {
             _controller = controller;
-            _getServerTime = getServerTime;
+            _getTime = getTime;
             _sorter = new ContactSorter(_controller.transform);
         }
 

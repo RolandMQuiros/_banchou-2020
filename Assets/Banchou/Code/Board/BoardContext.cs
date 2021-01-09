@@ -13,10 +13,10 @@ namespace Banchou.Board {
         private MobActions _mobActions;
         private CombatantActions _combatantActions;
 
-        public void Construct(GetServerTime getServerTime) {
-            _boardActions = new BoardActions(getServerTime);
-            _mobActions = new MobActions(getServerTime);
-            _combatantActions = new CombatantActions(getServerTime);
+        public void Construct(GetTime getTime) {
+            _boardActions = new BoardActions(getTime);
+            _mobActions = new MobActions(getTime);
+            _combatantActions = new CombatantActions(getTime);
         }
 
         public void InstallBindings(DiContainer container) {

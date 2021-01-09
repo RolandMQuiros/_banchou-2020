@@ -67,7 +67,6 @@ namespace Banchou.Network {
         public float When;
     }
 
-    public delegate float GetServerTime();
     public delegate IObservable<float> ObserveBeforeResimulation();
     public delegate IObservable<float> ObserveAfterResimulation();
 }

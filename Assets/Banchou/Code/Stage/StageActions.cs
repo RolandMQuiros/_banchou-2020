@@ -19,24 +19,24 @@ namespace Banchou.Stage {
     }
 
     public class StageActions {
-        private GetServerTime _getServerTime;
-        public StageActions(GetServerTime getServerTime) {
-            _getServerTime = getServerTime;
+        private GetTime _getTime;
+        public StageActions(GetTime getTime) {
+            _getTime = getTime;
         }
 
         public StateAction.AddScene AddScene(string sceneName, float? when = null) => new StateAction.AddScene {
             Scene = sceneName,
-            When = when ?? _getServerTime()
+            When = when ?? _getTime()
         };
 
         public StateAction.SetScene SetScene(string sceneName, float? when = null) => new StateAction.SetScene {
             Scene = sceneName,
-            When = when ?? _getServerTime()
+            When = when ?? _getTime()
         };
 
         public StateAction.SceneLoaded SceneLoaded(string sceneName, float? when = null) => new StateAction.SceneLoaded {
             Scene = sceneName,
-            When = when ?? _getServerTime()
+            When = when ?? _getTime()
         };
     }
 }

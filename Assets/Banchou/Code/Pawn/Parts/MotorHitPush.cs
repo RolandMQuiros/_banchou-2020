@@ -11,7 +11,8 @@ namespace Banchou.Pawn.Part {
         public void Construct(
             PawnId pawnId,
             IObservable<GameState> observeState,
-            IMotor motor
+            IMotor motor,
+            GetDeltaTime getDeltaTime
         ) {
             var pushVelocity = Vector3.zero;
 
@@ -27,8 +28,8 @@ namespace Banchou.Pawn.Part {
             this.FixedUpdateAsObservable()
                 .Where(_ => pushVelocity != Vector3.zero)
                 .Subscribe(_ => {
-                    pushVelocity = Vector3.MoveTowards(pushVelocity, Vector3.zero, _deceleration * Time.fixedDeltaTime);
-                    motor.Move(pushVelocity * Time.fixedDeltaTime);
+                    pushVelocity = Vector3.MoveTowards(pushVelocity, Vector3.zero, _deceleration * getDeltaTime());
+                    motor.Move(pushVelocity * getDeltaTime());
                 })
                 .AddTo(this);
         }
