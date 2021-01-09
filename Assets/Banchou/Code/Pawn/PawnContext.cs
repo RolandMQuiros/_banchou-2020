@@ -121,6 +121,7 @@ namespace Banchou.Pawn {
             );
             container.Bind<ObservePlayerCommand>(() => _observeState
                 .Select(state => state.GetPawnPlayerId(PawnId))
+                .DistinctUntilChanged()
                 .SelectMany(playerId => _playerInput.ObserveCommands(playerId))
                 .Select(unit => unit.Command)
             );

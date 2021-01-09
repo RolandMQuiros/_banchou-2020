@@ -1,8 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
+
+using UniRx;
 using UnityEngine;
 using UnityEngine.TestTools;
+
+using Banchou.Player;
 
 namespace Banchou.Test {
     public class DeterminismTests {
@@ -46,6 +50,32 @@ namespace Banchou.Test {
             Assert.AreEqual(16.6700000762939453125f, 16.67f);
 
             yield return null;
+        }
+
+        [Test]
+        public void DistinctStructsUntilChanged() {
+            Subject<InputUnit> subject = new Subject<InputUnit>();
+            int subscribeCalls = 0;
+            var sub = subject
+                .DistinctUntilChanged()
+                .Subscribe(unit => {
+                    subscribeCalls++;
+                    Assert.AreEqual(1, subscribeCalls);
+                });
+
+            subject.OnNext(new InputUnit {
+                PlayerId = new PlayerId(12345),
+                Type = InputUnitType.Command,
+                Direction = new Vector3(123f, 321f, 456f),
+                When = 16.67f
+            });
+
+            subject.OnNext(new InputUnit {
+                PlayerId = new PlayerId(12345),
+                Type = InputUnitType.Command,
+                Direction = new Vector3(123f, 321f, 456f),
+                When = 16.67f
+            });
         }
     }
 }

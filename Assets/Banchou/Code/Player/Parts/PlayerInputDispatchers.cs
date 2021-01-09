@@ -55,11 +55,16 @@ namespace Banchou.Player.Part {
             }
         }
 
+        private bool _lockOnDown = false;
         public void DispatchLockOn(InputAction.CallbackContext callbackContext) {
             if (callbackContext.performed) {
-                _playerInputStreams.PushCommand(_playerId, InputCommand.LockOn, _getServerTime());
-            } else {
-                _playerInputStreams.PushCommand(_playerId, InputCommand.LockOff, _getServerTime());
+                _lockOnDown = !_lockOnDown;
+
+                if (_lockOnDown) {
+                    _playerInputStreams.PushCommand(_playerId, InputCommand.LockOn, _getServerTime());
+                } else {
+                    _playerInputStreams.PushCommand(_playerId, InputCommand.LockOff, _getServerTime());
+                }
             }
         }
 

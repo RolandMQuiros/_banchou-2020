@@ -46,35 +46,48 @@ namespace Banchou.Player {
         }
 
         public IDisposable Subscribe(IObserver<InputUnit> observer) {
-            return ((IObservable<InputUnit>)_inputSubject).Subscribe(observer);
+            return _inputSubject.Subscribe(observer);
         }
     }
 
     public static class InputStreamExtensions {
         public static IObservable<InputUnit> ObserveCommands(this IObservable<InputUnit> source) {
-            return source.Where(unit => unit.Type == InputUnitType.Command);
+            return source
+                .Where(unit => unit.Type == InputUnitType.Command)
+                .DistinctUntilChanged();
         }
 
         public static IObservable<InputUnit> ObserveCommands(this IObservable<InputUnit> source, PlayerId playerId) {
-            return source.ObserveCommands().Where(unit => unit.PlayerId == playerId);
+            return source
+                .Where(unit => unit.PlayerId == playerId)
+                .Where(unit => unit.Type == InputUnitType.Command)
+                .DistinctUntilChanged();
         }
 
         public static IObservable<InputUnit> ObserveMoves(this IObservable<InputUnit> source) {
-            return source.Where(unit => unit.Type == InputUnitType.Movement)
+            return source
+                .Where(unit => unit.Type == InputUnitType.Movement)
                 .DistinctUntilChanged();
         }
 
         public static IObservable<InputUnit> ObserveMoves(this IObservable<InputUnit> source, PlayerId playerId) {
-            return source.ObserveMoves().Where(unit => unit.PlayerId == playerId);
+            return source
+                .Where(unit => unit.PlayerId == playerId)
+                .Where(unit => unit.Type == InputUnitType.Movement)
+                .DistinctUntilChanged();
         }
 
         public static IObservable<InputUnit> ObserveLook(this IObservable<InputUnit> source) {
-            return source.Where(unit => unit.Type == InputUnitType.Look)
+            return source
+                .Where(unit => unit.Type == InputUnitType.Look)
                 .DistinctUntilChanged();
         }
 
         public static IObservable<InputUnit> ObserveLook(this IObservable<InputUnit> source, PlayerId playerId) {
-            return source.ObserveLook().Where(unit => unit.PlayerId == playerId);
+            return source
+                .Where(unit => unit.PlayerId == playerId)
+                .Where(unit => unit.Type == InputUnitType.Look)
+                .DistinctUntilChanged();
         }
     }
 }

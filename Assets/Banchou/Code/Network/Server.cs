@@ -219,6 +219,8 @@ namespace Banchou.Network {
                             );
 
                             _serializationPerf.Stop();
+
+                            Debug.Log($"Serialized action {action.GetType().Name} to {actionBytes.Length} in {_serializationPerf.ElapsedMilliseconds} ms");
                         }
 
                         // Send bytestream to peer
