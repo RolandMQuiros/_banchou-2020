@@ -64,19 +64,15 @@ namespace Banchou.Network {
                 .Where(state => state.IsEnabled)
                 .SelectMany(
                     state => observeRemoteActions
-                        .Do(remoteAction => {
-                            if (remoteAction.Action is Board.StateAction.SyncPawn sync) {
-                                Debug.Log($"Incoming sync stamped at {remoteAction.When}, {sync.When}, at {getTime()}");
-                            }
-                        })
                         .Where(_ => history.Count > 0)
                         .Where(action => WithinRollbackThresholds(action.When, state.Thresholds))
+                        .BatchFrame(0, FrameCountType.FixedUpdate)
                 )
                 .Select(
-                    remoteAction => new RollbackUnit {
-                        Action = remoteAction.Action,
+                    remoteActions => new RollbackUnit {
+                        Actions = remoteActions.Select(r => r.Action).ToList(),
                         When = getTime(),
-                        CorrectionTime = remoteAction.When,
+                        CorrectionTime = remoteActions.Min(r => r.When),
                         DeltaTime = deltaTime
                     }
                 );
@@ -99,6 +95,7 @@ namespace Banchou.Network {
                     .Where(input => WithinRollbackThresholds(input.When, state.Thresholds))
                 )
                 .Where(_ => Phase == RollbackPhase.Complete)
+                .Do(unit => Debug.Log($"Rollback input for {unit.Command} at {unit.When} at {getTime()}: {getTime() - unit.When}"))
                 .BatchFrame(0, FrameCountType.FixedUpdate)
                 .Select(units => new RollbackUnit {
                     InputUnits = units,
@@ -110,9 +107,11 @@ namespace Banchou.Network {
             // Inputs that don't require rollback
             var passthroughInputs = rollbackSettings
                 .SelectMany(state => observeRemoteInput
-                    .Where(unit => !state.IsEnabled ||
-                        history.Count <= 0 ||
-                        !WithinRollbackThresholds(unit.When, state.Thresholds))
+                    .Where(
+                        unit => !state.IsEnabled ||
+                            history.Count <= 0 ||
+                            !WithinRollbackThresholds(unit.When, state.Thresholds)
+                    )
                 );
 
             // All rollback events
@@ -183,9 +182,9 @@ namespace Banchou.Network {
                         Phase = RollbackPhase.Resimulate;
                         ResimulateStep();
 
-                        // Dispatch deferred action
-                        if (unit.Action != null) {
-                            dispatch(unit.Action);
+                        // Dispatch deferred actions
+                        for (int i = 0; unit.Actions != null && i < unit.Actions.Count; i++) {
+                            dispatch(unit.Actions[i]);
                         }
 
                         // Pump inputs into the stream

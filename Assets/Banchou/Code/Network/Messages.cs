@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using MessagePack;
 
 namespace Banchou.Network.Message {
@@ -17,14 +18,26 @@ namespace Banchou.Network.Message {
         [Key(0)] public PayloadType PayloadType;
         [Key(1)] public byte[] Payload;
 
+#if DEBUG
+        private static Stopwatch _serializationPerformance = new Stopwatch();
+#endif
+
         public static byte[] CreateMessage<T>(PayloadType payloadType, T payload, MessagePackSerializerOptions options) {
-            return MessagePackSerializer.Serialize(
+#if DEBUG
+            _serializationPerformance.Restart();
+#endif
+            var message = MessagePackSerializer.Serialize(
                 new Envelope {
                     PayloadType = payloadType,
                     Payload = MessagePackSerializer.Serialize(payload, options)
                 },
                 options
             );
+#if DEBUG
+            _serializationPerformance.Stop();
+            UnityEngine.Debug.Log($"Serialized {typeof(T).FullName} to {message.Length} bytes in {_serializationPerformance.ElapsedTicks} nanoseconds");
+#endif
+            return message;
         }
     }
 

@@ -58,7 +58,7 @@ namespace Banchou.Network {
             bool enablePhysicsRollback = true,
             float rollbackHistoryDuration = 0.5f,
             float rollbackDetectionMinThreshold = 0.017f,
-            float rollbackDetectionMaxThreshold = 0.17f,
+            float rollbackDetectionMaxThreshold = 1f,
             float? when = null
         ) => new StateAction.SetNetworkMode {
             Mode = mode,

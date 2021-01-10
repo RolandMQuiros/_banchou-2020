@@ -99,7 +99,7 @@ namespace Banchou.Network {
                     _messagePackOptions
                 );
 
-                peer.Send(syncClientMessage, DeliveryMethod.ReliableOrdered);
+                peer.Send(syncClientMessage, DeliveryMethod.ReliableUnordered);
             };
 
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
@@ -178,7 +178,6 @@ namespace Banchou.Network {
                     .CatchIgnoreLog()
                     .Subscribe(_ => { _server.PollEvents(); })
             );
-
 
             return this;
         }

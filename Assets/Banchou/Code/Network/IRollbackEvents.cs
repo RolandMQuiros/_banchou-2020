@@ -4,7 +4,7 @@ using Banchou.Player;
 
 namespace Banchou.Network {
     public struct RollbackUnit {
-        public object Action;
+        public IList<object> Actions;
         public IList<InputUnit> InputUnits;
         public float When;
         public float CorrectionTime;
