@@ -3,12 +3,12 @@ using System.Linq;
 
 namespace Banchou.Stage {
     public static class StageSelectors {
-        public static bool IsStageing(this GameState state) {
+        public static bool AreScenesLoading(this GameState state) {
             return state.Stage.LoadingScenes.Any();
         }
 
-        public static string GetLatestScene(this GameState state) {
-            return state.Stage.LatestScene;
+        public static IEnumerable<string> GetLoadingScenes(this GameState state) {
+            return state.Stage.LoadingScenes;
         }
 
         public static IEnumerable<string> GetLoadedScenes(this GameState state) {

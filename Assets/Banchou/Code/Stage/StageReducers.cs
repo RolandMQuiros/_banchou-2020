@@ -1,15 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System.Linq;
+using System.Collections.Generic;
 
 namespace Banchou.Stage {
     public static class StageReducers {
         public static StageState Reduce(in StageState prev, in object action) {
             if (action is StateAction.AddScene add) {
                 if (!prev.LoadingScenes.Contains(add.Scene) && !prev.LoadedScenes.Contains(add.Scene)) {
-                    var loading = new HashSet<string>(prev.LoadingScenes);
-                    loading.Add(add.Scene);
                     return new StageState(prev) {
-                        LatestScene = add.Scene,
-                        LoadingScenes = loading,
+                        LoadingScenes = prev.LoadingScenes.Append(add.Scene).Distinct(),
                         LastUpdated = add.When
                     };
                 }
@@ -17,34 +15,32 @@ namespace Banchou.Stage {
 
             if (action is StateAction.SetScene set) {
                 if (!prev.LoadingScenes.Contains(set.Scene) && !prev.LoadedScenes.Contains(set.Scene)) {
-                    var loading = new HashSet<string>(prev.LoadingScenes);
-                    loading.Add(set.Scene);
-
                     return new StageState(prev) {
-                        LatestScene = set.Scene,
-                        LoadingScenes = loading,
-                        LoadedScenes = new HashSet<string>(),
+                        LoadingScenes = prev.LoadingScenes.Append(set.Scene).Distinct(),
+                        LoadedScenes = Enumerable.Empty<string>(),
                         LastUpdated = set.When
                     };
                 }
             }
 
             if (action is StateAction.SceneLoaded done) {
-                var loading = new HashSet<string>(prev.LoadingScenes);
-                loading.Remove(done.Scene);
-
-                var loaded = new HashSet<string>(prev.LoadedScenes);
-                loaded.Add(done.Scene);
-
                 return new StageState(prev) {
-                    LoadedScenes = loaded,
-                    LoadingScenes = loading,
+                    LoadedScenes = prev.LoadedScenes.Append(done.Scene),
+                    LoadingScenes = prev.LoadingScenes.Where(s => s != done.Scene),
                     LastUpdated = done.When
                 };
             }
 
             if (action is Network.StateAction.SyncGameState sync) {
-                return sync.GameState.Stage;
+                var syncStage = sync.GameState.Stage;
+                return new StageState(prev) {
+                    LoadingScenes = prev.LoadingScenes
+                        .Concat(syncStage.LoadedScenes)
+                        .Concat(syncStage.LoadingScenes)
+                        .Distinct()
+                        .Except(prev.LoadedScenes),
+                    LastUpdated = syncStage.LastUpdated
+                };
             }
 
             return prev;

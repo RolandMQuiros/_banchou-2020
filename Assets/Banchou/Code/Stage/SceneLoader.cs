@@ -14,8 +14,12 @@ namespace Banchou.Stage {
             StageActions stageActions
         ) {
             // Load scenes
-            observeState.Select(state => state.GetLatestScene())
+            observeState
+                .Select(state => state.GetLoadingScenes())
                 .DistinctUntilChanged()
+                .StartWith(Enumerable.Empty<string>())
+                .Pairwise()
+                .SelectMany(pair => pair.Current.Except(pair.Previous))
                 .Where(scene => scene != null)
                 .SelectMany(
                     scene => SceneManager
@@ -28,7 +32,8 @@ namespace Banchou.Stage {
                 .AddTo(this);
 
             // Unload scenes
-            observeState.Select(state => state.GetLoadedScenes())
+            observeState
+                .Select(state => state.GetLoadedScenes())
                 .DistinctUntilChanged()
                 .Pairwise()
                 .SelectMany(pair => pair.Previous.Except(pair.Current))

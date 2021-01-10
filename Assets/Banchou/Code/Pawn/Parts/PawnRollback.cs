@@ -12,9 +12,6 @@ using Banchou.Network;
 
 namespace Banchou.Pawn.Part {
     public class PawnRollback : MonoBehaviour {
-        [SerializeField, Tooltip("Server only. Amount of time, in seconds, between sending synchronization messages to clients")]
-        private float _syncInterval = 5f;
-
         public void Construct(
             PawnId pawnId,
             IRollbackEvents rollback,
@@ -37,26 +34,39 @@ namespace Banchou.Pawn.Part {
             var intKeys = GetParameterKeys(AnimatorControllerParameterType.Int);
             var boolKeys = GetParameterKeys(AnimatorControllerParameterType.Bool);
 
-            // Record Animator's state every frame
-            var history = new LinkedList<PawnFrameData>();
-            _gizmoFrames = history;
+            // Choose the current or next animation states for each layer
+            var selectStateInfo = Enumerable.Range(0, animator.layerCount)
+                .Select(
+                    layer => {
+                        var current = animator.GetCurrentAnimatorStateInfo(layer);
+                        var next = animator.GetNextAnimatorStateInfo(layer);
+                        return animator.IsInTransition(layer) ? next : current;
+                    }
+                );
+
             PawnFrameData RecordStep(float when) {
                 return new PawnFrameData {
                     PawnId = pawnId,
-                    StateHashes = Enumerable.Range(0, animator.layerCount)
-                        .Select(layer => animator.GetCurrentAnimatorStateInfo(layer).fullPathHash)
+                    StateHashes = selectStateInfo
+                        .Select(stateInfo => stateInfo.fullPathHash)
                         .ToList(),
-                    NormalizedTimes = Enumerable.Range(0, animator.layerCount)
-                        .Select(layer => animator.GetCurrentAnimatorStateInfo(layer).normalizedTime)
+                    NormalizedTimes = selectStateInfo
+                        .Select(stateInfo => stateInfo.normalizedTime % 1f)
                         .ToList(),
                     Floats = floatKeys.ToDictionary(key => key, key => animator.GetFloat(key)),
                     Ints = intKeys.ToDictionary(key => key, key => animator.GetInteger(key)),
                     Bools = boolKeys.ToDictionary(key => key, key => animator.GetBool(key)),
                     Position = motor.TargetPosition,
                     Forward = orientation.transform.forward,
-                    When = when,
+                    When = when
                 };
             }
+
+            // Record Animator's state every frame
+            var history = new LinkedList<PawnFrameData>();
+            history.AddLast(RecordStep(getTime()));
+
+            _gizmoFrames = history;
 
             void SetAnimatorFrame(in PawnFrameData frame) {
                 // Set transform
@@ -65,7 +75,6 @@ namespace Banchou.Pawn.Part {
                 orientation.TrackForward(frame.Forward);
 
                 // Set animator states
-                animator.enabled = false;
                 animator.UseFrame(frame);
             }
 
@@ -96,10 +105,14 @@ namespace Banchou.Pawn.Part {
                     var frame = history.Last.Value;
                     while (correctionTime < history.Last.Value.When) {
                         history.RemoveLast();
-                        frame = history.Last.Value;
+                        if (history.Count > 0) {
+                            frame = history.Last.Value;
+                        } else {
+                            return;
+                        }
                     }
 
-                    Debug.Log($"Rolling back to frame at {frame.When}, at {getTime()}");
+                    animator.enabled = false;
 
                     _gizmoStep = frame;
                     SetAnimatorFrame(frame);
@@ -125,19 +138,8 @@ namespace Banchou.Pawn.Part {
 
             rollback.OnResimulationEnd
                 .CatchIgnoreLog()
-                .Subscribe(_ => {
+                .Subscribe(unit => {
                     animator.enabled = true;
-                })
-                .AddTo(this);
-
-            // Send pawn syncs
-            Observable.Interval(TimeSpan.FromSeconds(_syncInterval))
-                .ThrottleFrame(0, FrameCountType.FixedUpdate)
-                .CatchIgnore()
-                .Subscribe(_ => {
-                    dispatch(
-                        boardActions.SyncPawn(RecordStep(getTime()))
-                    );
                 })
                 .AddTo(this);
         }

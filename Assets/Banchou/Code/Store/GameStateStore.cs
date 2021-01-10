@@ -14,6 +14,7 @@ using Banchou.Stage;
 
 namespace Banchou {
     namespace StateAction {
+        public struct DevToolsInitialize { }
         public struct Hydrate {
             public GameState GameState;
         }
@@ -69,6 +70,7 @@ namespace Banchou {
                 _store = new Store<GameState>(
                     Reducer, initialState, Redux.Middlewares.Thunk, NetworkServer.Install<GameState>(jsonSerializer, messagePackOptions), _devToolsSession.Install<GameState>()
                 );
+                _store.Dispatch(new StateAction.DevToolsInitialize());
             }
         }
 

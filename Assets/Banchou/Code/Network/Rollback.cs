@@ -50,7 +50,7 @@ namespace Banchou.Network {
             }
 
             var history = new LinkedList<HistoryStep>();
-            var deltaTime = Time.fixedUnscaledDeltaTime; // Find out where the target framerate is
+            var deltaTime = Time.fixedDeltaTime; // Find out where the target framerate is
 
             var rollbackSettings = observeState
                 .Select(state => (
@@ -64,6 +64,11 @@ namespace Banchou.Network {
                 .Where(state => state.IsEnabled)
                 .SelectMany(
                     state => observeRemoteActions
+                        .Do(remoteAction => {
+                            if (remoteAction.Action is Board.StateAction.SyncPawn sync) {
+                                Debug.Log($"Incoming sync stamped at {remoteAction.When}, {sync.When}, at {getTime()}");
+                            }
+                        })
                         .Where(_ => history.Count > 0)
                         .Where(action => WithinRollbackThresholds(action.When, state.Thresholds))
                 )
@@ -98,7 +103,7 @@ namespace Banchou.Network {
                 .Select(units => new RollbackUnit {
                     InputUnits = units,
                     When = getTime(),
-                    CorrectionTime = Snapping.Snap(units.Min(unit => unit.When), deltaTime),
+                    CorrectionTime = units.Min(unit => unit.When),
                     DeltaTime = deltaTime
                 });
 
@@ -137,11 +142,12 @@ namespace Banchou.Network {
                     }),
                 // Handle rollbacks
                 rollbacks
-                    .Do(unit => Debug.Log($"Rollback unit at {unit.When}"))
                     .CatchIgnoreLog()
                     .Subscribe(unit => {
-                        var now = getTime();
+                        var now = getTime() + deltaTime;
+
                         CorrectionTime = unit.CorrectionTime;
+                        unit.CorrectionTime = CorrectionTime;
 
                         // Disable physics tick
                         Physics.autoSimulation = false;
@@ -160,7 +166,7 @@ namespace Banchou.Network {
                         dispatch(boardActions.Rollback(step.State));
 
                         void ResimulateStep() {
-                            DeltaTime = Mathf.Min(Time.fixedUnscaledDeltaTime, now - CorrectionTime);
+                            DeltaTime = Mathf.Min(Time.fixedDeltaTime, now - CorrectionTime);
 
                             unit.DeltaTime = DeltaTime;
                             _beforeResimulate.OnNext(unit);

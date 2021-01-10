@@ -1,7 +1,6 @@
 ﻿using Redux;
 using UnityEngine;
 
-using Banchou.Network;
 using Banchou.Player;
 using Banchou.Pawn;
 

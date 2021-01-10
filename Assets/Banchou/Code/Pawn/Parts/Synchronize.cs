@@ -25,7 +25,11 @@ namespace Banchou.Pawn.Part {
 
             syncFrames
                 .CatchIgnoreLog()
-                .Subscribe(frame => { animator.UseFrame(frame); })
+                .Subscribe(frame => {
+                    animator.enabled = false;
+                    animator.UseFrame(frame);
+                    animator.enabled = true;
+                })
                 .AddTo(this);
 
             var interpolationFrames = 5;

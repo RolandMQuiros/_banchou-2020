@@ -15,7 +15,7 @@ namespace Banchou.Prototype {
             Observable.Interval(TimeSpan.FromMilliseconds(100))
                 .CatchIgnoreLog()
                 .Subscribe(_ => {
-                    label.text = $"Server time: {getTime()}\nLocal time: {Time.fixedUnscaledTime}";
+                    label.text = $"Server time: {getTime()}\nLocal time: {Time.fixedTime}";
                 })
                 .AddTo(this);
         }

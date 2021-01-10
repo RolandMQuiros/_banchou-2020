@@ -1,4 +1,4 @@
 ﻿namespace Banchou {
-    public delegate float GetTime();
-    public delegate float GetDeltaTime();
+    public delegate float GetTime(bool realtime = false);
+    public delegate float GetDeltaTime(bool realtime = false);
 }

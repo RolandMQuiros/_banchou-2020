@@ -18,8 +18,8 @@ namespace Banchou {
             container.Bind<IObservable<GameState>>(_store.ObserveState());
             container.Bind<Dispatcher>(_store.Dispatch);
             container.Bind<GetState>(_store.GetState);
-            container.Bind<GetTime>(() => Time.fixedUnscaledTime);
-            container.Bind<GetDeltaTime>(() => Time.fixedDeltaTime);
+            container.Bind<GetTime>(_ => Time.fixedTime);
+            container.Bind<GetDeltaTime>(_ => Time.fixedDeltaTime);
         }
     }
     public delegate GameState GetState();

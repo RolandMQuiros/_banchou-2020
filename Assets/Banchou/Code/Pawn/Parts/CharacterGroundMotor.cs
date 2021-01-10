@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-using Banchou.Network;
-
 namespace Banchou.Pawn.Part {
     [RequireComponent(typeof(CharacterController))]
     public class CharacterGroundMotor : MonoBehaviour, IMotor {

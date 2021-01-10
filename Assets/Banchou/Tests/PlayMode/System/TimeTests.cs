@@ -15,9 +15,9 @@ namespace Banchou.Test {
 
             var subscription = Observable.EveryFixedUpdate()
                 .Subscribe(_ => {
-                    var startTime = Time.fixedUnscaledTime;
+                    var startTime = Time.fixedTime;
                     Thread.Sleep(1000);
-                    var endTime = Time.fixedUnscaledTime;
+                    var endTime = Time.fixedTime;
                     Assert.AreEqual(startTime, endTime);
                     finished = true;
                 });
@@ -34,7 +34,7 @@ namespace Banchou.Test {
             var subscriptions = new CompositeDisposable(
                 Observable.EveryFixedUpdate()
                     .Subscribe(_ => {
-                        Assert.AreEqual(Time.fixedUnscaledTime % Time.fixedUnscaledDeltaTime, 0f);
+                        Assert.AreEqual(Time.fixedTime % Time.fixedDeltaTime, 0f);
                     }),
                 Observable.Timer(TimeSpan.FromSeconds(1f))
                     .Subscribe(_ => { finished = true; })
@@ -51,7 +51,7 @@ namespace Banchou.Test {
 
             var subscriptions = new CompositeDisposable(
                 Observable.EveryFixedUpdate()
-                    .Select(_ => Snapping.Snap(Time.fixedUnscaledTime, Time.fixedUnscaledDeltaTime))
+                    .Select(_ => Snapping.Snap(Time.fixedTime, Time.fixedDeltaTime))
                     .Pairwise()
                     .Subscribe(times => {
                         Assert.AreNotEqual(times.Current, times.Previous);
@@ -68,7 +68,7 @@ namespace Banchou.Test {
         public IEnumerator DoesFixedDeltaTimeChangeWithFatFrames() {
             var finished = false;
 
-            var targetDelta = Time.fixedUnscaledDeltaTime;
+            var targetDelta = Time.fixedDeltaTime;
 
             var subscriptions = new CompositeDisposable(
                 Observable.EveryFixedUpdate()
@@ -76,7 +76,7 @@ namespace Banchou.Test {
                         Thread.Sleep((int)(10 * frameCount));
                     }),
                 Observable.EveryFixedUpdate()
-                    .Select(_ => Time.fixedUnscaledDeltaTime)
+                    .Select(_ => Time.fixedDeltaTime)
                     .Subscribe(delta => {
                         Assert.AreEqual(targetDelta, delta);
                     }),
@@ -92,11 +92,11 @@ namespace Banchou.Test {
         public IEnumerator IsFixedUpdateCalledWithPhysicsAutoSimDisabled() {
             Physics.autoSimulation = false;
             var finished = false;
-            var targetDelta = Time.fixedUnscaledDeltaTime;
+            var targetDelta = Time.fixedDeltaTime;
             var subscriptions = new CompositeDisposable (
                 Observable.EveryFixedUpdate()
                     .Subscribe(_ => {
-                        Assert.AreEqual(0f, Time.fixedUnscaledDeltaTime);
+                        Assert.AreEqual(0f, Time.fixedDeltaTime);
                     }),
                 Observable.Timer(TimeSpan.FromSeconds(1))
                     .Subscribe(_ => { finished = true; })
@@ -117,7 +117,7 @@ namespace Banchou.Test {
                     }),
                 Observable.EveryFixedUpdate()
                     .Subscribe(_ => {
-                        Assert.AreEqual(0.03f, Time.fixedUnscaledDeltaTime);
+                        Assert.AreEqual(0.03f, Time.fixedDeltaTime);
                     })
             );
             yield return new WaitUntil(() => finished);

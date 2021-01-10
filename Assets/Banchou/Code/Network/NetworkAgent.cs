@@ -108,18 +108,18 @@ namespace Banchou.Network {
                 }).AddTo(this);
         }
 
-        public float GetTime() {
-            if (_rollback != null && _rollback.Phase == RollbackPhase.Resimulate) {
+        public float GetTime(bool realtime = false) {
+            if (!realtime && _rollback != null && _rollback.Phase == RollbackPhase.Resimulate) {
                 return _rollback.CorrectionTime;
             }
-            return _client?.GetTime() ?? _server?.GetTime() ?? Time.fixedUnscaledTime;
+            return _client?.GetTime() ?? _server?.GetTime() ?? Time.fixedTime;
         }
 
-        public float GetDeltaTime() {
-            if (_rollback != null && _rollback.Phase == RollbackPhase.Resimulate) {
+        public float GetDeltaTime(bool realtime) {
+            if (!realtime && _rollback != null && _rollback.Phase == RollbackPhase.Resimulate) {
                 return _rollback.DeltaTime;
             }
-            return _getState().GetBoardTimescale() * Time.fixedUnscaledDeltaTime;
+            return _getState().GetBoardTimescale() * Time.fixedDeltaTime;
         }
 
         public void OnDestroy() {

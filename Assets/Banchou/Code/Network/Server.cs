@@ -32,7 +32,7 @@ namespace Banchou.Network {
 
         public NetworkServer(
             Guid networkId,
-            IObservable<GameState> onStateUpdate,
+            IObservable<GameState> observeState,
             GetState getState,
             Dispatcher dispatch,
             NetworkActions networkActions,
@@ -53,7 +53,7 @@ namespace Banchou.Network {
             ObserveRemoteInput = remoteInput;
 
             float When(float ping) {
-                return Snapping.Snap(GetTime() - (ping / 1000f), Time.fixedUnscaledDeltaTime);
+                return Snapping.Snap(GetTime() - (ping / 1000f), Time.fixedDeltaTime);
             }
 
             _listener.ConnectionRequestEvent += request => {
@@ -125,9 +125,9 @@ namespace Banchou.Network {
                 }
             };
 
-            // Send input to all peers, provided they're not the source
             _subscriptions = new CompositeDisposable(
-                onStateUpdate
+                // Respond to latency changes in the state
+                observeState
                     .Select(state => state.GetSimulatedLatency())
                     .DistinctUntilChanged()
                     .CatchIgnoreLog()
@@ -136,6 +136,7 @@ namespace Banchou.Network {
                         _server.SimulationMinLatency = latency.Min;
                         _server.SimulationMaxLatency = latency.Max;
                     }),
+                // Send input to all peers, provided they're not the source
                 observeLocalInput
                     .ObserveCommands()
                     .Merge(observeLocalInput.ObserveMoves())
@@ -150,7 +151,7 @@ namespace Banchou.Network {
                                     _messagePackOptions
                                 );
 
-                                peer.Value.Send(currentMessage, DeliveryMethod.ReliableUnordered);
+                                peer.Value.Send(currentMessage, DeliveryMethod.ReliableSequenced);
                             }
                         }
                     })
@@ -161,7 +162,7 @@ namespace Banchou.Network {
         }
 
         public float GetTime() {
-            return Snapping.Snap(Time.fixedUnscaledTime, Time.fixedUnscaledDeltaTime);
+            return Snapping.Snap(Time.fixedTime, Time.fixedDeltaTime);
         }
 
         public NetworkServer Start<T>(IObservable<T> pollInterval) {
@@ -194,6 +195,7 @@ namespace Banchou.Network {
                 var state = store.GetState() as GameState;
                 var isServer = state != null && state.IsServer();
                 var isLocalAction = Attribute.GetCustomAttribute(action.GetType(), typeof(LocalActionAttribute)) != null;
+                var isMessagePackable = Attribute.GetCustomAttribute(action.GetType(), typeof(MessagePackObjectAttribute)) != null;
 
                 if (isServer && !isLocalAction && _instances.TryGetValue(state.GetNetworkId(), out server)) {
                     byte[] actionBytes = null;
@@ -203,17 +205,26 @@ namespace Banchou.Network {
                         if (actionBytes == null) {
                             _serializationPerf.Restart();
 
-                            // Convert action to BSON
                             var actionStream = new MemoryStream();
-                            using (var writer = new BsonWriter(actionStream)) {
-                                jsonSerializer.Serialize(writer, action);
+                            if (isMessagePackable) {
+                                MessagePackSerializer.Serialize(
+                                    stream: actionStream,
+                                    value: action,
+                                    options: messagePackOptions
+                                );
+                            } else {
+                                // Convert action to BSON
+                                using (var writer = new BsonWriter(actionStream)) {
+                                    jsonSerializer.Serialize(writer, action);
+                                }
                             }
 
                             // Pack into envelope and serialize to bytestream
                             actionBytes = Envelope.CreateMessage(
                                 PayloadType.ReduxAction,
                                 new ReduxAction {
-                                    ActionBytes = actionStream.ToArray()
+                                    ActionBytes = actionStream.ToArray(),
+                                    When = server.GetTime()
                                 },
                                 messagePackOptions
                             );

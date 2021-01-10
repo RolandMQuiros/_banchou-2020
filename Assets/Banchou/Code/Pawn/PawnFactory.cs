@@ -7,6 +7,7 @@ using UniRx;
 using UnityEngine;
 
 using Banchou.DependencyInjection;
+using Banchou.Stage;
 
 namespace Banchou.Pawn {
     public class PawnFactory : MonoBehaviour, IPawnInstances {
@@ -27,13 +28,16 @@ namespace Banchou.Pawn {
             _observeState = observeState;
             _getState = getState;
             _instantiate = instantiate;
-        }
 
-        private void Start() {
-            var observePawnIdDeltas = _observeState
-                .Select(state => state.GetPawnIds())
+            var observePawnIdDeltas = observeState
+                .DistinctUntilChanged(state => state.AreScenesLoading())
+                .Where(state => !state.AreScenesLoading())
+                .SelectMany(
+                    _ => observeState
+                        .Select(state => state.GetPawnIds())
+                        .DistinctUntilChanged()
+                )
                 .StartWith(Enumerable.Empty<PawnId>())
-                .DistinctUntilChanged()
                 .Pairwise();
 
             // If a pawn was added, instantiate it
@@ -41,6 +45,7 @@ namespace Banchou.Pawn {
                 .SelectMany(pair => pair.Current.Except(pair.Previous))
                 .Where(id => !_instances.ContainsKey(id))
                 .Select(id => (PawnId: id, Pawn: _getState().GetPawn(id)))
+                .CatchIgnoreLog()
                 .Subscribe(info => {
                     GameObject prefab;
                     if (_catalog.TryGetValue(info.Pawn.PrefabKey, out prefab)) {

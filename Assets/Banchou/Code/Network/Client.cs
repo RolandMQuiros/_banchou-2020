@@ -29,7 +29,7 @@ namespace Banchou.Network {
         private NetManager _client;
         private NetPeer _peer;
 
-        private float Now => Time.fixedUnscaledTime;
+        private float Now => Time.fixedTime;
 
         private float _lastServerTime = 0f;
         private float _lastLocalTime = 0f;
@@ -207,7 +207,7 @@ namespace Banchou.Network {
         /// </summary>
         /// <returns>The estimated server time</returns>
         public float GetTime() {
-            return Snapping.Snap(_lastServerTime + Now - _lastLocalTime, Time.fixedUnscaledDeltaTime);
+            return Snapping.Snap(_lastServerTime + Now - _lastLocalTime, Time.fixedDeltaTime);
         }
 
         public void Dispose() {
