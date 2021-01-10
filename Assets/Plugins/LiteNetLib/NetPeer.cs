@@ -82,8 +82,8 @@ namespace LiteNetLib
  
         //Channels
         private readonly Queue<NetPacket> _unreliableChannel;
+        private readonly Queue<BaseChannel> _channelSendQueue;
         private readonly BaseChannel[] _channels;
-        private BaseChannel _headChannel;
 
         //MTU
         private int _mtu;
@@ -202,7 +202,13 @@ namespace LiteNetLib
             Statistics = new NetStatistics();
             _packetPool = netManager.NetPacketPool;
             NetManager = netManager;
-            SetMtu(0);
+
+            if (netManager.MtuOverride > 0)
+                OverrideMtu(netManager.MtuOverride);
+            else if (netManager.UseSafeMtu)
+                SetMtu(0);
+            else
+                SetMtu(1);
 
             EndPoint = remoteEndPoint;
             _connectionState = ConnectionState.Connected;
@@ -211,16 +217,23 @@ namespace LiteNetLib
             _pingPacket = new NetPacket(PacketProperty.Ping, 0) {Sequence = 1};
            
             _unreliableChannel = new Queue<NetPacket>(64);
-            _headChannel = null;
             _holdedFragments = new Dictionary<ushort, IncomingFragments>();
             _deliveredFragments = new Dictionary<ushort, ushort>();
 
             _channels = new BaseChannel[netManager.ChannelsCount * 4];
+            _channelSendQueue = new Queue<BaseChannel>(netManager.ChannelsCount * 4);
         }
 
         private void SetMtu(int mtuIdx)
         {
+            _mtuIdx = mtuIdx;
             _mtu = NetConstants.PossibleMtu[mtuIdx] - NetManager.ExtraPacketSizeForLayer;
+        }
+
+        private void OverrideMtu(int mtuValue)
+        {
+            _mtu = mtuValue;
+            _finishMtu = true;
         }
 
         /// <summary>
@@ -260,14 +273,6 @@ namespace LiteNetLib
             BaseChannel prevChannel = Interlocked.CompareExchange(ref _channels[idx], newChannel, null);
             if (prevChannel != null)
                 return prevChannel;
-
-            BaseChannel headChannel;
-            do
-            {
-                headChannel = _headChannel;
-                newChannel.Next = headChannel;
-            }
-            while (Interlocked.CompareExchange(ref _headChannel, newChannel, headChannel) != headChannel);
 
             return newChannel;
         }
@@ -530,7 +535,7 @@ namespace LiteNetLib
             {
                 //if cannot be fragmented
                 if (deliveryMethod != DeliveryMethod.ReliableOrdered && deliveryMethod != DeliveryMethod.ReliableUnordered)
-                    throw new TooBigPacketException("Unreliable packet size exceeded maximum of " + (mtu - headerSize) + " bytes");
+                    throw new TooBigPacketException("Unreliable or ReliableSequenced packet size exceeded maximum of " + (mtu - headerSize) + " bytes, Check allowed size by GetMaxSinglePacketSize()");
 
                 int packetFullSize = mtu - headerSize;
                 int packetDataSize = packetFullSize - NetConstants.FragmentHeaderSize;
@@ -618,6 +623,14 @@ namespace LiteNetLib
                     : DisconnectResult.Reject;
             }
             return DisconnectResult.None;
+        }
+
+        internal void AddToReliableChannelSendQueue(BaseChannel channel)
+        {
+            lock (_channelSendQueue)
+            {
+                _channelSendQueue.Enqueue(channel);
+            }
         }
 
         internal ShutdownResult Shutdown(byte[] data, int start, int length, bool force)
@@ -777,8 +790,7 @@ namespace LiteNetLib
 
                 lock (_mtuMutex)
                 {
-                    _mtuIdx++;
-                    SetMtu(_mtuIdx);
+                    SetMtu(_mtuIdx+1);
                 }
                 //if maxed - finish.
                 if (_mtuIdx == NetConstants.PossibleMtu.Length - 1)
@@ -1111,20 +1123,33 @@ namespace LiteNetLib
             UpdateMtuLogic(deltaTime);
 
             //Pending send
-            BaseChannel currentChannel = _headChannel;
-            while (currentChannel != null)
+            if (_channelSendQueue.Count > 0)
             {
-                currentChannel.SendNextPackets();
-                currentChannel = currentChannel.Next;
+                lock (_channelSendQueue)
+                {
+                    var count = _channelSendQueue.Count;
+                    while (count-- > 0)
+                    {
+                        BaseChannel channel = _channelSendQueue.Dequeue();
+                        if (channel.SendAndCheckQueue())
+                        {
+                            // still has something to send, re-add it to the send queue
+                            _channelSendQueue.Enqueue(channel);
+                        }
+                    }
+                }
             }
 
-            lock (_unreliableChannel)
+            if (_unreliableChannel.Count > 0)
             {
-                while (_unreliableChannel.Count > 0)
+                lock (_unreliableChannel)
                 {
-                    NetPacket packet = _unreliableChannel.Dequeue();
-                    SendUserData(packet);
-                    NetManager.NetPacketPool.Recycle(packet);
+                    while (_unreliableChannel.Count > 0)
+                    {
+                        NetPacket packet = _unreliableChannel.Dequeue();
+                        SendUserData(packet);
+                        NetManager.NetPacketPool.Recycle(packet);
+                    }
                 }
             }
 
