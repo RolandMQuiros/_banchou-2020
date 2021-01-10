@@ -48,12 +48,12 @@ namespace Banchou.Network {
             _dispatch = dispatch;
 
             var remoteInput = new Subject<InputUnit>();
-            var clients = new Dictionary<IPEndPoint, ConnectClient>();
+            var clients = new Dictionary<IPEndPoint, (ConnectClient, float)>();
 
             ObserveRemoteInput = remoteInput;
 
             float When(float ping) {
-                return Snapping.Snap(GetTime() - (ping / 1000f), Time.fixedDeltaTime);
+                return GetTime() - (ping / 1000f);
             }
 
             _listener.ConnectionRequestEvent += request => {
@@ -63,7 +63,7 @@ namespace Banchou.Network {
 
                 if (_server.ConnectedPeersCount < 10 && connectData.ConnectionKey == "BanchouConnectionKey") {
                     request.Accept();
-                    clients[request.RemoteEndPoint] = connectData;
+                    clients[request.RemoteEndPoint] = (connectData, GetTime());
                     Debug.Log($"Accepted connection from {request.RemoteEndPoint}");
                 } else {
                     request.Reject();
@@ -85,13 +85,16 @@ namespace Banchou.Network {
                     jsonSerializer.Serialize(writer, getState());
                 }
 
+                var (connectData, timeReceived) = clients[peer.EndPoint];
+                Debug.Log($"Time between connect and response: {GetTime() - timeReceived}");
+
                 var syncClientMessage = Envelope.CreateMessage(
                     PayloadType.SyncClient,
                     new SyncClient {
                         ClientNetworkId = newNetworkId,
                         GameStateBytes = gameStateStream.ToArray(),
-                        ClientTime = clients[peer.EndPoint].ClientConnectionTime,
-                        ServerTime = When(peer.Ping)
+                        ClientTime = connectData.ClientConnectionTime,
+                        ServerTime = timeReceived - (peer.Ping / 1000f)
                     },
                     _messagePackOptions
                 );
@@ -101,6 +104,7 @@ namespace Banchou.Network {
 
             _listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) => {
                 // Open envelope
+                var now = When(fromPeer.Ping);
                 var envelope = MessagePackSerializer.Deserialize<Envelope>(dataReader.GetRemainingBytes(), _messagePackOptions);
                 dataReader.Recycle();
 
@@ -112,11 +116,12 @@ namespace Banchou.Network {
                             PayloadType.ServerTimeResponse,
                             new ServerTimeResponse {
                                 ClientTime = request.ClientTime,
-                                ServerTime = When(fromPeer.Ping)
+                                ServerTime = now
                             },
                             _messagePackOptions
                         );
                         fromPeer.Send(response, DeliveryMethod.Unreliable);
+                        Debug.Log($"Responding to time request at {request.ClientTime} with {now}");
                     } break;
                     case PayloadType.PlayerInput: {
                         var inputUnit = MessagePackSerializer.Deserialize<InputUnit>(envelope.Payload, _messagePackOptions);
@@ -151,7 +156,7 @@ namespace Banchou.Network {
                                     _messagePackOptions
                                 );
 
-                                peer.Value.Send(currentMessage, DeliveryMethod.ReliableSequenced);
+                                peer.Value.Send(currentMessage, DeliveryMethod.Unreliable);
                             }
                         }
                     })
@@ -162,7 +167,7 @@ namespace Banchou.Network {
         }
 
         public float GetTime() {
-            return Snapping.Snap(Time.fixedTime, Time.fixedDeltaTime);
+            return Time.fixedUnscaledTime;
         }
 
         public NetworkServer Start<T>(IObservable<T> pollInterval) {
@@ -173,6 +178,8 @@ namespace Banchou.Network {
                     .CatchIgnoreLog()
                     .Subscribe(_ => { _server.PollEvents(); })
             );
+
+
             return this;
         }
 

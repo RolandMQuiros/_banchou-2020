@@ -30,13 +30,9 @@ namespace Banchou.Pawn {
             _instantiate = instantiate;
 
             var observePawnIdDeltas = observeState
-                .DistinctUntilChanged(state => state.AreScenesLoading())
                 .Where(state => !state.AreScenesLoading())
-                .SelectMany(
-                    _ => observeState
-                        .Select(state => state.GetPawnIds())
-                        .DistinctUntilChanged()
-                )
+                .Select(state => state.GetPawnIds())
+                .DistinctUntilChanged()
                 .StartWith(Enumerable.Empty<PawnId>())
                 .Pairwise();
 
@@ -48,6 +44,7 @@ namespace Banchou.Pawn {
                 .CatchIgnoreLog()
                 .Subscribe(info => {
                     GameObject prefab;
+                    var state = getState();
                     if (_catalog.TryGetValue(info.Pawn.PrefabKey, out prefab)) {
                         var instance = _instantiate(
                             prefab,

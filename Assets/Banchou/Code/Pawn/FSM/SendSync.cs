@@ -26,7 +26,8 @@ namespace Banchou.Pawn.Part {
             IMotor motor,
             Orientation orientation,
             GetTime getTime,
-            GetDeltaTime getDeltaTime
+            GetDeltaTime getDeltaTime,
+            IRollbackEvents rollback
         ) {
             List<int> GetParameterKeys(AnimatorControllerParameterType parameterType) {
                 return animator.parameters
@@ -71,6 +72,11 @@ namespace Banchou.Pawn.Part {
                 .DistinctUntilChanged()
                 .Where(isServer => isServer);
 
+            var observeResimulation = rollback
+                .OnResimulationStart
+                .Select(_ => true)
+                .Merge(rollback.OnResimulationEnd.Select(_ => false));
+
             if (_sendOnEnter) {
                 observeIsServer
                     .SelectMany(_ => ObserveStateEnter)
@@ -84,6 +90,8 @@ namespace Banchou.Pawn.Part {
             if (_sendOnExit) {
                 observeIsServer
                     .SelectMany(_ => ObserveStateExit)
+                    .WithLatestFrom(observeResimulation, (_, isResimulating) => isResimulating)
+                    .Where(isResimulating => !isResimulating)
                     .CatchIgnoreLog()
                     .Subscribe(_ => {
                         dispatch(boardActions.SyncPawn(RecordFrame(getTime())));
@@ -103,6 +111,8 @@ namespace Banchou.Pawn.Part {
 
                 observeIsServer
                     .SelectMany(_ => ObserveStateUpdate)
+                    .WithLatestFrom(observeResimulation, (_, isResimulating) => isResimulating)
+                    .Where(isResimulating => !isResimulating)
                     .CatchIgnore()
                     .Subscribe(_ => {
                         stateTime += getDeltaTime();

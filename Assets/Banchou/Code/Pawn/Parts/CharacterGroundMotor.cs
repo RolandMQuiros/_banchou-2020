@@ -5,26 +5,14 @@ namespace Banchou.Pawn.Part {
     [RequireComponent(typeof(CharacterController))]
     public class CharacterGroundMotor : MonoBehaviour, IMotor {
         [SerializeField] private LayerMask _terrainMask;
-        public Vector3 TargetPosition => _controller.transform.position + _velocity;
+        public Vector3 TargetPosition => _position + _velocity;
 
         private CharacterController _controller = null;
         private GetTime _getTime = null;
         private List<Vector3> _contacts = new List<Vector3>();
         private Vector3 _velocity = Vector3.zero;
 
-        private class ContactSorter : IComparer<Vector3> {
-            private Transform _body;
-            public ContactSorter(Transform body) {
-                _body = body;
-            }
-            public int Compare(Vector3 first, Vector3 second) {
-                var diff = Vector3.Dot(first, _body.transform.up) - Vector3.Dot(first, _body.transform.up);
-                return (int)Mathf.Sign(diff);
-            }
-        }
-        private ContactSorter _sorter;
-
-        #region MonoBehaviour
+        private Vector3 _position;
 
         public void Construct(
             CharacterController controller,
@@ -32,21 +20,10 @@ namespace Banchou.Pawn.Part {
         ) {
             _controller = controller;
             _getTime = getTime;
-            _sorter = new ContactSorter(_controller.transform);
+            _position = transform.position;
         }
 
-        private void OnCollisionStay(Collision collision) {
-            foreach (var contact in collision.contacts) {
-                if ((_terrainMask.value & (1 << contact.otherCollider.gameObject.layer)) != 0) {
-                    _contacts.Add(contact.normal);
-                }
-            }
-        }
-
-        private void OnCollisionEnter(Collision collision) {
-            OnCollisionStay(collision);
-        }
-
+        #region MonoBehaviour
         private void FixedUpdate() {
             Apply();
         }
@@ -56,7 +33,8 @@ namespace Banchou.Pawn.Part {
         public void Teleport(Vector3 position) {
             var oldEnabled = _controller.enabled;
             _controller.enabled = false;
-            _controller.transform.position = position;
+            _position = position;
+            _controller.transform.position = _position;
             _controller.enabled = oldEnabled;
         }
 
@@ -69,7 +47,13 @@ namespace Banchou.Pawn.Part {
         }
 
         public void Apply() {
-             _controller.Move(_velocity);
+            Teleport(_position);
+            if (_controller.Move(_velocity) != CollisionFlags.None) {
+                _position = _controller.transform.position;
+            } else {
+                _position += _velocity;
+            }
+
             _velocity = Vector3.zero;
             _contacts.Clear();
         }

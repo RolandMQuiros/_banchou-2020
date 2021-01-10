@@ -26,31 +26,33 @@ namespace Banchou.Pawn.Part {
             syncFrames
                 .CatchIgnoreLog()
                 .Subscribe(frame => {
+                    motor.Teleport(frame.Position);
+                    orientation.TrackForward(frame.Forward);
                     animator.enabled = false;
                     animator.UseFrame(frame);
                     animator.enabled = true;
                 })
                 .AddTo(this);
 
-            var interpolationFrames = 5;
+            // var interpolationFrames = 5;
 
-            syncFrames
-                .SelectMany(
-                    frame => Observable.EveryFixedUpdate()
-                        .Take(interpolationFrames)
-                        .Select(frameCount => (frame, frameCount))
-                )
-                .CatchIgnoreLog()
-                .Subscribe(args => {
-                    var (frame, frameCount) = args;
-                    motor.Teleport(
-                        Vector3.Slerp(motor.TargetPosition, frame.Position, (float)frameCount / interpolationFrames)
-                    );
-                    orientation.TrackForward(
-                        Vector3.Slerp(orientation.transform.forward, frame.Forward, (float)frameCount / interpolationFrames)
-                    );
-                })
-                .AddTo(this);
+            // syncFrames
+            //     .SelectMany(
+            //         frame => Observable.EveryFixedUpdate()
+            //             .Take(interpolationFrames)
+            //             .Select(frameCount => (frame, frameCount))
+            //     )
+            //     .CatchIgnoreLog()
+            //     .Subscribe(args => {
+            //         var (frame, frameCount) = args;
+            //         motor.Teleport(
+            //             Vector3.Slerp(motor.TargetPosition, frame.Position, (float)frameCount / interpolationFrames)
+            //         );
+            //         orientation.TrackForward(
+            //             Vector3.Slerp(orientation.transform.forward, frame.Forward, (float)frameCount / interpolationFrames)
+            //         );
+            //     })
+            //     .AddTo(this);
         }
 
         private void Start() { }

@@ -13,7 +13,6 @@ using Redux;
 using UnityEngine;
 using UniRx;
 
-using Banchou.Board;
 using Banchou.Player;
 using Banchou.Network.Message;
 
@@ -29,11 +28,10 @@ namespace Banchou.Network {
         private NetManager _client;
         private NetPeer _peer;
 
-        private float Now => Time.fixedTime;
+        private float Now => Time.fixedUnscaledTime;
 
         private float _lastServerTime = 0f;
         private float _lastLocalTime = 0f;
-
         private float _timeRequestTime = 0f;
 
         private CompositeDisposable _subscriptions;
@@ -207,7 +205,7 @@ namespace Banchou.Network {
         /// </summary>
         /// <returns>The estimated server time</returns>
         public float GetTime() {
-            return Snapping.Snap(_lastServerTime + Now - _lastLocalTime, Time.fixedDeltaTime);
+            return _lastServerTime + Now - _lastLocalTime;
         }
 
         public void Dispose() {

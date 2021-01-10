@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Net;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
@@ -82,6 +82,7 @@ namespace Banchou.Test {
             });
 
             _clientBoard.Dispatch(new Network.StateAction.SetNetworkMode {
+                IP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9050),
                 Mode = Network.Mode.Client,
                 SimulateMinLatency = minPing,
                 SimulateMaxLatency = maxPing
@@ -117,7 +118,7 @@ namespace Banchou.Test {
 
         [UnityTest]
         public IEnumerator ServerAndClientTimeMatch() {
-            yield return SetupServerAndClient(300, 300);
+            yield return SetupServerAndClient(0, 0);
 
             var times = new List<(float Server, float Client)>();
             for (int i = 0; i <= 10; i++) {
@@ -127,7 +128,7 @@ namespace Banchou.Test {
                 yield return new WaitForSecondsRealtime(1f);
             }
 
-            Assert.That(!times.Any(t => t.Server != t.Client), $"Server and client have mismatched timestamps");
+            Assert.That(!times.Any(t => Mathf.Abs(t.Server - t.Client) > Time.fixedUnscaledDeltaTime), $"Server and client have mismatched timestamps");
         }
 
         [UnityTest]
